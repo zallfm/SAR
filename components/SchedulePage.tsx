@@ -5,11 +5,11 @@ import { SearchIcon } from './icons/SearchIcon';
 import { ChevronDownIcon } from './icons/ChevronDownIcon';
 import { EditIcon } from './icons/EditIcon';
 import { CalendarIcon } from './icons/CalendarIcon';
-import ScheduleEditModal from './ScheduleEditModal';
-import ConfirmationModal from './ConfirmationModal';
-import SetScheduleModal from './SetScheduleModal';
-import SuccessModal from './SuccessModal';
-import StatusConfirmationModal from './StatusConfirmationModal';
+import ScheduleEditModal from '../src/components/common/Modal/ScheduleEditModal';
+import ConfirmationModal from '../src/components/common/Modal/ConfirmationModal';
+import SetScheduleModal from '../src/components/common/Modal/SetScheduleModal';
+import SuccessModal from '../src/components/common/Modal/SuccessModal';
+import StatusConfirmationModal from '../src/components/common/Modal/StatusConfirmationModal';
 import { formatDdMmToDisplayDate } from '../utils/dateFormatter';
 import StatusPill from './StatusPill';
 

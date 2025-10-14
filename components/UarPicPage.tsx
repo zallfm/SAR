@@ -5,9 +5,9 @@ import { EditIcon } from './icons/EditIcon';
 import { DeleteIcon } from './icons/DeleteIcon';
 import { initialPicUsers, divisions } from '../data';
 import type { PicUser } from '../data';
-import UarPicModal from './UarPicModal';
-import ConfirmationModal from './ConfirmationModal';
-import InfoModal from './InfoModal';
+import UarPicModal from '../src/components/common/Modal/UarPicModal';
+import ConfirmationModal from '../src/components/common/Modal/ConfirmationModal';
+import InfoModal from '../src/components/common/Modal/InfoModal';
 
 const UarPicPage: React.FC = () => {
     const [pics, setPics] = useState<PicUser[]>(initialPicUsers);

@@ -2,11 +2,11 @@ import React, { useState } from 'react';
 import { SearchIcon } from './icons/SearchIcon';
 import { ActionIcon } from './icons/ActionIcon';
 import { ChevronDownIcon } from './icons/ChevronDownIcon';
-import AddApplicationModal from './AddApplicationModal';
-import SuccessModal from './SuccessModal';
+import AddApplicationModal from '../src/components/common/Modal/AddApplicationModal';
+import SuccessModal from '../src/components/common/Modal/SuccessModal';
 import { initialApplications } from '../data';
 import type { Application } from '../data';
-import StatusConfirmationModal from './StatusConfirmationModal';
+import StatusConfirmationModal from '../src/components/common/Modal/StatusConfirmationModal';
 import StatusPill from './StatusPill';
 
 const ApplicationPage: React.FC = () => {

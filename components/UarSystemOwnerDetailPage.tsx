@@ -4,8 +4,8 @@ import type { UarSystemOwnerRecord, UarSystemOwnerDetail, Comment } from '../dat
 import { initialUarSystemOwnerDetailData } from '../data';
 import { ChevronDownIcon } from './icons/ChevronDownIcon';
 import { CommentIcon } from './icons/CommentIcon';
-import RoleInfoModal from './RoleInfoModal';
-import CommentModal from './CommentModal';
+import RoleInfoModal from '../src/components/common/Modal/RoleInfoModal';
+import CommentModal from '../src/components/common/Modal/CommentModal';
 
 type ApprovalStatus = 'Approved' | 'Revoked';
 type TableData = UarSystemOwnerDetail & { approvalStatus: ApprovalStatus };

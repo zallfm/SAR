@@ -1,6 +1,6 @@
 import React from 'react';
-import { roleInformationData } from '../data';
-import { CloseIcon } from './icons/CloseIcon';
+import { roleInformationData } from '../../../../data';
+import { CloseIcon } from '../../../../components/icons/CloseIcon';
 
 // FIX: Define a more generic interface for role information to make the modal reusable.
 interface RoleInfo {

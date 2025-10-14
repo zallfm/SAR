@@ -4,8 +4,9 @@ import type { UarDivisionUserRecord, UarDivisionUserReviewDetail, Comment } from
 import { initialUarDivisionUserReviewData } from '../data';
 import { ChevronDownIcon } from './icons/ChevronDownIcon';
 import { CommentIcon } from './icons/CommentIcon';
-import RoleInfoModal from './RoleInfoModal';
-import CommentModal from './CommentModal';
+// import RoleInfoModal from './RoleInfoModal';
+import CommentModal from '../src/components/common/Modal/CommentModal';
+import RoleInfoModal from '@/src/components/common/Modal/RoleInfoModal';
 
 type ApprovalStatus = 'Approved' | 'Revoked';
 type TableData = UarDivisionUserReviewDetail & { approvalStatus: ApprovalStatus };
@@ -270,7 +271,7 @@ const UarDivisionUserDetailPage: React.FC<UarDivisionUserDetailPageProps> = ({ r
             </div>
 
             {isRoleInfoModalOpen && selectedRoleInfo && (
-                <RoleInfoModal 
+                <RoleInfoModal
                     onClose={() => setIsRoleInfoModalOpen(false)} 
                     roleInfo={selectedRoleInfo}
                 />

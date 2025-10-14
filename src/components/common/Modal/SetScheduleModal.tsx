@@ -1,8 +1,8 @@
 import React, { useState, useEffect, useMemo, useRef } from 'react';
-import type { Schedule } from '../data';
-import { initialSchedules } from '../data';
-import { isValidDdMm } from '../utils/dateFormatter';
-import { TrashIcon } from './icons/TrashIcon';
+import type { Schedule } from '../../../../data';
+import { initialSchedules } from '../../../../data';
+import { isValidDdMm } from '../../../../utils/dateFormatter';
+import { TrashIcon } from '../../../../components/icons/TrashIcon';
 
 interface SetScheduleModalProps {
     onClose: () => void;
