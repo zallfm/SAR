@@ -1,11 +1,11 @@
 import React, { useState, useMemo, useEffect } from 'react';
-import type { User } from '../types';
-import type { UarSystemOwnerRecord, UarSystemOwnerDetail, Comment } from '../data';
-import { initialUarSystemOwnerDetailData } from '../data';
-import { ChevronDownIcon } from '../src/components/icons/ChevronDownIcon';
-import { CommentIcon } from '../src/components/icons/CommentIcon';
-import RoleInfoModal from '../src/components/common/Modal/RoleInfoModal';
-import CommentModal from '../src/components/common/Modal/CommentModal';
+import type { User } from '../../../../types';
+import type { UarSystemOwnerRecord, UarSystemOwnerDetail, Comment } from '../../../../data';
+import { initialUarSystemOwnerDetailData } from '../../../../data';
+import { ChevronDownIcon } from '../../icons/ChevronDownIcon';
+import { CommentIcon } from '../../icons/CommentIcon';
+import RoleInfoModal from '../../common/Modal/RoleInfoModal';
+import CommentModal from '../../common/Modal/CommentModal';
 
 type ApprovalStatus = 'Approved' | 'Revoked';
 type TableData = UarSystemOwnerDetail & { approvalStatus: ApprovalStatus };

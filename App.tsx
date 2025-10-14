@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import LoginPage from './components/LoginPage';
+import LoginPage from './src/components/features/auth/LoginPage/LoginPage';
 import Dashboard from './src/components/layout/Dashboard';
 import type { User } from './types';
 

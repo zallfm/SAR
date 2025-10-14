@@ -1,14 +1,14 @@
 import React, { useState, useMemo } from 'react';
-import { initialSystemMasterData } from '../data';
-import type { SystemMasterRecord } from '../data';
-import type { User } from '../types';
-import { SearchIcon } from '../src/components/icons/SearchIcon';
-import { ChevronDownIcon } from '../src/components/icons/ChevronDownIcon';
-import { EditIcon } from '../src/components/icons/EditIcon';
-import { DeleteIcon } from '../src/components/icons/DeleteIcon';
-import SystemMasterModal from '../src/components/common/Modal/SystemMasterModal';
-import ConfirmationModal from '../src/components/common/Modal/ConfirmationModal';
-import InfoModal from '../src/components/common/Modal/InfoModal';
+import { initialSystemMasterData } from '../../../../data';
+import type { SystemMasterRecord } from '../../../../data';
+import type { User } from '../../../../types';
+import { SearchIcon } from '../../icons/SearchIcon';
+import { ChevronDownIcon } from '../../icons/ChevronDownIcon';
+import { EditIcon } from '../../icons/EditIcon';
+import { DeleteIcon } from '../../icons/DeleteIcon';
+import SystemMasterModal from '../../common/Modal/SystemMasterModal';
+import ConfirmationModal from '../../common/Modal/ConfirmationModal';
+import InfoModal from '../../common/Modal/InfoModal';
 
 interface SystemMasterPageProps {
     user: User;

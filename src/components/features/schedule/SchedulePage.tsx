@@ -1,17 +1,17 @@
 import React, { useState, useMemo } from 'react';
-import { initialSchedules } from '../data';
-import type { Schedule } from '../data';
-import { SearchIcon } from '../src/components/icons/SearchIcon';
-import { ChevronDownIcon } from '../src/components/icons/ChevronDownIcon';
-import { EditIcon } from '../src/components/icons/EditIcon';
-import { CalendarIcon } from '../src/components/icons/CalendarIcon';
-import ScheduleEditModal from '../src/components/common/Modal/ScheduleEditModal';
-import ConfirmationModal from '../src/components/common/Modal/ConfirmationModal';
-import SetScheduleModal from '../src/components/common/Modal/SetScheduleModal';
-import SuccessModal from '../src/components/common/Modal/SuccessModal';
-import StatusConfirmationModal from '../src/components/common/Modal/StatusConfirmationModal';
-import { formatDdMmToDisplayDate } from '../utils/dateFormatter';
-import StatusPill from './StatusPill';
+import { initialSchedules } from '../../../../data';
+import type { Schedule } from '../../../../data';
+import { SearchIcon } from '../../icons/SearchIcon';
+import { ChevronDownIcon } from '../../icons/ChevronDownIcon';
+import { EditIcon } from '../../icons/EditIcon';
+import { CalendarIcon } from '../../icons/CalendarIcon';
+import ScheduleEditModal from '../../common/Modal/ScheduleEditModal';
+import ConfirmationModal from '../../common/Modal/ConfirmationModal';
+import SetScheduleModal from '../../common/Modal/SetScheduleModal';
+import SuccessModal from '../../common/Modal/SuccessModal';
+import StatusConfirmationModal from '../../common/Modal/StatusConfirmationModal';
+import { formatDdMmToDisplayDate } from '../../../../utils/dateFormatter';
+import StatusPill from '../../../../components/StatusPill';
 
 const SchedulePage: React.FC = () => {
     const [schedules, setSchedules] = useState<Schedule[]>(initialSchedules);

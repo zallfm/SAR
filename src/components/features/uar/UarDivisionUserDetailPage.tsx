@@ -1,12 +1,12 @@
 import React, { useState, useEffect } from 'react';
-import type { User } from '../types';
-import type { UarDivisionUserRecord, UarDivisionUserReviewDetail, Comment } from '../data';
-import { initialUarDivisionUserReviewData } from '../data';
-import { ChevronDownIcon } from '../src/components/icons/ChevronDownIcon';
-import { CommentIcon } from '../src/components/icons/CommentIcon';
+import type { User } from '../../../../types';
+import type { UarDivisionUserRecord, UarDivisionUserReviewDetail, Comment } from '../../../../data';
+import { initialUarDivisionUserReviewData } from '../../../../data';
+import { ChevronDownIcon } from '../../icons/ChevronDownIcon';
+import { CommentIcon } from '../../icons/CommentIcon';
 // import RoleInfoModal from './RoleInfoModal';
-import CommentModal from '../src/components/common/Modal/CommentModal';
-import RoleInfoModal from '@/src/components/common/Modal/RoleInfoModal';
+import CommentModal from '../../common/Modal/CommentModal';
+import RoleInfoModal from '../../common/Modal/RoleInfoModal';
 
 type ApprovalStatus = 'Approved' | 'Revoked';
 type TableData = UarDivisionUserReviewDetail & { approvalStatus: ApprovalStatus };

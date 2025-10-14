@@ -1,13 +1,13 @@
 import React, { useState } from 'react';
-import { SearchIcon } from '../src/components/icons/SearchIcon';
-import { ActionIcon } from '../src/components/icons/ActionIcon';
-import { ChevronDownIcon } from '../src/components/icons/ChevronDownIcon';
-import AddApplicationModal from '../src/components/common/Modal/AddApplicationModal';
-import SuccessModal from '../src/components/common/Modal/SuccessModal';
-import { initialApplications } from '../data';
-import type { Application } from '../data';
-import StatusConfirmationModal from '../src/components/common/Modal/StatusConfirmationModal';
-import StatusPill from './StatusPill';
+import { SearchIcon } from '../../icons/SearchIcon';
+import { ActionIcon } from '../../icons/ActionIcon';
+import { ChevronDownIcon } from '../../icons/ChevronDownIcon';
+import AddApplicationModal from '../../common/Modal/AddApplicationModal';
+import SuccessModal from '../../common/Modal/SuccessModal';
+import { initialApplications } from '../../../../data';
+import type { Application } from '../../../../data';
+import StatusConfirmationModal from '../../common/Modal/StatusConfirmationModal';
+import StatusPill from '../../../../components/StatusPill';
 
 const ApplicationPage: React.FC = () => {
     const [applications, setApplications] = useState<Application[]>(initialApplications);

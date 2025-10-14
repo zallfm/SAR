@@ -3,19 +3,19 @@ import type { User } from '../../../types';
 import Header from './Header';
 import Sidebar from './Sidebar';
 import DashboardContent from '../../../components/DashboardContent';
-import ApplicationPage from '../../../components/ApplicationPage';
+import ApplicationPage from '../features/application/ApplicationPage';
 import LoggingMonitoringPage from '../../../components/LoggingMonitoringPage';
 import type { LogEntry, UarSystemOwnerRecord, UarDivisionUserRecord } from '../../../data';
 import LoggingMonitoringDetailPage from '../../../components/LoggingMonitoringDetailPage';
 import UarPicPage from '../../../components/UarPicPage';
-import SystemMasterPage from '../../../components/SystemMasterPage';
-import UarLatestRolePage from '../../../components/UarLatestRolePage';
-import SchedulePage from '../../../components/SchedulePage';
-import UarSystemOwnerPage from '../../../components/UarSystemOwnerPage';
-import UarProgressPage from '../../../components/UarProgressPage';
-import UarSystemOwnerDetailPage from '../../../components/UarSystemOwnerDetailPage';
-import UarDivisionUserPage from '../../../components/UarDivisionUserPage';
-import UarDivisionUserDetailPage from '../../../components/UarDivisionUserDetailPage';
+import SystemMasterPage from '../features/system-master/SystemMasterPage';
+import UarLatestRolePage from '../features/uar/UarLatestRolePage';
+import SchedulePage from '../features/schedule/SchedulePage';
+import UarSystemOwnerPage from '../features/uar/UarSystemOwnerPage';
+import UarProgressPage from '../features/uar/UarProgressPage';
+import UarSystemOwnerDetailPage from '../features/uar/UarSystemOwnerDetailPage';
+import UarDivisionUserPage from '../features/uar/UarDivisionUserPage';
+import UarDivisionUserDetailPage from '../features/uar/UarDivisionUserDetailPage';
 
 export type ActiveView = 
   | 'dashboard'
