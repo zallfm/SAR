@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import LoginPage from './components/LoginPage';
-import Dashboard from './components/Dashboard';
+import Dashboard from './src/components/layout/Dashboard';
 import type { User } from './types';
 
 const App: React.FC = () => {
