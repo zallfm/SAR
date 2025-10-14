@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useMemo } from 'react';
-import type { Schedule } from '../data';
-import { formatDisplayDateToDdMm, isValidDdMm, formatDdMmToDisplayDate } from '../utils/dateFormatter';
+import type { Schedule } from '../../../../data';
+import { formatDisplayDateToDdMm, isValidDdMm, formatDdMmToDisplayDate } from '../../../../utils/dateFormatter';
 
 interface EditedScheduleState {
     id: number;

@@ -6,9 +6,9 @@ import { SearchIcon } from './icons/SearchIcon';
 import { ChevronDownIcon } from './icons/ChevronDownIcon';
 import { EditIcon } from './icons/EditIcon';
 import { DeleteIcon } from './icons/DeleteIcon';
-import SystemMasterModal from './SystemMasterModal';
-import ConfirmationModal from './ConfirmationModal';
-import InfoModal from './InfoModal';
+import SystemMasterModal from '../src/components/common/Modal/SystemMasterModal';
+import ConfirmationModal from '../src/components/common/Modal/ConfirmationModal';
+import InfoModal from '../src/components/common/Modal/InfoModal';
 
 interface SystemMasterPageProps {
     user: User;
