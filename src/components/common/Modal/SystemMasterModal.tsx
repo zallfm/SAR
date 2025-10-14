@@ -1,7 +1,7 @@
 import React, { useState, useEffect, useMemo } from 'react';
 import type { SystemMasterRecord } from '../../../../data';
 import type { User } from '../../../../types';
-import { CloseIcon } from '../../../../components/icons/CloseIcon';
+import { CloseIcon } from '../../icons/CloseIcon';
 
 interface SystemMasterModalProps {
     onClose: () => void;

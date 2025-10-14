@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
-import { SearchIcon } from './icons/SearchIcon';
-import { ActionIcon } from './icons/ActionIcon';
-import { ChevronDownIcon } from './icons/ChevronDownIcon';
+import { SearchIcon } from '../src/components/icons/SearchIcon';
+import { ActionIcon } from '../src/components/icons/ActionIcon';
+import { ChevronDownIcon } from '../src/components/icons/ChevronDownIcon';
 import AddApplicationModal from '../src/components/common/Modal/AddApplicationModal';
 import SuccessModal from '../src/components/common/Modal/SuccessModal';
 import { initialApplications } from '../data';

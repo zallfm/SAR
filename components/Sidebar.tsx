@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { ChevronDownIcon } from './icons/ChevronDownIcon';
+import { ChevronDownIcon } from '../src/components/icons/ChevronDownIcon';
 import type { ActiveView } from './Dashboard';
 
 interface SidebarProps {

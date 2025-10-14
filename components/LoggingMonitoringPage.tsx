@@ -1,7 +1,7 @@
 import React, { useState, useMemo } from 'react';
-import { SearchIcon } from './icons/SearchIcon';
-import { ChevronDownIcon } from './icons/ChevronDownIcon';
-import { DetailIcon } from './icons/DetailIcon';
+import { SearchIcon } from '../src/components/icons/SearchIcon';
+import { ChevronDownIcon } from '../src/components/icons/ChevronDownIcon';
+import { DetailIcon } from '../src/components/icons/DetailIcon';
 import { mockLogs } from '../data';
 import type { LogEntry } from '../data';
 import StatusPill from './StatusPill';

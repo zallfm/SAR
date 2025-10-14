@@ -1,8 +1,8 @@
 import React, { useState, useRef, useEffect } from 'react';
 import type { User } from '../types';
-import { SystemIcon } from './icons/SystemIcon';
-import { BellIcon } from './icons/BellIcon';
-import { ChevronDownIcon } from './icons/ChevronDownIcon';
+import { SystemIcon } from '../src/components/icons/SystemIcon';
+import { BellIcon } from '../src/components/icons/BellIcon';
+import { ChevronDownIcon } from '../src/components/icons/ChevronDownIcon';
 
 interface HeaderProps {
   user: User;

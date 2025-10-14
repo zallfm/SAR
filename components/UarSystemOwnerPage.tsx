@@ -1,11 +1,11 @@
 import React, { useState, useMemo } from 'react';
 import { initialUarSystemOwnerData, initialUarSystemOwnerDetailData } from '../data';
 import type { UarSystemOwnerRecord } from '../data';
-import { ChevronDownIcon } from './icons/ChevronDownIcon';
-import { SearchIcon } from './icons/SearchIcon';
-import { ProgressCheckIcon } from './icons/ProgressCheckIcon';
-import { SendIcon } from './icons/SendIcon';
-import { DownloadActionIcon } from './icons/DownloadActionIcon';
+import { ChevronDownIcon } from '../src/components/icons/ChevronDownIcon';
+import { SearchIcon } from '../src/components/icons/SearchIcon';
+import { ProgressCheckIcon } from '../src/components/icons/ProgressCheckIcon';
+import { SendIcon } from '../src/components/icons/SendIcon';
+import { DownloadActionIcon } from '../src/components/icons/DownloadActionIcon';
 import StatusPill from './StatusPill';
 
 interface UarSystemOwnerPageProps {

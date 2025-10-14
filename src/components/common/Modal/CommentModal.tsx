@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useRef } from 'react';
-import { CloseIcon } from '../../../../components/icons/CloseIcon';
+import { CloseIcon } from '../../icons/CloseIcon';
 import type { Comment } from '../../../../data';
 
 interface CommentModalProps {

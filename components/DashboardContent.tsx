@@ -1,9 +1,9 @@
 import React from 'react';
-import { ApprovedIcon } from './icons/ApprovedIcon';
-import { RevokedIcon } from './icons/RevokedIcon';
-import { AccessReviewCompleteIcon } from './icons/AccessReviewCompleteIcon';
-import { UpTrendIcon } from './icons/UpTrendIcon';
-import { DownTrendIcon } from './icons/DownTrendIcon';
+import { ApprovedIcon } from '../src/components/icons/ApprovedIcon';
+import { RevokedIcon } from '../src/components/icons/RevokedIcon';
+import { AccessReviewCompleteIcon } from '../src/components/icons/AccessReviewCompleteIcon';
+import { UpTrendIcon } from '../src/components/icons/UpTrendIcon';
+import { DownTrendIcon } from '../src/components/icons/DownTrendIcon';
 
 interface StatCardProps {
   title: string;

@@ -2,10 +2,10 @@
 import React, { useState } from 'react';
 import type { User } from '../types';
 import { MOCK_USERS } from '../constants';
-import { SystemIcon } from './icons/SystemIcon';
-import { EyeIcon } from './icons/EyeIcon';
-import { EyeSlashIcon } from './icons/EyeSlashIcon';
-import { ExclamationCircleIcon } from './icons/ExclamationCircleIcon';
+import { SystemIcon } from '../src/components/icons/SystemIcon';
+import { EyeIcon } from '../src/components/icons/EyeIcon';
+import { EyeSlashIcon } from '../src/components/icons/EyeSlashIcon';
+import { ExclamationCircleIcon } from '../src/components/icons/ExclamationCircleIcon';
 
 interface LoginPageProps {
   onLoginSuccess: (user: User) => void;

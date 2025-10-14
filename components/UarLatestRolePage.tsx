@@ -1,7 +1,7 @@
 import React, { useState, useMemo } from 'react';
 import { initialUarLatestRoles, roleInformationData } from '../data';
 import type { UarLatestRole } from '../data';
-import { ChevronDownIcon } from './icons/ChevronDownIcon';
+import { ChevronDownIcon } from '../src/components/icons/ChevronDownIcon';
 import RoleInfoModal from '../src/components/common/Modal/RoleInfoModal';
 
 declare var XLSX: any;

@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useMemo, useRef } from 'react';
-import { CloseIcon } from '../../../../components/icons/CloseIcon';
+import { CloseIcon } from '../../icons/CloseIcon';
 import { divisions } from '../../../../data';
 import type { PicUser } from '../../../../data';
 
