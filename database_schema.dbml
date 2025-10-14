@@ -1,1 +1,417 @@
-ÿÿÿûï¾ûï¾ûï¾ûï¾ûï¾ûï¾ûï¾ûï¾ûï¾ûï¾ûï¾ûï¾ûï¾ÿÿÿIÈ^™§è­,¬µé€ºØh®,Ú¶*'Eëâ{ÿÿÿ¾ûï¾ûï¾ûï¾ûï¾ûï¾ûï¾ûï¾ûï¾ûï¾ûï¾ûï¾ûï¾ûïÿÿ
+// SAR (System Access Review) Database Schema
+// Use this at https://dbdiagram.io to visualize the database structure
+// Using Business Keys instead of Auto-Increment IDs
+// Business Key Format: SAR[EntityType(3)][FunctionCode(3)][DeptCode(4)][yyyymmdd(8)][sequence(4)]
+// Example: SARTSCUCIO2025100001
+
+// ============================================
+// CORE AUTHENTICATION & USER MANAGEMENT
+// ============================================
+
+Table Users {
+  UserId nvarchar(22) [pk, note: 'Format: SARUSRXXXXXXXXYYYYMMDD0001']
+  Username nvarchar(50) [not null, unique]
+  Name nvarchar(100) [not null]
+  PasswordHash nvarchar(255) [not null]
+  Role nvarchar(20) [not null, note: 'Admin, DpH, System Owner']
+  IsActive bit [default: 1]
+  CreatedBy nvarchar(50)
+  CreatedDate datetime2 [default: `GETDATE()`]
+  ChangedBy nvarchar(50)
+  ChangedDate datetime2
+  
+  indexes {
+    Username
+    Role
+  }
+}
+
+Table Divisions {
+  DivisionId nvarchar(22) [pk, note: 'Format: SARDIVXXXXXXXXYYYYMMDD0001']
+  DivisionCode nvarchar(10) [not null, unique]
+  DivisionName nvarchar(100) [not null]
+  IsActive bit [default: 1]
+  CreatedBy nvarchar(50)
+  CreatedDate datetime2 [default: `GETDATE()`]
+  ChangedBy nvarchar(50)
+  ChangedDate datetime2
+}
+
+Table Departments {
+  DepartmentId nvarchar(22) [pk, note: 'Format: SARDPTXXXXXXXXYYYYMMDD0001']
+  DepartmentCode nvarchar(20) [not null, unique]
+  DepartmentName nvarchar(100) [not null]
+  DivisionId nvarchar(22) [not null, ref: > Divisions.DivisionId]
+  IsActive bit [default: 1]
+  CreatedBy nvarchar(50)
+  CreatedDate datetime2 [default: `GETDATE()`]
+  ChangedBy nvarchar(50)
+  ChangedDate datetime2
+}
+
+Table SecurityCenters {
+  SecurityCenterId nvarchar(22) [pk, note: 'Format: SARSECXXXXXXXXYYYYMMDD0001']
+  SecurityCenterCode nvarchar(30) [not null, unique]
+  SecurityCenterName nvarchar(100)
+  IsActive bit [default: 1]
+  CreatedBy nvarchar(50)
+  CreatedDate datetime2 [default: `GETDATE()`]
+  ChangedBy nvarchar(50)
+  ChangedDate datetime2
+}
+
+Table SystemUsers {
+  SystemUserId nvarchar(22) [pk, note: 'Format: SARSUSXXXXXXXXYYYYMMDD0001']
+  EmployeeId nvarchar(10) [not null, unique]
+  Name nvarchar(100) [not null]
+  Email nvarchar(100) [not null]
+  DivisionId nvarchar(22) [ref: > Divisions.DivisionId]
+  DepartmentId nvarchar(22) [ref: > Departments.DepartmentId]
+  Position nvarchar(50)
+  Company nvarchar(100)
+  IsActive bit [default: 1]
+  CreatedBy nvarchar(50)
+  CreatedDate datetime2 [default: `GETDATE()`]
+  ChangedBy nvarchar(50)
+  ChangedDate datetime2
+  
+  indexes {
+    EmployeeId
+    Email
+    DivisionId
+  }
+}
+
+Table PicUsers {
+  PicUserId nvarchar(22) [pk, note: 'Format: SARPICXXXXXXXXYYYYMMDD0001']
+  Name nvarchar(100) [not null]
+  Email nvarchar(100) [not null, unique]
+  DivisionId nvarchar(22) [ref: > Divisions.DivisionId]
+  IsActive bit [default: 1]
+  CreatedBy nvarchar(50)
+  CreatedDate datetime2 [default: `GETDATE()`]
+  ChangedBy nvarchar(50)
+  ChangedDate datetime2
+}
+
+// ============================================
+// APPLICATION & ROLE MANAGEMENT
+// ============================================
+
+Table Applications {
+  ApplicationId nvarchar(22) [pk, note: 'Format: SARAPPXXXXXXXXYYYYMMDD0001']
+  ApplicationCode nvarchar(20) [not null, unique]
+  ApplicationName nvarchar(200) [not null]
+  DivisionId nvarchar(22) [ref: > Divisions.DivisionId]
+  OwnerId nvarchar(22) [ref: > SystemUsers.SystemUserId]
+  CustodianId nvarchar(22) [ref: > SystemUsers.SystemUserId]
+  SecurityCenterId nvarchar(22) [ref: > SecurityCenters.SecurityCenterId]
+  Status nvarchar(10) [default: 'Active', note: 'Active or Inactive']
+  CreatedBy nvarchar(50)
+  CreatedDate datetime2 [default: `GETDATE()`]
+  ChangedBy nvarchar(50)
+  ChangedDate datetime2
+  
+  indexes {
+    ApplicationCode
+    Status
+    DivisionId
+  }
+}
+
+Table Roles {
+  RoleId nvarchar(22) [pk, note: 'Format: SARROLXXXXXXXXYYYYMMDD0001']
+  ApplicationId nvarchar(22) [not null, ref: > Applications.ApplicationId]
+  RoleCode nvarchar(50) [not null]
+  RoleDescription nvarchar(200)
+  IsActive bit [default: 1]
+  CreatedBy nvarchar(50)
+  CreatedDate datetime2 [default: `GETDATE()`]
+  ChangedBy nvarchar(50)
+  ChangedDate datetime2
+  
+  indexes {
+    (ApplicationId, RoleCode) [unique]
+  }
+}
+
+Table RolePermissions {
+  RolePermissionId nvarchar(22) [pk, note: 'Format: SARRPMXXXXXXXXYYYYMMDD0001']
+  RoleId nvarchar(22) [not null, ref: > Roles.RoleId]
+  PermissionName nvarchar(200) [not null]
+  PermissionDescription nvarchar(500)
+  IsActive bit [default: 1]
+  CreatedBy nvarchar(50)
+  CreatedDate datetime2 [default: `GETDATE()`]
+  ChangedBy nvarchar(50)
+  ChangedDate datetime2
+}
+
+Table UserRoleAssignments {
+  UserRoleAssignmentId nvarchar(22) [pk, note: 'Format: SARURAXXXXXXXXYYYYMMDD0001']
+  ApplicationId nvarchar(22) [not null, ref: > Applications.ApplicationId]
+  SystemUserId nvarchar(22) [not null, ref: > SystemUsers.SystemUserId]
+  Username nvarchar(50) [not null]
+  RoleId nvarchar(22) [not null, ref: > Roles.RoleId]
+  AssignedDate datetime2 [default: `GETDATE()`]
+  IsActive bit [default: 1]
+  CreatedBy nvarchar(50)
+  CreatedDate datetime2 [default: `GETDATE()`]
+  ChangedBy nvarchar(50)
+  ChangedDate datetime2
+  
+  indexes {
+    ApplicationId
+    SystemUserId
+    RoleId
+    Username
+  }
+}
+
+// ============================================
+// SYSTEM CONFIGURATION
+// ============================================
+
+Table SystemMaster {
+  SystemMasterId nvarchar(22) [pk, note: 'Format: SARSMSXXXXXXXXYYYYMMDD0001']
+  SystemType nvarchar(50) [not null]
+  SystemCode nvarchar(50) [not null]
+  ValidFrom date [not null]
+  ValidTo date [not null]
+  SystemValueText nvarchar(500)
+  SystemValueNum int
+  SystemValueTime time
+  IsActive bit [default: 1]
+  CreatedBy nvarchar(50)
+  CreatedDate datetime2 [default: `GETDATE()`]
+  ChangedBy nvarchar(50)
+  ChangedDate datetime2
+  
+  indexes {
+    (SystemType, SystemCode) [unique]
+  }
+}
+
+Table UarSchedules {
+  UarScheduleId nvarchar(22) [pk, note: 'Format: SARSCHXXXXXXXXYYYYMMDD0001']
+  ApplicationId nvarchar(22) [not null, ref: > Applications.ApplicationId]
+  ScheduleSyncStart date [not null]
+  ScheduleSyncEnd date [not null]
+  ScheduleUarDate date [not null]
+  Status nvarchar(10) [default: 'Active', note: 'Active or Inactive']
+  CreatedBy nvarchar(50)
+  CreatedDate datetime2 [default: `GETDATE()`]
+  ChangedBy nvarchar(50)
+  ChangedDate datetime2
+}
+
+// ============================================
+// UAR PROCESS MANAGEMENT
+// ============================================
+
+Table UarBatches {
+  UarBatchId nvarchar(22) [pk, note: 'Format: SARUBTXXXXXXXXYYYYMMDD0001']
+  UarCode nvarchar(30) [not null, unique, note: 'Format: UAR_MMYYYY_APPCODE']
+  ApplicationId nvarchar(22) [not null, ref: > Applications.ApplicationId]
+  UarScheduleId nvarchar(22) [ref: > UarSchedules.UarScheduleId]
+  BatchYear int [not null]
+  BatchMonth int [not null]
+  Status nvarchar(20) [default: 'InProgress', note: 'InProgress, Finished, Cancelled']
+  CreatedBy nvarchar(50)
+  CreatedDate datetime2 [default: `GETDATE()`]
+  ChangedBy nvarchar(50)
+  ChangedDate datetime2
+  CompletedDate datetime2
+  
+  indexes {
+    UarCode
+    ApplicationId
+    Status
+    (BatchYear, BatchMonth)
+  }
+}
+
+Table UarSystemOwnerReviews {
+  UarSystemOwnerReviewId nvarchar(22) [pk, note: 'Format: SARSORXXXXXXXXYYYYMMDD0001']
+  UarBatchId nvarchar(22) [not null, ref: > UarBatches.UarBatchId]
+  DivisionId nvarchar(22) [not null, ref: > Divisions.DivisionId]
+  TotalUsers int [default: 0]
+  ReviewedUsers int [default: 0]
+  PercentComplete decimal(5,2) [default: 0]
+  Status nvarchar(20) [default: 'InProgress', note: 'InProgress or Finished']
+  CreatedBy nvarchar(50)
+  CreatedDate datetime2 [default: `GETDATE()`]
+  ChangedBy nvarchar(50)
+  ChangedDate datetime2
+  CompletedDate datetime2
+  
+  indexes {
+    UarBatchId
+    DivisionId
+    Status
+  }
+}
+
+Table UarSystemOwnerReviewDetails {
+  UarSystemOwnerReviewDetailId nvarchar(22) [pk, note: 'Format: SARSODXXXXXXXXYYYYMMDD0001']
+  UarSystemOwnerReviewId nvarchar(22) [not null, ref: > UarSystemOwnerReviews.UarSystemOwnerReviewId]
+  UserRoleAssignmentId nvarchar(22) [not null, ref: > UserRoleAssignments.UserRoleAssignmentId]
+  SystemUserId nvarchar(22) [not null, ref: > SystemUsers.SystemUserId]
+  IsReviewed bit [default: 0]
+  ReviewedBy nvarchar(22) [ref: > Users.UserId]
+  ReviewedDate datetime2
+  ReviewStatus nvarchar(20) [note: 'Approved, Revoked, Pending']
+  CreatedBy nvarchar(50)
+  CreatedDate datetime2 [default: `GETDATE()`]
+  ChangedBy nvarchar(50)
+  ChangedDate datetime2
+  
+  indexes {
+    UarSystemOwnerReviewId
+    SystemUserId
+    IsReviewed
+  }
+}
+
+Table UarDivisionUserReviews {
+  UarDivisionUserReviewId nvarchar(22) [pk, note: 'Format: SARDURXXXXXXXXYYYYMMDD0001']
+  UarBatchId nvarchar(22) [not null, ref: > UarBatches.UarBatchId]
+  DivisionId nvarchar(22) [not null, ref: > Divisions.DivisionId]
+  TotalUsers int [default: 0]
+  ReviewedUsers int [default: 0]
+  PercentComplete decimal(5,2) [default: 0]
+  Status nvarchar(20) [default: 'InProgress', note: 'InProgress or Finished']
+  CreatedBy nvarchar(50)
+  CreatedDate datetime2 [default: `GETDATE()`]
+  ChangedBy nvarchar(50)
+  ChangedDate datetime2
+  CompletedDate datetime2
+  
+  indexes {
+    UarBatchId
+    DivisionId
+    Status
+  }
+}
+
+Table UarDivisionUserReviewDetails {
+  UarDivisionUserReviewDetailId nvarchar(22) [pk, note: 'Format: SARDUDXXXXXXXXYYYYMMDD0001']
+  UarDivisionUserReviewId nvarchar(22) [not null, ref: > UarDivisionUserReviews.UarDivisionUserReviewId]
+  UserRoleAssignmentId nvarchar(22) [not null, ref: > UserRoleAssignments.UserRoleAssignmentId]
+  SystemUserId nvarchar(22) [not null, ref: > SystemUsers.SystemUserId]
+  UserStatus nvarchar(20) [note: 'Mutation, Rotation, Fixed']
+  IsReviewed bit [default: 0]
+  ReviewedBy nvarchar(22) [ref: > Users.UserId]
+  ReviewedDate datetime2
+  ReviewStatus nvarchar(20) [note: 'Approved, Revoked, Pending']
+  CreatedBy nvarchar(50)
+  CreatedDate datetime2 [default: `GETDATE()`]
+  ChangedBy nvarchar(50)
+  ChangedDate datetime2
+  
+  indexes {
+    UarDivisionUserReviewId
+    SystemUserId
+    IsReviewed
+  }
+}
+
+Table UarProgress {
+  UarProgressId nvarchar(22) [pk, note: 'Format: SARPRGXXXXXXXXYYYYMMDD0001']
+  UarBatchId nvarchar(22) [not null, ref: > UarBatches.UarBatchId]
+  DivisionId nvarchar(22) [ref: > Divisions.DivisionId]
+  DepartmentId nvarchar(22) [ref: > Departments.DepartmentId]
+  ApplicationId nvarchar(22) [ref: > Applications.ApplicationId]
+  ProgressType nvarchar(20) [not null, note: 'Division, Department, System']
+  TotalUsers int [default: 0]
+  ApprovedUsers int [default: 0]
+  ReviewedUsers int [default: 0]
+  SoApprovedUsers int [default: 0]
+  PercentComplete decimal(5,2) [default: 0]
+  CreatedBy nvarchar(50)
+  CreatedDate datetime2 [default: `GETDATE()`]
+  ChangedBy nvarchar(50)
+  ChangedDate datetime2
+  
+  indexes {
+    UarBatchId
+    DivisionId
+    DepartmentId
+    ApplicationId
+    ProgressType
+  }
+}
+
+// ============================================
+// COMMENTS & FEEDBACK
+// ============================================
+
+Table Comments {
+  CommentId nvarchar(22) [pk, note: 'Format: SARCMTXXXXXXXXYYYYMMDD0001']
+  EntityType nvarchar(50) [not null, note: 'UarSystemOwnerDetail or UarDivisionUserDetail']
+  EntityId nvarchar(22) [not null, note: 'ID from either table']
+  UserId nvarchar(22) [not null, ref: > Users.UserId]
+  CommentText nvarchar(1000) [not null]
+  CreatedBy nvarchar(50)
+  CreatedDate datetime2 [default: `GETDATE()`]
+  ChangedBy nvarchar(50)
+  ChangedDate datetime2
+  
+  indexes {
+    (EntityType, EntityId)
+    UserId
+  }
+}
+
+// ============================================
+// LOGGING & MONITORING
+// ============================================
+
+Table LogEntries {
+  LogEntryId nvarchar(22) [pk, note: 'Format: SARLOGXXXXXXXXYYYYMMDD0001']
+  ProcessId nvarchar(20) [not null]
+  UserId nvarchar(22) [ref: > Users.UserId]
+  Module nvarchar(50) [not null]
+  FunctionName nvarchar(100) [not null]
+  StartDate datetime2 [not null]
+  EndDate datetime2
+  Status nvarchar(20) [default: 'InProgress', note: 'Success, Error, InProgress']
+  ErrorMessage nvarchar(1000)
+  CreatedBy nvarchar(50)
+  CreatedDate datetime2 [default: `GETDATE()`]
+  ChangedBy nvarchar(50)
+  ChangedDate datetime2
+  
+  indexes {
+    ProcessId
+    Module
+    Status
+    StartDate
+  }
+}
+
+Table LogDetails {
+  LogDetailId nvarchar(22) [pk, note: 'Format: SARLGDXXXXXXXXYYYYMMDD0001']
+  LogEntryId nvarchar(22) [not null, ref: > LogEntries.LogEntryId]
+  MessageDateTime datetime2 [not null]
+  Location nvarchar(200) [not null]
+  MessageDetail nvarchar(2000) [not null]
+  CreatedBy nvarchar(50)
+  CreatedDate datetime2 [default: `GETDATE()`]
+  ChangedBy nvarchar(50)
+  ChangedDate datetime2
+}
+
+// ============================================
+// ID SEQUENCE MANAGEMENT
+// ============================================
+
+Table IdSequences {
+  EntityType nvarchar(10) [pk, note: 'USR, DIV, DPT, APP, etc.']
+  CurrentDate date [not null]
+  CurrentSequence int [not null]
+  CreatedBy nvarchar(50)
+  CreatedDate datetime2 [default: `GETDATE()`]
+  ChangedBy nvarchar(50)
+  ChangedDate datetime2
+}

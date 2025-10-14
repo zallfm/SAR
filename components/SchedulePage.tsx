@@ -237,7 +237,7 @@ const SchedulePage: React.FC = () => {
                         <tbody>
                             {currentSchedules.map((schedule) => (
                                 <tr key={schedule.id} className="bg-white border-b border-gray-200 last:border-b-0 hover:bg-gray-50">
-                                    <td className="px-4 py-2 whitespace-nowrap text-sm">
+                                    <td className="px-4 py-3 whitespace-nowrap text-sm">
                                         <input 
                                             type="checkbox" 
                                             className="h-4 w-4 rounded border-gray-300 text-blue-600 focus:ring-blue-500" 
@@ -246,11 +246,11 @@ const SchedulePage: React.FC = () => {
                                             aria-label={`Select row ${schedule.id}`}
                                         />
                                     </td>
-                                    <td className="px-4 py-4 whitespace-nowrap text-gray-900 text-sm">{schedule.applicationId}</td>
-                                    <td className="px-4 py-4 whitespace-nowrap text-sm">{schedule.applicationName}</td>
-                                    <td className="px-4 py-4 whitespace-nowrap text-sm">{schedule.scheduleSync}</td>
-                                    <td className="px-4 py-4 whitespace-nowrap text-sm">{schedule.scheduleUar}</td>
-                                    <td className="px-4 py-4 whitespace-nowrap text-sm">
+                                    <td className="px-4 py-3 whitespace-nowrap text-gray-900 text-sm">{schedule.applicationId}</td>
+                                    <td className="px-4 py-3 whitespace-nowrap text-sm">{schedule.applicationName}</td>
+                                    <td className="px-4 py-3 whitespace-nowrap text-sm">{schedule.scheduleSync}</td>
+                                    <td className="px-4 py-3 whitespace-nowrap text-sm">{schedule.scheduleUar}</td>
+                                    <td className="px-4 py-3 whitespace-nowrap text-sm">
                                         <button
                                             type="button"
                                             onClick={() => handleOpenStatusConfirm(schedule)}

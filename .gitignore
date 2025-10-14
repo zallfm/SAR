@@ -22,3 +22,10 @@ dist-ssr
 *.njsproj
 *.sln
 *.sw?
+
+# Database schema files
+database_schema.dbml
+DATABASE_SCHEMA_DOCUMENTATION.md
+DATABASE_README.md
+database_schema.sql
+database_schema.dbml
