@@ -1,0 +1,5 @@
+{
+  "name": "System Authorization Review",
+  "description": "A login page for the System Authorization Review application, featuring role-based access control for admin, DpH, and System Owner roles.",
+  "requestFramePermissions": []
+}

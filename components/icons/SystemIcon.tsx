@@ -1,0 +1,32 @@
+
+import React from 'react';
+
+export const SystemIcon: React.FC<React.SVGProps<SVGSVGElement>> = (props) => (
+  <svg
+    xmlns="http://www.w3.org/2000/svg"
+    viewBox="0 0 200 220"
+    {...props}
+  >
+    <path
+      d="M100 0L10 40v120c0 30 90 60 90 60s90-30 90-60V40L100 0z"
+      fill="#0F3460"
+    />
+    <path
+      d="M100 15a4 4 0 00-4 4v10a12 12 0 1024 0V19a4 4 0 00-4-4h-16zm8 20a4 4 0 110-8 4 4 0 010 8z"
+      fill="#f8fafc"
+    />
+    <circle cx="80" cy="90" r="20" fill="#60A5FA" />
+    <path
+      d="M50 145c0-20 60-20 60 0v5H50v-5z"
+      fill="#60A5FA"
+    />
+    <rect x="120" y="70" width="60" height="80" rx="10" fill="#f8fafc" />
+    <path
+      d="M130 85l5 5 10-10m-15 30l5 5 10-10m-15 30l5 5 10-10"
+      stroke="#0F3460"
+      strokeWidth="5"
+      strokeLinecap="round"
+      fill="none"
+    />
+  </svg>
+);
