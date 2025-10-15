@@ -58,7 +58,7 @@ const UarPicModal: React.FC<UarPicModalProps> = ({ onClose, onSave, picToEdit })
             if (email.includes('@')) {
                 // Full email address provided
                 if (!/^[^\s@]+@toyota\.co\.id$/.test(email)) {
-                    return 'Email must use @toyota.co.id domain.';
+                    return 'You must input email name @toyota.co.id';
                 }
             } else {
                 // No domain provided, check if username part is valid
@@ -169,7 +169,7 @@ const UarPicModal: React.FC<UarPicModalProps> = ({ onClose, onSave, picToEdit })
                                 className={`w-full px-3 py-2 border rounded-md shadow-sm focus:outline-none focus:ring-1 ${emailError ? 'border-red-500 focus:ring-red-500 focus:border-red-500' : 'border-gray-300 focus:ring-blue-500 focus:border-blue-500'}`}
                             />
                             {email && !email.includes('@') && !emailError && (
-                                <span className="absolute inset-y-0 right-3 flex items-center text-gray-400 pointer-events-none">
+                                <span className="absolute inset-y-0 right-3 flex items-center text-black-400 pointer-events-none">
                                     @toyota.co.id
                                 </span>
                             )}

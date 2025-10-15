@@ -3,6 +3,7 @@ import { initialUarLatestRoles, roleInformationData } from '../../../../data';
 import type { UarLatestRole } from '../../../../data';
 import { ChevronDownIcon } from '../../icons/ChevronDownIcon';
 import RoleInfoModal from '../../common/Modal/RoleInfoModal';
+import { DownloadButton } from '../../common/Button/DownloadButton';
 
 declare var XLSX: any;
 
@@ -104,12 +105,7 @@ const UarLatestRolePage: React.FC = () => {
                             </div>
                         </div>
                     </div>
-                    <button
-                        onClick={handleDownload}
-                        className="bg-blue-600 text-white font-semibold px-6 py-2 rounded-lg hover:bg-blue-700 transition-colors"
-                    >
-                        Download
-                    </button>
+                    <DownloadButton style={{ paddingLeft: "24px", paddingRight: "24px" }}className='bg-blue-600 text-white font-semibold py-2 rounded-lg hover:bg-blue-700 transition-colors' onClick={handleDownload}/>
                 </div>
 
                 <div className="overflow-x-auto">

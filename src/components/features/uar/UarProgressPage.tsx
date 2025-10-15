@@ -257,22 +257,22 @@ const UarProgressPage: React.FC = () => {
     const divisionOptions = useMemo(() => [...new Set(uarDivisionProgress.map(d => d.label))], []);
 
     const departmentOptions = useMemo(() => {
-        const relevantDepartments = drilldownDivision 
-            ? uarDepartmentProgress.filter(d => d.division === drilldownDivision)
+        const relevantDepartments = selectedDivisionFilter 
+            ? uarDepartmentProgress.filter(d => d.division === selectedDivisionFilter)
             : uarDepartmentProgress;
         return [...new Set(relevantDepartments.map(d => d.label))];
-    }, [drilldownDivision]);
+    }, [selectedDivisionFilter]);
 
     const systemOptions = useMemo(() => {
         let relevantSystems = uarSystemProgressData;
-        if (drilldownDivision) {
-            relevantSystems = relevantSystems.filter(d => d.division === drilldownDivision);
+        if (selectedDivisionFilter) {
+            relevantSystems = relevantSystems.filter(d => d.division === selectedDivisionFilter);
         }
         if (selectedDepartmentFilter) {
             relevantSystems = relevantSystems.filter(d => d.department === selectedDepartmentFilter);
         }
         return [...new Set(relevantSystems.map(d => d.label))];
-    }, [drilldownDivision, selectedDepartmentFilter]);
+    }, [selectedDivisionFilter, selectedDepartmentFilter]);
 
     const departmentChartData = useMemo(() => {
         if (!drilldownDivision) return [];
@@ -282,8 +282,8 @@ const UarProgressPage: React.FC = () => {
     const systemAppsChartData = useMemo(() => {
         let filteredData = uarSystemProgressData;
         
-        if (drilldownDivision) {
-            filteredData = filteredData.filter(app => app.division === drilldownDivision);
+        if (selectedDivisionFilter) {
+            filteredData = filteredData.filter(app => app.division === selectedDivisionFilter);
         }
         
         if (selectedDepartmentFilter) {
@@ -291,7 +291,7 @@ const UarProgressPage: React.FC = () => {
         }
 
         return filteredData;
-    }, [drilldownDivision, selectedDepartmentFilter]);
+    }, [selectedDivisionFilter, selectedDepartmentFilter]);
 
     const handleDivisionBarClick = (divisionLabel: string) => {
         setDrilldownDivision(divisionLabel);
@@ -313,7 +313,12 @@ const UarProgressPage: React.FC = () => {
 
     const handleDivisionFilterChange = (value: string) => {
         setSelectedDivisionFilter(value);
-        setDrilldownDivision(value || null);
+        // Don't set drilldownDivision here - only highlight the selected division
+        // Drilldown only happens when clicking the bar
+        if (!value) {
+            // If clearing the filter and we're drilled down, go back to division view
+            setDrilldownDivision(null);
+        }
         setSelectedDepartmentFilter('');
         setSelectedSystemFilter('');
     };
@@ -332,13 +337,16 @@ const UarProgressPage: React.FC = () => {
         if (selectedDepartmentFilter) {
             return `${title} (Department: ${selectedDepartmentFilter})`;
         }
+        if (selectedDivisionFilter && !drilldownDivision) {
+            // When a division filter is selected without drilldown, show the division in subtitle
+            return `${title} (Division: ${selectedDivisionFilter})`;
+        }
         if (drilldownDivision) {
-            // When a division is selected, the data is filtered, but we don't add a subtitle.
-            // The context is clear from the Department chart above it.
+            // When drilled down to department view, context is clear from Department chart
             return title;
         }
         return `${title} (All)`;
-    }, [drilldownDivision, selectedDepartmentFilter]);
+    }, [selectedDivisionFilter, drilldownDivision, selectedDepartmentFilter]);
     
     const isDrilledDown = !!drilldownDivision;
 

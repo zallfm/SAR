@@ -263,8 +263,8 @@ export interface Schedule {
 }
 
 export const initialSchedules: Schedule[] = [
-  { id: 1, applicationId: 'IPPCS', applicationName: 'IPPCS', scheduleSync: '07 June - 12 Desember', scheduleUar: '13 June', status: 'Active' },
-  { id: 2, applicationId: 'IPPCS', applicationName: 'IPPCS', scheduleSync: '07 December - 12 Dec', scheduleUar: '13 June', status: 'Active' },
+  { id: 1, applicationId: 'IPPCS', applicationName: 'IPPCS', scheduleSync: '07 June - 12 December', scheduleUar: '13 June', status: 'Active' },
+  { id: 2, applicationId: 'IPPCS', applicationName: 'IPPCS', scheduleSync: '07 December - 12 December', scheduleUar: '13 June', status: 'Active' },
   { id: 3, applicationId: 'TVEST', applicationName: 'TVEST', scheduleSync: '06 June - 09 June', scheduleUar: '13 June', status: 'Active' },
   { id: 4, applicationId: 'IFAST', applicationName: 'IFAST', scheduleSync: '07 June - 12 June', scheduleUar: '03 June', status: 'Active' },
   { id: 5, applicationId: 'RCS', applicationName: 'RCS', scheduleSync: '07 June - 12 June', scheduleUar: '03 June', status: 'Active' },

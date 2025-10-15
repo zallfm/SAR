@@ -7,6 +7,8 @@ import { ProgressCheckIcon } from '../../icons/ProgressCheckIcon';
 import { SendIcon } from '../../icons/SendIcon';
 import { DownloadActionIcon } from '../../icons/DownloadActionIcon';
 import StatusPill from '../StatusPill/StatusPill';
+import { ActionReview } from '../../common/Button/ActionReview';
+import { ActionDownload } from '../../common/Button/ActionDownload';
 
 interface UarDivisionUserPageProps {
     onReview: (record: UarDivisionUserRecord) => void;
@@ -180,12 +182,12 @@ const UarDivisionUserPage: React.FC<UarDivisionUserPageProps> = ({ onReview }) =
                                     <td className="px-4 py-4 whitespace-nowrap text-sm">
                                         <div className="flex items-center gap-3">
                                             <div className="group relative">
-                                                <button onClick={() => onReview(record)} className="text-gray-500 hover:text-blue-600"><SendIcon /></button>
-                                                <div className="absolute bottom-full mb-2 left-1/2 -translate-x-1/2 w-max px-2 py-1 bg-blue-600 text-white text-xs rounded opacity-0 group-hover:opacity-100 transition-opacity whitespace-nowrap z-10">Review</div>
+                                                {/* Button Review */}
+                                                <ActionReview onClick={() => onReview(record)}/>
                                             </div>
                                             <div className="group relative">
-                                                <button className="text-gray-500 hover:text-blue-600"><DownloadActionIcon /></button>
-                                                <div className="absolute bottom-full mb-2 left-1/2 -translate-x-1/2 w-max px-2 py-1 bg-blue-600 text-white text-xs rounded opacity-0 group-hover:opacity-100 transition-opacity whitespace-nowrap z-10">Download</div>
+                                                {/* Button download */}
+                                                <ActionDownload />
                                             </div>
                                         </div>
                                     </td>

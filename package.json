@@ -11,7 +11,10 @@
     "test:watch": "jest --watch"
   },
   "dependencies": {
+    "clsx": "^2.1.1",
+    "dayjs": "^1.11.18",
     "react": "^19.2.0",
+    "react-datepicker": "^8.7.0",
     "react-dom": "^19.2.0"
   },
   "devDependencies": {
