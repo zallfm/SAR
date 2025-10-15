@@ -1,10 +1,10 @@
 import React, { useState, useMemo } from 'react';
-import { SearchIcon } from '../src/components/icons/SearchIcon';
-import { ChevronDownIcon } from '../src/components/icons/ChevronDownIcon';
-import { DetailIcon } from '../src/components/icons/DetailIcon';
-import { mockLogs } from '../data';
-import type { LogEntry } from '../data';
-import StatusPill from './StatusPill';
+import { SearchIcon } from '../../../components/icons/SearchIcon';
+import { ChevronDownIcon } from '../../../components/icons/ChevronDownIcon';
+import { DetailIcon } from '../../../components/icons/DetailIcon';
+import { mockLogs } from '../../../../data';
+import type { LogEntry } from '../../../../data';
+import StatusPill from '../StatusPill/StatusPill';
 
 declare var XLSX: any;
 

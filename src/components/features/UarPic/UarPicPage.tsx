@@ -1,13 +1,13 @@
 import React, { useState, useMemo } from 'react';
-import { SearchIcon } from '../src/components/icons/SearchIcon';
-import { ChevronDownIcon } from '../src/components/icons/ChevronDownIcon';
-import { EditIcon } from '../src/components/icons/EditIcon';
-import { DeleteIcon } from '../src/components/icons/DeleteIcon';
-import { initialPicUsers, divisions } from '../data';
-import type { PicUser } from '../data';
-import UarPicModal from '../src/components/common/Modal/UarPicModal';
-import ConfirmationModal from '../src/components/common/Modal/ConfirmationModal';
-import InfoModal from '../src/components/common/Modal/InfoModal';
+import { SearchIcon } from '../../icons/SearchIcon';
+import { ChevronDownIcon } from '../../icons/ChevronDownIcon';
+import { EditIcon } from '../../icons/EditIcon';
+import { DeleteIcon } from '../../icons/DeleteIcon';
+import { initialPicUsers, divisions } from '../../../../data';
+import type { PicUser } from '../../../../data';
+import UarPicModal from '../../common/Modal/UarPicModal';
+import ConfirmationModal from '../../common/Modal/ConfirmationModal';
+import InfoModal from '../../common/Modal/InfoModal';
 
 const UarPicPage: React.FC = () => {
     const [pics, setPics] = useState<PicUser[]>(initialPicUsers);

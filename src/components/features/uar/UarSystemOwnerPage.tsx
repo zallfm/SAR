@@ -6,7 +6,7 @@ import { SearchIcon } from '../../icons/SearchIcon';
 import { ProgressCheckIcon } from '../../icons/ProgressCheckIcon';
 import { SendIcon } from '../../icons/SendIcon';
 import { DownloadActionIcon } from '../../icons/DownloadActionIcon';
-import StatusPill from '../../../../components/StatusPill';
+import StatusPill from '../StatusPill/StatusPill';
 
 interface UarSystemOwnerPageProps {
     onReview: (record: UarSystemOwnerRecord) => void;

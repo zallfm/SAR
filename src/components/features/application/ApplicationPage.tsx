@@ -7,7 +7,7 @@ import SuccessModal from '../../common/Modal/SuccessModal';
 import { initialApplications } from '../../../../data';
 import type { Application } from '../../../../data';
 import StatusConfirmationModal from '../../common/Modal/StatusConfirmationModal';
-import StatusPill from '../../../../components/StatusPill';
+import StatusPill from '../StatusPill/StatusPill';
 
 const ApplicationPage: React.FC = () => {
     const [applications, setApplications] = useState<Application[]>(initialApplications);

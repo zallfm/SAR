@@ -11,7 +11,7 @@ import SetScheduleModal from '../../common/Modal/SetScheduleModal';
 import SuccessModal from '../../common/Modal/SuccessModal';
 import StatusConfirmationModal from '../../common/Modal/StatusConfirmationModal';
 import { formatDdMmToDisplayDate } from '../../../../utils/dateFormatter';
-import StatusPill from '../../../../components/StatusPill';
+import StatusPill from '../StatusPill/StatusPill';
 
 const SchedulePage: React.FC = () => {
     const [schedules, setSchedules] = useState<Schedule[]>(initialSchedules);
