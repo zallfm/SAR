@@ -10,7 +10,7 @@ const monthNameToNumber: { [key: string]: string } = {
     'september': '09', 'sep': '09',
     'october': '10', 'oct': '10',
     'november': '11', 'nov': '11',
-    'desember': '12', 'december': '12', 'dec': '12'
+    'december': '12', 'dec': '12'
 };
 
 const monthNumberToName: { [key: string]: string } = {
@@ -25,7 +25,7 @@ const monthNumberToName: { [key: string]: string } = {
     '09': 'September',
     '10': 'October',
     '11': 'November',
-    '12': 'Desember'
+    '12': 'December'
 };
 
 /**

@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useMemo } from 'react';
-import { CloseIcon } from '../../../../components/icons/CloseIcon';
+import { CloseIcon } from '../../icons/CloseIcon';
 import { systemUsers, securityCenters } from '../../../../data';
 import type { SystemUser, Application } from '../../../../data';
 

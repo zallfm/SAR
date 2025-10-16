@@ -1,10 +1,11 @@
 import React, { useState, useMemo } from 'react';
-import { SearchIcon } from './icons/SearchIcon';
-import { ChevronDownIcon } from './icons/ChevronDownIcon';
-import { DetailIcon } from './icons/DetailIcon';
-import { mockLogs } from '../data';
-import type { LogEntry } from '../data';
-import StatusPill from './StatusPill';
+import { SearchIcon } from '../../../components/icons/SearchIcon';
+import { ChevronDownIcon } from '../../../components/icons/ChevronDownIcon';
+import { DetailIcon } from '../../../components/icons/DetailIcon';
+import { mockLogs } from '../../../../data';
+import type { LogEntry } from '../../../../data';
+import StatusPill from '../StatusPill/StatusPill';
+import { DownloadButton } from '../../common/Button/DownloadButton';
 
 declare var XLSX: any;
 
@@ -201,13 +202,7 @@ const LoggingMonitoringPage: React.FC<{ onViewDetail: (log: LogEntry) => void }>
                         <option value="Error">Error</option>
                         <option value="InProgress">In Progress</option>
                     </FilterSelect>
-                    <button 
-                        type="button"
-                        onClick={handleDownload}
-                        className="bg-blue-600 text-white font-semibold px-6 py-2.5 rounded-lg hover:bg-blue-700 transition-colors text-sm whitespace-nowrap"
-                    >
-                        Download
-                    </button>
+                    <DownloadButton style={{ paddingLeft: "24px", paddingRight: "24px" }} className='bg-blue-600 text-white font-semibold py-2.5 rounded-lg hover:bg-blue-700 transition-colors text-sm whitespace-nowrap' onClick={handleDownload}/>
                 </div>
 
                 <div className="overflow-x-auto">

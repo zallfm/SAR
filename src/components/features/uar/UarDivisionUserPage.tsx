@@ -1,19 +1,21 @@
 import React, { useState, useMemo } from 'react';
-import { initialUarSystemOwnerData, initialUarSystemOwnerDetailData } from '../data';
-import type { UarSystemOwnerRecord } from '../data';
-import { ChevronDownIcon } from './icons/ChevronDownIcon';
-import { SearchIcon } from './icons/SearchIcon';
-import { ProgressCheckIcon } from './icons/ProgressCheckIcon';
-import { SendIcon } from './icons/SendIcon';
-import { DownloadActionIcon } from './icons/DownloadActionIcon';
-import StatusPill from './StatusPill';
+import { initialUarDivisionUserData, initialUarDivisionUserReviewData } from '../../../../data';
+import type { UarDivisionUserRecord } from '../../../../data';
+import { ChevronDownIcon } from '../../icons/ChevronDownIcon';
+import { SearchIcon } from '../../icons/SearchIcon';
+import { ProgressCheckIcon } from '../../icons/ProgressCheckIcon';
+import { SendIcon } from '../../icons/SendIcon';
+import { DownloadActionIcon } from '../../icons/DownloadActionIcon';
+import StatusPill from '../StatusPill/StatusPill';
+import { ActionReview } from '../../common/Button/ActionReview';
+import { ActionDownload } from '../../common/Button/ActionDownload';
 
-interface UarSystemOwnerPageProps {
-    onReview: (record: UarSystemOwnerRecord) => void;
+interface UarDivisionUserPageProps {
+    onReview: (record: UarDivisionUserRecord) => void;
 }
 
-const UarSystemOwnerPage: React.FC<UarSystemOwnerPageProps> = ({ onReview }) => {
-    const [records] = useState<UarSystemOwnerRecord[]>(initialUarSystemOwnerData);
+const UarDivisionUserPage: React.FC<UarDivisionUserPageProps> = ({ onReview }) => {
+    const [records] = useState<UarDivisionUserRecord[]>(initialUarDivisionUserData);
     
     // Filters
     const [periodFilter, setPeriodFilter] = useState('');
@@ -26,10 +28,10 @@ const UarSystemOwnerPage: React.FC<UarSystemOwnerPageProps> = ({ onReview }) => 
     // Pagination
     const [currentPage, setCurrentPage] = useState(1);
     const [itemsPerPage, setItemsPerPage] = useState(10);
-
+    
     const progressData = useMemo(() => {
         const progressMap = new Map<string, { reviewed: number; total: number }>();
-        initialUarSystemOwnerDetailData.forEach(detail => {
+        initialUarDivisionUserReviewData.forEach(detail => {
             const progress = progressMap.get(detail.uarId) || { reviewed: 0, total: 0 };
             progress.total += 1;
             if (detail.reviewed) {
@@ -66,7 +68,7 @@ const UarSystemOwnerPage: React.FC<UarSystemOwnerPageProps> = ({ onReview }) => 
             const periodMatch = (() => {
                 if (!periodFilter) return true; // periodFilter is "YYYY-MM"
                 const parts = record.uarId.split('_');
-                if (parts.length > 1 && parts[1].length === 6 && /^\d+$/.test(parts[1])) {
+                 if (parts.length > 1 && parts[1].length === 6 && /^\d+$/.test(parts[1])) {
                     const month = parts[1].substring(0, 2);
                     const year = `20${parts[1].substring(2)}`;
                     const recordPeriod = `${year}-${month}`;
@@ -88,7 +90,7 @@ const UarSystemOwnerPage: React.FC<UarSystemOwnerPageProps> = ({ onReview }) => 
 
     return (
         <div>
-            <h2 className="text-3xl font-bold text-gray-800 mb-6">UAR System Owner</h2>
+            <h2 className="text-3xl font-bold text-gray-800 mb-6">UAR Division User</h2>
             
             <div className="bg-white p-6 rounded-xl border border-gray-200 shadow-sm">
                 <div className="mb-6">
@@ -168,10 +170,10 @@ const UarSystemOwnerPage: React.FC<UarSystemOwnerPageProps> = ({ onReview }) => 
                                     ? `${Math.round((progress.reviewed / progress.total) * 100)}% (${progress.reviewed} of ${progress.total})`
                                     : '0% (0 of 0)';
                                 const status: 'Finished' | 'InProgress' = (progress && progress.reviewed === progress.total) ? 'Finished' : 'InProgress';
-
+                                
                                 return (
                                 <tr key={record.id} className="bg-white border-b border-gray-200 last:border-b-0 hover:bg-gray-50">
-                                    <td className="px-4 py-4 whitespace-nowrap text-sm font-medium text-gray-900">{record.uarId}</td>
+                                    <td className="px-4 py-4 whitespace-nowrap font-medium text-gray-900 text-sm">{record.uarId}</td>
                                     <td className="px-4 py-4 whitespace-nowrap text-sm">{record.divisionOwner}</td>
                                     <td className="px-4 py-4 whitespace-nowrap text-sm">{percentComplete}</td>
                                     <td className="px-4 py-4 whitespace-nowrap text-sm">{record.createDate}</td>
@@ -180,12 +182,12 @@ const UarSystemOwnerPage: React.FC<UarSystemOwnerPageProps> = ({ onReview }) => 
                                     <td className="px-4 py-4 whitespace-nowrap text-sm">
                                         <div className="flex items-center gap-3">
                                             <div className="group relative">
-                                                <button onClick={() => onReview(record)} className="text-gray-500 hover:text-blue-600"><SendIcon /></button>
-                                                <div className="absolute bottom-full mb-2 left-1/2 -translate-x-1/2 w-max px-2 py-1 bg-blue-600 text-white text-xs rounded opacity-0 group-hover:opacity-100 transition-opacity whitespace-nowrap z-10">Review</div>
+                                                {/* Button Review */}
+                                                <ActionReview onClick={() => onReview(record)}/>
                                             </div>
                                             <div className="group relative">
-                                                <button className="text-gray-500 hover:text-blue-600"><DownloadActionIcon /></button>
-                                                <div className="absolute bottom-full mb-2 left-1/2 -translate-x-1/2 w-max px-2 py-1 bg-blue-600 text-white text-xs rounded opacity-0 group-hover:opacity-100 transition-opacity whitespace-nowrap z-10">Download</div>
+                                                {/* Button download */}
+                                                <ActionDownload />
                                             </div>
                                         </div>
                                     </td>
@@ -242,4 +244,4 @@ const UarSystemOwnerPage: React.FC<UarSystemOwnerPageProps> = ({ onReview }) => 
     );
 };
 
-export default UarSystemOwnerPage;
+export default UarDivisionUserPage;

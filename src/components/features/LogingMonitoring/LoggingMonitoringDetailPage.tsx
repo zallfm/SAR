@@ -1,8 +1,8 @@
 import React, { useState, useMemo } from 'react';
-import { SearchIcon } from './icons/SearchIcon';
-import { ChevronDownIcon } from './icons/ChevronDownIcon';
-import { mockLogDetails } from '../data';
-import type { LogEntry, LogDetail } from '../data';
+import { SearchIcon } from '../../../components/icons/SearchIcon';
+import { ChevronDownIcon } from '../../../components/icons/ChevronDownIcon';
+import { mockLogDetails } from '../../../../data';
+import type { LogEntry, LogDetail } from '../../../../data';
 
 declare var XLSX: any;
 

@@ -1,11 +1,11 @@
 import React, { useEffect, useRef, useState, useMemo } from 'react';
-import { ChevronDownIcon } from './icons/ChevronDownIcon';
-import { UarReviewIcon } from './icons/UarReviewIcon';
-import { DivisionApprovedIcon } from './icons/DivisionApprovedIcon';
-import { SoApprovedIcon } from './icons/SoApprovedIcon';
-import { CompletedIcon } from './icons/CompletedIcon';
-import { uarDivisionProgress, uarDepartmentProgress, uarSystemProgressData } from '../data';
-import type { UarProgressData } from '../data';
+import { ChevronDownIcon } from '../../icons/ChevronDownIcon';
+import { UarReviewIcon } from '../../icons/UarReviewIcon';
+import { DivisionApprovedIcon } from '../../icons/DivisionApprovedIcon';
+import { SoApprovedIcon } from '../../icons/SoApprovedIcon';
+import { CompletedIcon } from '../../icons/CompletedIcon';
+import { uarDivisionProgress, uarDepartmentProgress, uarSystemProgressData } from '../../../../data';
+import type { UarProgressData } from '../../../../data';
 
 declare var Chart: any;
 
