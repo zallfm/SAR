@@ -3,27 +3,35 @@ import { SearchIcon } from "../../icons/SearchIcon";
 import { ChevronDownIcon } from "../../icons/ChevronDownIcon";
 import { EditIcon } from "../../icons/EditIcon";
 import { DeleteIcon } from "../../icons/DeleteIcon";
-import { initialPicUsers, divisions } from "../../../../data";
+import { divisions } from "../../../../data";
 import type { PicUser } from "../../../../data";
 import UarPicModal from "../../common/Modal/UarPicModal";
 import ConfirmationModal from "../../common/Modal/ConfirmationModal";
 import InfoModal from "../../common/Modal/InfoModal";
 import { AddButton } from "../../common/Button/AddButton";
 import { IconButton } from "../../common/Button/IconButton";
+import SearchableDropdown from "../../common/SearchableDropdown";
+import { 
+  usePics, 
+  useFilteredPics,
+  useUarPicFilters,
+  useUarPicPagination, 
+  useUarPicActions 
+} from "../../../hooks/useStoreSelectors";
 
 const UarPicPage: React.FC = () => {
-  const [pics, setPics] = useState<PicUser[]>(initialPicUsers);
-  const [searchTerm, setSearchTerm] = useState("");
-  const [divisionFilter, setDivisionFilter] = useState("");
-  const [currentPage, setCurrentPage] = useState(1);
-  const [itemsPerPage, setItemsPerPage] = useState(10);
-
+  // Zustand store hooks
+  const pics = usePics();
+  const storeFilteredPics = useFilteredPics();
+  const { filters, setFilters } = useUarPicFilters();
+  const { currentPage, itemsPerPage, setCurrentPage, setItemsPerPage, getTotalPages, getCurrentPagePics } = useUarPicPagination();
+  const { setPics, setFilteredPics, setSelectedPic, addPic, updatePic, deletePic } = useUarPicActions();
+  
+  // Local state for UI interactions
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [editingPic, setEditingPic] = useState<PicUser | null>(null);
-
   const [isDeleteConfirmOpen, setIsDeleteConfirmOpen] = useState(false);
   const [picToDelete, setPicToDelete] = useState<PicUser | null>(null);
-
   const [isEditConfirmOpen, setIsEditConfirmOpen] = useState(false);
   const [picToEdit, setPicToEdit] = useState<PicUser | null>(null);
 
@@ -34,23 +42,28 @@ const UarPicPage: React.FC = () => {
     return pics.filter((pic) => {
       const nameMatch = pic.name
         .toLowerCase()
-        .includes(searchTerm.toLowerCase());
-      const divisionMatch = divisionFilter
-        ? pic.division === divisionFilter
+        .includes(filters.name.toLowerCase());
+      const divisionMatch = filters.division
+        ? pic.division === filters.division
         : true;
       return nameMatch && divisionMatch;
     });
-  }, [pics, searchTerm, divisionFilter]);
+  }, [pics, filters]);
 
-  const currentPics = useMemo(() => {
-    const startIndex = (currentPage - 1) * itemsPerPage;
-    return filteredPics.slice(startIndex, startIndex + itemsPerPage);
-  }, [filteredPics, currentPage, itemsPerPage]);
+  // Update filtered pics in store when filters change
+  React.useEffect(() => {
+    const haveSameLength = storeFilteredPics.length === filteredPics.length
+    const haveSameIds = haveSameLength && storeFilteredPics.every((pic, index) => pic.id === filteredPics[index]?.id)
 
-  const totalItems = filteredPics.length;
-  const totalPages = Math.ceil(totalItems / itemsPerPage);
-  const startItem = totalItems > 0 ? (currentPage - 1) * itemsPerPage + 1 : 0;
-  const endItem = Math.min(currentPage * itemsPerPage, totalItems);
+    if (!haveSameIds) {
+      setFilteredPics(filteredPics)
+    }
+  }, [filteredPics, storeFilteredPics, setFilteredPics])
+
+  const totalPages = getTotalPages();
+  const currentPics = getCurrentPagePics();
+  const startItem = currentPics.length > 0 ? (currentPage - 1) * itemsPerPage + 1 : 0;
+  const endItem = Math.min(currentPage * itemsPerPage, filteredPics.length);
 
   const handleOpenAddModal = () => {
     setEditingPic(null);
@@ -75,9 +88,7 @@ const UarPicPage: React.FC = () => {
       setIsEditConfirmOpen(true);
     } else {
       // If adding, save directly
-      const newId =
-        pics.length > 0 ? Math.max(...pics.map((p) => p.id)) + 1 : 1;
-      setPics((prev) => [{ ...pic, id: newId }, ...prev]);
+      addPic(pic);
       setInfoMessage("Save Successfully");
       setIsInfoOpen(true);
     }
@@ -85,9 +96,7 @@ const UarPicPage: React.FC = () => {
 
   const handleConfirmEdit = () => {
     if (picToEdit) {
-      setPics((prev) =>
-        prev.map((p) => (p.id === picToEdit.id ? picToEdit : p))
-      );
+      updatePic(picToEdit.id, picToEdit);
       setInfoMessage("Save Successfully");
       setIsInfoOpen(true);
     }
@@ -107,7 +116,7 @@ const UarPicPage: React.FC = () => {
 
   const handleDeletePic = () => {
     if (picToDelete) {
-      setPics((prev) => prev.filter((p) => p.id !== picToDelete.id));
+      deletePic(picToDelete.id);
       handleCloseDeleteConfirm();
     }
   };
@@ -118,38 +127,23 @@ const UarPicPage: React.FC = () => {
       <div className="bg-white p-6 rounded-xl border border-gray-200 shadow-sm">
         <div className="flex justify-between items-center mb-6 flex-wrap gap-4">
           <div className="flex items-center gap-4">
-            <div className="relative w-full max-w-xs">
-              <input
-                type="text"
-                placeholder="Name"
-                value={searchTerm}
-                onChange={(e) => {
-                  setSearchTerm(e.target.value);
-                  setCurrentPage(1);
-                }}
-                className="w-full pl-4 pr-10 py-2 bg-white border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-              />
-              <div className="absolute inset-y-0 right-0 pr-3 flex items-center pointer-events-none">
-                <SearchIcon className="w-5 h-5 text-gray-400" />
-              </div>
-            </div>
-            <div className="relative">
-              <select
-                value={divisionFilter}
-                onChange={(e) => setDivisionFilter(e.target.value)}
-                className="pl-3 pr-8 py-2 border border-gray-300 rounded-md appearance-none bg-white focus:outline-none focus:ring-2 focus:ring-blue-500"
-              >
-                <option value="">Division</option>
-                {[...new Set(divisions)].sort().map((d) => (
-                  <option key={d} value={d}>
-                    {d}
-                  </option>
-                ))}
-              </select>
-              <div className="absolute inset-y-0 right-0 pr-2 flex items-center pointer-events-none">
-                <ChevronDownIcon className="w-5 h-5 text-gray-400" />
-              </div>
-            </div>
+            <SearchableDropdown 
+              label="Name" 
+              value={filters.name} 
+              onChange={(value) => setFilters({ name: value })} 
+              options={[...new Set(pics.map(pic => pic.name))]}
+              placeholder="Name"
+              className="w-full sm:w-40"
+            />
+            <SearchableDropdown 
+              label="Division" 
+              value={filters.division} 
+              onChange={(value) => setFilters({ division: value })} 
+              options={[...new Set(divisions)].sort()}
+              searchable={false}
+              placeholder="Division"
+              className="w-full sm:w-40"
+            />
           </div>
           <AddButton onClick={handleOpenAddModal} label="+ Add" />
         </div>
@@ -182,7 +176,7 @@ const UarPicPage: React.FC = () => {
                     key={pic.id}
                     className="bg-white border-b border-gray-200 last:border-b-0 hover:bg-gray-50"
                   >
-                    <td className="px-4 py-4 whitespace-nowrap font-medium text-gray-900 text-sm">
+                    <td className="px-4 py-4 whitespace-nowrap text-gray-900 text-sm">
                       {startItem + index}
                     </td>
                     <td className="px-4 py-4 whitespace-nowrap text-sm">
@@ -201,6 +195,7 @@ const UarPicPage: React.FC = () => {
                             onClick={() => handleOpenEditModal(pic)}
                             tooltip="Edit"
                             aria-label={`Edit ${pic.name}`}
+                            hoverColor="blue"
                           >
                             <EditIcon />
                           </IconButton>
@@ -210,6 +205,7 @@ const UarPicPage: React.FC = () => {
                             onClick={() => handleOpenDeleteConfirm(pic)}
                             tooltip="Delete"
                             aria-label={`Delete ${pic.name}`}
+                            hoverColor="red"
                           >
                             <DeleteIcon />
                           </IconButton>
@@ -254,11 +250,11 @@ const UarPicPage: React.FC = () => {
           </div>
           <div className="flex items-center gap-4">
             <span>
-              Showing {startItem}-{endItem} of {totalItems}
+              Showing {startItem}-{endItem} of {filteredPics.length}
             </span>
             <div className="flex gap-2">
               <button
-                onClick={() => setCurrentPage((p) => p - 1)}
+                onClick={() => setCurrentPage(currentPage - 1)}
                 disabled={currentPage === 1}
                 className="px-3 py-1.5 border bg-white border-gray-300 rounded-md hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed"
                 aria-label="Previous Page"
@@ -266,7 +262,7 @@ const UarPicPage: React.FC = () => {
                 &lt;
               </button>
               <button
-                onClick={() => setCurrentPage((p) => p + 1)}
+                onClick={() => setCurrentPage(currentPage + 1)}
                 disabled={currentPage >= totalPages}
                 className="px-3 py-1.5 border bg-white border-gray-300 rounded-md hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed"
                 aria-label="Next Page"

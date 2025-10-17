@@ -74,26 +74,217 @@ export interface LogEntry {
   functionName: string;
   startDate: string;
   endDate: string;
-  status: 'Success' | 'Error' | 'InProgress';
+  status: 'Success' | 'Error' | 'Warning' | 'InProgress';
+  details?: string;
 }
 
-export const mockLogs: LogEntry[] = Array.from({ length: 50 }, (_, i) => ({
-    id: i + 1,
-    processId: (() => {
-        const date = new Date();
-        const year = String(date.getFullYear());
-        const month = String(date.getMonth() + 1).padStart(2, '0');
-        const day = String(date.getDate()).padStart(2, '0');
-        return `${year}${month}${day}${String(i + 1).padStart(3, '0')}`;
-    })(),
-    userId: ['admin', 'dph', 'systemowner'][i % 3],
-    module: ['UAR', 'System Master', 'Application'][i % 3],
-    functionName: ['Create', 'Update', 'Delete', 'View'][i % 4],
-    startDate: `21-07-2024 ${String(10 + (i%5)).padStart(2,'0')}:${String(i*2 % 60).padStart(2,'0')}:${String(i*3 % 60).padStart(2,'0')}`,
-    endDate: `21-07-2024 ${String(10 + (i%5)).padStart(2,'0')}:${String(i*2 % 60).padStart(2,'0')}:${String(i*3 % 60 + 5).padStart(2,'0')}`,
-    // FIX: The type assertion was incorrect. `as const` ensures the array elements are treated as literal types, matching `LogEntry['status']`.
-    status: (['Success', 'Error', 'InProgress'] as const)[i % 3],
-}));
+// Categorized logs - only important data changes and critical actions
+// Sorted from latest to oldest (newest first) - DESC order
+// New activities will appear at the top automatically
+export const mockLogs: LogEntry[] = [
+    // Security Events - Authentication & Security (Latest)
+    {
+        id: 17,
+        processId: '2025011600017',
+        userId: 'admin',
+        module: 'Security',
+        functionName: 'Login Success',
+        startDate: '21-07-2024 16:30:00',
+        endDate: '21-07-2024 16:30:00',
+        status: 'Success',
+        details: 'User admin successfully logged in from IP: 192.168.1.100'
+    },
+    {
+        id: 16,
+        processId: '2025011600016',
+        userId: 'unknown',
+        module: 'Security',
+        functionName: 'Login Failed',
+        startDate: '21-07-2024 16:25:00',
+        endDate: '21-07-2024 16:25:00',
+        status: 'Error',
+        details: 'Failed login attempt for username: testuser (attempt #3) - Potential brute force attack'
+    },
+    
+    // In Progress - Current Operations
+    {
+        id: 15,
+        processId: '2025011600015',
+        userId: 'systemowner',
+        module: 'UAR',
+        functionName: 'Update',
+        startDate: '21-07-2024 16:00:00',
+        endDate: '21-07-2024 16:00:00',
+        status: 'InProgress',
+        details: 'Updating UAR progress for Division: Production Planning Control'
+    },
+    
+    // Error Cases - Important to Track
+    {
+        id: 14,
+        processId: '2025011600014',
+        userId: 'dph',
+        module: 'Application',
+        functionName: 'Update',
+        startDate: '21-07-2024 15:15:00',
+        endDate: '21-07-2024 15:15:01',
+        status: 'Error',
+        details: 'Failed to update application: Database connection timeout'
+    },
+    {
+        id: 13,
+        processId: '2025011600013',
+        userId: 'admin',
+        module: 'UAR',
+        functionName: 'Create',
+        startDate: '21-07-2024 15:00:00',
+        endDate: '21-07-2024 15:00:02',
+        status: 'Error',
+        details: 'Failed to create UAR record: Validation error - Invalid division code'
+    },
+    
+    // Schedule Management - Critical Actions
+    {
+        id: 12,
+        processId: '2025011600012',
+        userId: 'systemowner',
+        module: 'Schedule',
+        functionName: 'Update',
+        startDate: '21-07-2024 14:15:00',
+        endDate: '21-07-2024 14:15:04',
+        status: 'Success',
+        details: 'Updated schedule: UAR Review Schedule for Q2 2025'
+    },
+    {
+        id: 11,
+        processId: '2025011600011',
+        userId: 'admin',
+        module: 'Schedule',
+        functionName: 'Create',
+        startDate: '21-07-2024 14:00:00',
+        endDate: '21-07-2024 14:00:05',
+        status: 'Success',
+        details: 'Created new schedule: UAR Review Schedule for Q1 2025'
+    },
+    
+    // User Management - Critical Actions
+    {
+        id: 10,
+        processId: '2025011600010',
+        userId: 'dph',
+        module: 'User',
+        functionName: 'Update',
+        startDate: '21-07-2024 13:15:00',
+        endDate: '21-07-2024 13:15:03',
+        status: 'Success',
+        details: 'Updated user permissions: UAR PIC for Division: Production Engineering'
+    },
+    {
+        id: 9,
+        processId: '2025011600009',
+        userId: 'admin',
+        module: 'User',
+        functionName: 'Create',
+        startDate: '21-07-2024 13:00:00',
+        endDate: '21-07-2024 13:00:07',
+        status: 'Success',
+        details: 'Created new user: UAR PIC for Division: Production Planning Control'
+    },
+    
+    // System Master Module - Critical Data Changes
+    {
+        id: 8,
+        processId: '2025011600008',
+        userId: 'admin',
+        module: 'System Master',
+        functionName: 'Update',
+        startDate: '21-07-2024 12:15:00',
+        endDate: '21-07-2024 12:15:04',
+        status: 'Success',
+        details: 'Updated system master: Security Center Configuration'
+    },
+    {
+        id: 7,
+        processId: '2025011600007',
+        userId: 'systemowner',
+        module: 'System Master',
+        functionName: 'Create',
+        startDate: '21-07-2024 12:00:00',
+        endDate: '21-07-2024 12:00:06',
+        status: 'Success',
+        details: 'Created new system master record: LDAP Configuration'
+    },
+    
+    // Application Module - Critical Data Changes
+    {
+        id: 6,
+        processId: '2025011600006',
+        userId: 'admin',
+        module: 'Application',
+        functionName: 'Update',
+        startDate: '21-07-2024 11:30:00',
+        endDate: '21-07-2024 11:30:03',
+        status: 'Warning',
+        details: 'Updated application status: Toyota Management System to Inactive'
+    },
+    {
+        id: 5,
+        processId: '2025011600005',
+        userId: 'dph',
+        module: 'Application',
+        functionName: 'Update',
+        startDate: '21-07-2024 11:15:00',
+        endDate: '21-07-2024 11:15:05',
+        status: 'Success',
+        details: 'Updated application: Production Achievement System'
+    },
+    {
+        id: 4,
+        processId: '2025011600004',
+        userId: 'admin',
+        module: 'Application',
+        functionName: 'Create',
+        startDate: '21-07-2024 11:00:00',
+        endDate: '21-07-2024 11:00:08',
+        status: 'Success',
+        details: 'Created new application: Integrated Production Planning Control System'
+    },
+    
+    // UAR Module - Critical Data Changes (Oldest)
+    {
+        id: 3,
+        processId: '2025011600003',
+        userId: 'systemowner',
+        module: 'UAR',
+        functionName: 'Delete',
+        startDate: '21-07-2024 10:30:00',
+        endDate: '21-07-2024 10:30:02',
+        status: 'Success',
+        details: 'Deleted UAR record for Division: Corporate Planning'
+    },
+    {
+        id: 2,
+        processId: '2025011600002',
+        userId: 'dph',
+        module: 'UAR',
+        functionName: 'Update',
+        startDate: '21-07-2024 10:15:00',
+        endDate: '21-07-2024 10:15:03',
+        status: 'Success',
+        details: 'Updated UAR progress for Division: Production Engineering'
+    },
+    {
+        id: 1,
+        processId: '2025011600001',
+        userId: 'admin',
+        module: 'UAR',
+        functionName: 'Create',
+        startDate: '21-07-2024 10:00:00',
+        endDate: '21-07-2024 10:00:05',
+        status: 'Success',
+        details: 'Created new UAR record for Division: Production Planning Control'
+    }
+];
 
 export interface LogDetail {
   id: number;

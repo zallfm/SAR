@@ -4,6 +4,7 @@ import {
   formatDisplayDateToDdMm,
   isValidDdMm,
   formatDdMmToDisplayDate,
+  isUarDateValid,
 } from "../../../../utils/dateFormatter";
 import ShortDatePicker from "../Button/ShortDatePicker";
 
@@ -73,7 +74,7 @@ const ScheduleEditModal: React.FC<ScheduleEditModalProps> = ({
   const isFormValid = useMemo(() => {
     return editedSchedules.every(
       (s) =>
-        isValidDdMm(s.syncStart) && isValidDdMm(s.syncEnd) && isValidDdMm(s.uar)
+        isValidDdMm(s.syncStart) && isValidDdMm(s.syncEnd) && isValidDdMm(s.uar) && isUarDateValid(s.syncEnd, s.uar)
     );
   }, [editedSchedules]);
 
@@ -94,16 +95,27 @@ const ScheduleEditModal: React.FC<ScheduleEditModalProps> = ({
     onSave(updatedSchedules);
   };
 
-  const getInputClasses = (value: string) => {
+  const getInputClasses = (schedule: EditedScheduleState, field: 'syncStart' | 'syncEnd' | 'uar') => {
     const baseClasses =
       "w-full px-3 py-2 border rounded-md shadow-sm focus:outline-none focus:ring-1 text-sm";
     const validClasses =
       "border-gray-300 focus:ring-blue-500 focus:border-blue-500";
     const invalidClasses =
       "border-red-500 focus:ring-red-500 focus:border-red-500";
-    return `${baseClasses} ${
-      !isValidDdMm(value) && value.length > 0 ? invalidClasses : validClasses
-    }`;
+
+    const value = schedule[field];
+
+    // Check basic date format validation
+    if (!isValidDdMm(value) && value.length > 0) {
+      return `${baseClasses} ${invalidClasses}`;
+    }
+
+    // Check UAR date validation against sync end date
+    if (field === 'uar' && value.length > 0 && isValidDdMm(schedule.syncEnd) && !isUarDateValid(schedule.syncEnd, value)) {
+      return `${baseClasses} ${invalidClasses}`;
+    }
+
+    return `${baseClasses} ${validClasses}`;
   };
 
   return (
@@ -170,14 +182,14 @@ const ScheduleEditModal: React.FC<ScheduleEditModalProps> = ({
                     onChange={(val) =>
                       handleScheduleChange(schedule.id, "syncStart", val)
                     }
-                    className={getInputClasses(schedule.syncStart)}
+                    className={getInputClasses(schedule, "syncStart")}
                   />
                   <ShortDatePicker
                     value={schedule.syncEnd}
                     onChange={(val) =>
                       handleScheduleChange(schedule.id, "syncEnd", val)
                     }
-                    className={getInputClasses(schedule.syncEnd)}
+                    className={getInputClasses(schedule, "syncEnd")}
                   />
                 </div>
               </div>
@@ -190,8 +202,13 @@ const ScheduleEditModal: React.FC<ScheduleEditModalProps> = ({
                   onChange={(val) =>
                     handleScheduleChange(schedule.id, "uar", val)
                   }
-                  className={getInputClasses(schedule.uar)}
+                  className={getInputClasses(schedule, "uar")}
                 />
+                {schedule.uar.length > 0 && isValidDdMm(schedule.syncEnd) && isValidDdMm(schedule.uar) && !isUarDateValid(schedule.syncEnd, schedule.uar) && (
+                  <p className="mt-1 text-sm text-red-600">
+                    Schedule UAR must be after Schedule Synchronize date ({schedule.syncEnd})
+                  </p>
+                )}
               </div>
             </div>
           ))}
@@ -209,7 +226,7 @@ const ScheduleEditModal: React.FC<ScheduleEditModalProps> = ({
             type="button"
             onClick={handleSave}
             disabled={!isFormValid}
-            className="px-8 py-2 text-sm font-semibold text-white bg-blue-600 border border-transparent rounded-md shadow-sm hover:bg-blue-700 focus:outline-none disabled:bg-blue-300 disabled:cursor-not-allowed"
+            className="px-8 py-2 text-sm font-semibold text-white bg-blue-600 border border-transparent rounded-md shadow-sm hover:bg-blue-700 focus:outline-none disabled:bg-gray-100 disabled:text-gray-400 disabled:cursor-not-allowed"
           >
             Save
           </button>

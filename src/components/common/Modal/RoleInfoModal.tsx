@@ -61,7 +61,7 @@ const RoleInfoModal: React.FC<RoleInfoModalProps> = ({ onClose, roleInfo }) => {
                             <tbody>
                                 {roleDetails.map((role, index) => (
                                     <tr key={index} className="bg-white border-b last:border-b-0 hover:bg-gray-50">
-                                        <td className="px-4 py-2 font-medium text-gray-900">{index + 1}</td>
+                                        <td className="px-4 py-2 text-gray-900">{index + 1}</td>
                                         <td className="px-4 py-2">{role}</td>
                                     </tr>
                                 ))}

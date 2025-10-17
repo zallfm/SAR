@@ -107,7 +107,7 @@ const UarDivisionUserDetailPage: React.FC<UarDivisionUserDetailPageProps> = ({ r
     return (
         <div className="space-y-6">
             <div>
-                 <h2 className="text-3xl font-bold text-gray-800">UAR Division User</h2>
+                 <h2 className="text-2xl font-bold text-gray-800">UAR Division User</h2>
                  <div className="text-sm text-gray-500 mt-1 flex items-center flex-wrap">
                     <button 
                         onClick={onBack} 

@@ -1,4 +1,4 @@
-import React, { useState, useMemo } from 'react';
+import React, { useState, useMemo, useEffect } from 'react';
 import { SearchIcon } from '../../../components/icons/SearchIcon';
 import { ChevronDownIcon } from '../../../components/icons/ChevronDownIcon';
 import { DetailIcon } from '../../../components/icons/DetailIcon';
@@ -6,6 +6,16 @@ import { mockLogs } from '../../../../data';
 import type { LogEntry } from '../../../../data';
 import StatusPill from '../StatusPill/StatusPill';
 import { DownloadButton } from '../../common/Button/DownloadButton';
+import { loggingService, LogFilter } from '../../../services/loggingService';
+import { useLogging } from '../../../hooks/useLogging';
+import SearchableDropdown from '../../common/SearchableDropdown';
+import { 
+  useLogs, 
+  useFilteredLogs, 
+  useLoggingFilters, 
+  useLoggingPagination, 
+  useLoggingActions 
+} from '../../../hooks/useStoreSelectors';
 
 declare var XLSX: any;
 
@@ -52,7 +62,7 @@ const FilterDate: React.FC<{
     value: string;
     onChange: (e: React.ChangeEvent<HTMLInputElement>) => void;
 }> = ({ placeholder, value, onChange }) => (
-     <div className="relative flex-1 min-w-[120px]">
+     <div className="relative w-36">
         <input
             type={value ? 'date' : 'text'}
             placeholder={placeholder}
@@ -67,17 +77,65 @@ const FilterDate: React.FC<{
 
 
 const LoggingMonitoringPage: React.FC<{ onViewDetail: (log: LogEntry) => void }> = ({ onViewDetail }) => {
-    const [logs] = useState<LogEntry[]>(mockLogs);
-    const [currentPage, setCurrentPage] = useState(1);
-    const [itemsPerPage, setItemsPerPage] = useState(10);
+    // Zustand store hooks
+    const logs = useLogs();
+    const filteredLogs = useFilteredLogs();
+    const { filters, setFilters } = useLoggingFilters();
+    const { currentPage, itemsPerPage, setCurrentPage, setItemsPerPage, getTotalPages, getCurrentPageLogs } = useLoggingPagination();
+    const { setLogs, setFilteredLogs, setSelectedLog } = useLoggingActions();
     
-    const [processFilter, setProcessFilter] = useState('');
-    const [userFilter, setUserFilter] = useState('');
-    const [moduleFilter, setModuleFilter] = useState('');
-    const [functionFilter, setFunctionFilter] = useState('');
-    const [startDateFilter, setStartDateFilter] = useState('');
-    const [endDateFilter, setEndDateFilter] = useState('');
-    const [statusFilter, setStatusFilter] = useState<LogEntry['status'] | ''>('');
+    // Local state for real-time logs
+    const [realTimeLogs, setRealTimeLogs] = useState<any[]>([]);
+
+    // Initialize logging for this component
+    const { logUserAction, logInfo } = useLogging({
+        componentName: 'LoggingMonitoringPage',
+        enablePerformanceLogging: true,
+    });
+
+    // Load real-time logs from logging service
+    useEffect(() => {
+        const loadLogs = () => {
+            const serviceLogs = loggingService.getLogs();
+            setRealTimeLogs(serviceLogs);
+            
+            // Combine with mock logs for now - Real-time logs first (latest), then mock logs
+            const realTimeLogsFormatted = serviceLogs.map(serviceLog => ({
+                id: serviceLog.id,
+                processId: serviceLog.processId,
+                userId: serviceLog.userId,
+                module: serviceLog.module,
+                functionName: serviceLog.functionName,
+                startDate: serviceLog.startDate,
+                endDate: serviceLog.endDate,
+                status: serviceLog.status as 'Success' | 'Error' | 'Warning' | 'InProgress',
+                details: serviceLog.details || ''
+            }));
+            
+            // Real-time logs first (latest), then mock logs (older)
+            const combinedLogs = [...realTimeLogsFormatted, ...mockLogs];
+            
+            setLogs(combinedLogs);
+        };
+
+        // Load initial logs
+        loadLogs();
+
+        // Set up real-time updates
+        const interval = setInterval(loadLogs, 2000); // Update every 2 seconds
+
+        // Log page access
+        logUserAction('access_logging_monitoring_page', {
+            timestamp: new Date().toISOString(),
+        });
+
+        return () => {
+            clearInterval(interval);
+            logUserAction('leave_logging_monitoring_page', {
+                timestamp: new Date().toISOString(),
+            });
+        };
+    }, [logUserAction, setLogs]);
 
     // FIX: Add explicit string[] type and use `logs` state variable in dependency array for `useMemo` to ensure correct type inference.
     const uniqueModules: string[] = useMemo(() => [...new Set(logs.map(log => log.module))], [logs]);
@@ -90,49 +148,53 @@ const LoggingMonitoringPage: React.FC<{ onViewDetail: (log: LogEntry) => void }>
         return new Date(Number(parts[3]), Number(parts[2]) - 1, Number(parts[1]), Number(parts[4]), Number(parts[5]), Number(parts[6]));
     };
 
-    const filteredLogs = useMemo(() => {
-        return logs.filter(log => {
-            if (processFilter && !log.processId.toLowerCase().includes(processFilter.toLowerCase())) {
+    // Update filtered logs in store when filters change
+    useEffect(() => {
+        const filtered = logs.filter(log => {
+            if (filters.process && !log.processId.toLowerCase().includes(filters.process.toLowerCase())) {
                 return false;
             }
-            if (userFilter && !log.userId.toLowerCase().includes(userFilter.toLowerCase())) {
+            if (filters.user && !log.userId.toLowerCase().includes(filters.user.toLowerCase())) {
                 return false;
             }
-            if (moduleFilter && log.module !== moduleFilter) {
+            if (filters.module && log.module !== filters.module) {
                 return false;
             }
-            if (functionFilter && log.functionName !== functionFilter) {
+            if (filters.function && log.functionName !== filters.function) {
                 return false;
             }
-            if (statusFilter && log.status !== statusFilter) {
+            if (filters.status && log.status !== filters.status) {
                 return false;
             }
             const logStartDate = parseDate(log.startDate);
-            if (startDateFilter && logStartDate) {
-                if (logStartDate < new Date(startDateFilter)) return false;
+            if (filters.startDate && logStartDate) {
+                if (logStartDate < new Date(filters.startDate)) return false;
             }
             const logEndDate = parseDate(log.endDate);
-            if (endDateFilter && logEndDate) {
-                const filterEndDate = new Date(endDateFilter);
+            if (filters.endDate && logEndDate) {
+                const filterEndDate = new Date(filters.endDate);
                 filterEndDate.setHours(23, 59, 59, 999);
                 if (logEndDate > filterEndDate) return false;
             }
             return true;
         });
-    }, [logs, processFilter, userFilter, moduleFilter, functionFilter, startDateFilter, endDateFilter, statusFilter]);
+        
+        const haveSameLength = filteredLogs.length === filtered.length
+        const haveSameIds = haveSameLength && filteredLogs.every((log, index) => log.id === filtered[index]?.id)
 
-    const currentLogs = useMemo(() => {
-        const startIndex = (currentPage - 1) * itemsPerPage;
-        return filteredLogs.slice(startIndex, startIndex + itemsPerPage);
-    }, [filteredLogs, currentPage, itemsPerPage]);
+        if (!haveSameIds) {
+            setFilteredLogs(filtered);
+        }
+    }, [logs, filters, filteredLogs, setFilteredLogs]);
 
+    const totalPages = getTotalPages();
+    const currentLogs = getCurrentPageLogs();
     const totalItems = filteredLogs.length;
-    const totalPages = Math.ceil(totalItems / itemsPerPage);
     const startItem = totalItems > 0 ? (currentPage - 1) * itemsPerPage + 1 : 0;
     const endItem = Math.min(currentPage * itemsPerPage, totalItems);
 
-    const handleFilterChange = (setter: React.Dispatch<React.SetStateAction<any>>) => (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) => {
-        setter(e.target.value);
+    const handleFilterChange = (filterName: keyof typeof filters, value: string) => {
+        setFilters({ [filterName]: value });
         setCurrentPage(1);
     };
     
@@ -141,6 +203,13 @@ const LoggingMonitoringPage: React.FC<{ onViewDetail: (log: LogEntry) => void }>
             alert("No data available to download based on the current filters.");
             return;
         }
+
+        // Log critical action
+        logUserAction('download_logs', {
+            filteredCount: filteredLogs.length,
+            filters: filters,
+            timestamp: new Date().toISOString(),
+        });
 
         const now = new Date();
         const year = now.getFullYear();
@@ -181,27 +250,56 @@ const LoggingMonitoringPage: React.FC<{ onViewDetail: (log: LogEntry) => void }>
 
     return (
         <div>
-            <h2 className="text-3xl font-bold text-gray-800 mb-6">Logging Monitoring</h2>
+            <h2 className="text-2xl font-bold text-gray-800 mb-6">Logging Monitoring</h2>
             <div className="bg-white p-6 rounded-xl border border-gray-200 shadow-sm">
-                <div className="flex items-center gap-x-3 mb-6 flex-wrap">
-                    <FilterInput placeholder="Process" value={processFilter} onChange={handleFilterChange(setProcessFilter)} />
-                    <FilterInput placeholder="User" value={userFilter} onChange={handleFilterChange(setUserFilter)} />
-                    <FilterSelect value={moduleFilter} onChange={handleFilterChange(setModuleFilter)}>
-                        <option value="">Module</option>
-                        {uniqueModules.map(m => <option key={m} value={m}>{m}</option>)}
-                    </FilterSelect>
-                    <FilterSelect value={functionFilter} onChange={handleFilterChange(setFunctionFilter)}>
-                        <option value="">Function</option>
-                        {uniqueFunctions.map(f => <option key={f} value={f}>{f}</option>)}
-                    </FilterSelect>
-                    <FilterDate placeholder="Start Date" value={startDateFilter} onChange={handleFilterChange(setStartDateFilter)} />
-                    <FilterDate placeholder="End Date" value={endDateFilter} onChange={handleFilterChange(setEndDateFilter)} />
-                    <FilterSelect value={statusFilter} onChange={handleFilterChange(setStatusFilter)}>
-                        <option value="">Status</option>
-                        <option value="Success">Success</option>
-                        <option value="Error">Error</option>
-                        <option value="InProgress">In Progress</option>
-                    </FilterSelect>
+                <div className="flex items-center justify-between gap-3 mb-6 flex-wrap">
+                    <div className="flex items-center gap-3 flex-wrap">
+                        <SearchableDropdown 
+                            label="Process" 
+                            value={filters.process} 
+                            onChange={(value) => handleFilterChange('process', value)} 
+                            options={[...new Set(logs.map((log: any) => log.processId))]}
+                            placeholder="Process"
+                            className="w-36"
+                        />
+                        <SearchableDropdown 
+                            label="User" 
+                            value={filters.user} 
+                            onChange={(value) => handleFilterChange('user', value)} 
+                            options={[...new Set(logs.map((log: any) => log.userId))]}
+                            placeholder="User"
+                            className="w-28"
+                        />
+                        <SearchableDropdown 
+                            label="Module" 
+                            value={filters.module} 
+                            onChange={(value) => handleFilterChange('module', value)} 
+                            options={uniqueModules}
+                            searchable={false}
+                            placeholder="Module"
+                            className="w-36"
+                        />
+                        <SearchableDropdown 
+                            label="Function" 
+                            value={filters.function} 
+                            onChange={(value) => handleFilterChange('function', value)} 
+                            options={uniqueFunctions}
+                            searchable={false}
+                            placeholder="Function"
+                            className="w-36"
+                        />
+                        <FilterDate placeholder="Start Date" value={filters.startDate} onChange={(e) => handleFilterChange('startDate', e.target.value)} />
+                        <FilterDate placeholder="End Date" value={filters.endDate} onChange={(e) => handleFilterChange('endDate', e.target.value)} />
+                        <SearchableDropdown 
+                            label="Status" 
+                            value={filters.status} 
+                            onChange={(value) => handleFilterChange('status', value)} 
+                            options={['Success', 'Error', 'In Progress']}
+                            searchable={false}
+                            placeholder="Status"
+                            className="w-28"
+                        />
+                    </div>
                     <DownloadButton style={{ paddingLeft: "24px", paddingRight: "24px" }} className='bg-blue-600 text-white font-semibold py-2.5 rounded-lg hover:bg-blue-700 transition-colors text-sm whitespace-nowrap' onClick={handleDownload}/>
                 </div>
 
@@ -223,7 +321,7 @@ const LoggingMonitoringPage: React.FC<{ onViewDetail: (log: LogEntry) => void }>
                         <tbody>
                              {currentLogs.length > 0 ? currentLogs.map((log, index) => (
                                 <tr key={log.id} className="bg-white border-b border-gray-200 last:border-b-0 hover:bg-gray-50">
-                                    <td className="px-4 py-4 whitespace-nowrap font-medium text-gray-900 text-sm">{startItem + index}</td>
+                                    <td className="px-4 py-4 whitespace-nowrap text-gray-900 text-sm">{startItem + index}</td>
                                     <td className="px-4 py-4 whitespace-nowrap text-sm">{log.processId}</td>
                                     <td className="px-4 py-4 whitespace-nowrap text-sm">{log.userId}</td>
                                     <td className="px-4 py-4 whitespace-nowrap text-sm">{log.module}</td>
@@ -235,7 +333,17 @@ const LoggingMonitoringPage: React.FC<{ onViewDetail: (log: LogEntry) => void }>
                                         <div className="group relative inline-block">
                                             <button 
                                                 type="button"
-                                                onClick={() => onViewDetail(log)}
+                                                onClick={() => {
+                                                setSelectedLog(log);
+                                                onViewDetail(log);
+                                                logUserAction('view_log_detail', {
+                                                    logId: log.id,
+                                                    logModule: log.module,
+                                                    logFunction: log.functionName,
+                                                    logStatus: log.status,
+                                                    timestamp: new Date().toISOString(),
+                                                });
+                                            }}
                                                 className="text-gray-500 hover:text-blue-600 text-sm" aria-label={`Details for ${log.processId}`}>
                                                 <DetailIcon />
                                             </button>
@@ -280,7 +388,7 @@ const LoggingMonitoringPage: React.FC<{ onViewDetail: (log: LogEntry) => void }>
                         <div className="flex gap-2">
                             <button
                                 type="button"
-                                onClick={() => setCurrentPage(p => p - 1)}
+                                onClick={() => setCurrentPage(currentPage - 1)}
                                 disabled={currentPage === 1}
                                 className="px-3 py-1.5 border bg-white border-gray-300 rounded-md hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed"
                                 aria-label="Previous Page"
@@ -289,7 +397,7 @@ const LoggingMonitoringPage: React.FC<{ onViewDetail: (log: LogEntry) => void }>
                             </button>
                             <button
                                 type="button"
-                                onClick={() => setCurrentPage(p => p + 1)}
+                                onClick={() => setCurrentPage(currentPage + 1)}
                                 disabled={currentPage >= totalPages}
                                 className="px-3 py-1.5 border bg-white border-gray-300 rounded-md hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed"
                                 aria-label="Next Page"

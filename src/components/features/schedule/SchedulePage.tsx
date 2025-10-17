@@ -1,5 +1,4 @@
 import React, { useState, useMemo } from 'react';
-import { initialSchedules } from '../../../../data';
 import type { Schedule } from '../../../../data';
 import { SearchIcon } from '../../icons/SearchIcon';
 import { ChevronDownIcon } from '../../icons/ChevronDownIcon';
@@ -14,12 +13,25 @@ import { formatDdMmToDisplayDate } from '../../../../utils/dateFormatter';
 import StatusPill from '../StatusPill/StatusPill';
 import { IconButton } from '../../common/Button/IconButton';
 import { AddButton } from '../../common/Button/AddButton';
+import SearchableDropdown from '../../common/SearchableDropdown';
+import { 
+  useSchedules, 
+  useFilteredSchedules,
+  useScheduleFilters, 
+  useSchedulePagination, 
+  useScheduleActions 
+} from '../../../hooks/useStoreSelectors';
 
 const SchedulePage: React.FC = () => {
-    const [schedules, setSchedules] = useState<Schedule[]>(initialSchedules);
+    // Zustand store hooks
+    const schedules = useSchedules();
+    const storeFilteredSchedules = useFilteredSchedules();
+    const { filters, setFilters } = useScheduleFilters();
+    const { currentPage, itemsPerPage, setCurrentPage, setItemsPerPage, getTotalPages, getCurrentPageSchedules } = useSchedulePagination();
+    const { setSchedules, setFilteredSchedules, setSelectedSchedule, addSchedule, updateSchedule, deleteSchedule } = useScheduleActions();
+    
+    // Local state for UI interactions
     const [selectedRows, setSelectedRows] = useState<number[]>([]);
-
-    // Modals
     const [isEditModalOpen, setIsEditModalOpen] = useState(false);
     const [isSetScheduleModalOpen, setIsSetScheduleModalOpen] = useState(false);
     const [isSaveConfirmOpen, setIsSaveConfirmOpen] = useState(false);
@@ -27,33 +39,31 @@ const SchedulePage: React.FC = () => {
     const [pendingUpdate, setPendingUpdate] = useState<Schedule[] | null>(null);
     const [isStatusConfirmOpen, setIsStatusConfirmOpen] = useState(false);
     const [scheduleToChangeStatus, setScheduleToChangeStatus] = useState<Schedule | null>(null);
-
-
-    // Filters
-    const [appIdFilter, setAppIdFilter] = useState('');
-    const [appNameFilter, setAppNameFilter] = useState('');
-    const [statusFilter, setStatusFilter] = useState('');
-
-    // Pagination
-    const [currentPage, setCurrentPage] = useState(1);
-    const [itemsPerPage, setItemsPerPage] = useState(10);
     
     const filteredSchedules = useMemo(() => {
         return schedules.filter(schedule => {
-            const appIdMatch = appIdFilter ? schedule.applicationId.toLowerCase().includes(appIdFilter.toLowerCase()) : true;
-            const appNameMatch = appNameFilter ? schedule.applicationName.toLowerCase().includes(appNameFilter.toLowerCase()) : true;
-            const statusMatch = statusFilter ? schedule.status === statusFilter : true;
+            const appIdMatch = filters.applicationId ? schedule.applicationId.toLowerCase().includes(filters.applicationId.toLowerCase()) : true;
+            const appNameMatch = filters.applicationName ? schedule.applicationName.toLowerCase().includes(filters.applicationName.toLowerCase()) : true;
+            const statusMatch = filters.status ? schedule.status === filters.status : true;
             return appIdMatch && appNameMatch && statusMatch;
         });
-    }, [schedules, appIdFilter, appNameFilter, statusFilter]);
+    }, [schedules, filters]);
     
-    const totalItems = filteredSchedules.length;
-    const totalPages = Math.ceil(totalItems / itemsPerPage);
-    const startIndex = (currentPage - 1) * itemsPerPage;
-    const currentSchedules = filteredSchedules.slice(startIndex, startIndex + itemsPerPage);
+    // Update filtered schedules in store when filters change
+    React.useEffect(() => {
+        const haveSameLength = storeFilteredSchedules.length === filteredSchedules.length
+        const haveSameIds = haveSameLength && storeFilteredSchedules.every((schedule, index) => schedule.id === filteredSchedules[index]?.id)
 
-    const startItem = totalItems > 0 ? startIndex + 1 : 0;
-    const endItem = Math.min(startIndex + itemsPerPage, totalItems);
+        if (!haveSameIds) {
+            setFilteredSchedules(filteredSchedules)
+        }
+    }, [filteredSchedules, storeFilteredSchedules, setFilteredSchedules])
+    
+    const totalPages = getTotalPages();
+    const currentSchedules = getCurrentPageSchedules();
+
+    const startItem = currentSchedules.length > 0 ? (currentPage - 1) * itemsPerPage + 1 : 0;
+    const endItem = Math.min(currentPage * itemsPerPage, filteredSchedules.length);
 
     const handleSelectAll = (e: React.ChangeEvent<HTMLInputElement>) => {
         if (e.target.checked) {
@@ -85,15 +95,9 @@ const SchedulePage: React.FC = () => {
     
     const handleConfirmEditSave = () => {
         if (pendingUpdate) {
-            const updatesMap = new Map(pendingUpdate.map(p => [p.id, p]));
-            
-            setSchedules(prevSchedules => 
-                prevSchedules.map(schedule => 
-                    updatesMap.has(schedule.id)
-                        ? updatesMap.get(schedule.id)!
-                        : schedule
-                )
-            );
+            pendingUpdate.forEach(updatedSchedule => {
+                updateSchedule(updatedSchedule.id, updatedSchedule);
+            });
             
             setSelectedRows([]);
             setShowSuccessModal(true);
@@ -124,7 +128,9 @@ const SchedulePage: React.FC = () => {
             };
         });
 
-        setSchedules(prev => [...schedulesToAdd, ...prev]);
+        schedulesToAdd.forEach(schedule => {
+            addSchedule(schedule);
+        });
         setIsSetScheduleModalOpen(false);
         setShowSuccessModal(true);
     };
@@ -142,13 +148,8 @@ const SchedulePage: React.FC = () => {
     const handleConfirmStatusChange = () => {
         if (!scheduleToChangeStatus) return;
 
-        setSchedules(prev =>
-            prev.map(s =>
-                s.id === scheduleToChangeStatus.id
-                    ? { ...s, status: s.status === 'Active' ? 'Inactive' : 'Active' }
-                    : s
-            )
-        );
+        const newStatus = scheduleToChangeStatus.status === 'Active' ? 'Inactive' : 'Active' as 'Active' | 'Inactive';
+        updateSchedule(scheduleToChangeStatus.id, { status: newStatus });
         
         handleCloseStatusConfirm();
         setShowSuccessModal(true);
@@ -156,52 +157,39 @@ const SchedulePage: React.FC = () => {
 
     return (
         <div>
-            <h2 className="text-3xl font-bold text-gray-800 mb-6">Schedule</h2>
+            <h2 className="text-2xl font-bold text-gray-800 mb-6">Schedule</h2>
             <div className="bg-white p-6 rounded-xl border border-gray-200 shadow-sm">
                 <div className="flex justify-between items-center mb-6 flex-wrap gap-4">
                     <div className="flex items-center gap-4 flex-wrap">
-                        <div className="relative">
-                            <input
-                                type="text"
-                                placeholder="Application ID"
-                                value={appIdFilter}
-                                onChange={e => setAppIdFilter(e.target.value)}
-                                className="w-full sm:w-48 pl-10 pr-4 py-2 bg-white border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
-                            />
-                            <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-                                <SearchIcon className="w-5 h-5 text-gray-400" />
-                            </div>
-                        </div>
-                         <div className="relative">
-                            <input
-                                type="text"
-                                placeholder="Application Name"
-                                value={appNameFilter}
-                                onChange={e => setAppNameFilter(e.target.value)}
-                                className="w-full sm:w-48 pl-10 pr-4 py-2 bg-white border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
-                            />
-                            <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-                                <SearchIcon className="w-5 h-5 text-gray-400" />
-                            </div>
-                        </div>
-                        <div className="relative">
-                           <select
-                                value={statusFilter}
-                                onChange={e => setStatusFilter(e.target.value)}
-                                className={`w-full sm:w-40 pl-3 pr-8 py-2 border border-gray-300 rounded-lg appearance-none bg-white focus:outline-none focus:ring-2 focus:ring-blue-500 ${statusFilter ? 'text-gray-800' : 'text-gray-500'}`}
-                            >
-                                <option value="">Status</option>
-                                <option value="Active">Active</option>
-                                <option value="Inactive">Inactive</option>
-                            </select>
-                            <div className="absolute inset-y-0 right-0 pr-2 flex items-center pointer-events-none">
-                                <ChevronDownIcon className="w-5 h-5 text-gray-400" />
-                            </div>
-                        </div>
+                        <SearchableDropdown 
+                            label="Application ID" 
+                            value={filters.applicationId} 
+                            onChange={(value) => setFilters({ applicationId: value })} 
+                            options={[...new Set(schedules.map(s => s.applicationId))]}
+                            placeholder="Application ID"
+                            className="w-full sm:w-48"
+                        />
+                        <SearchableDropdown 
+                            label="Application Name" 
+                            value={filters.applicationName} 
+                            onChange={(value) => setFilters({ applicationName: value })} 
+                            options={[...new Set(schedules.map(s => s.applicationName))]}
+                            placeholder="Application Name"
+                            className="w-full sm:w-48"
+                        />
+                        <SearchableDropdown 
+                            label="Status" 
+                            value={filters.status} 
+                            onChange={(value) => setFilters({ status: value })} 
+                            options={['Active', 'Inactive']}
+                            searchable={false}
+                            placeholder="Status"
+                            className="w-full sm:w-40"
+                        />
                     </div>
                     <div className="flex items-center gap-3">
                         {/* button edit */}
-                        <IconButton mode='label' leftIcon={<EditIcon className="w-4 h-4"/>} label='Edit' disabled={selectedRows.length === 0} onClick={handleOpenEditModal}/>
+                        <IconButton mode='label' leftIcon={<EditIcon className="w-4 h-4"/>} label='Edit' disabled={selectedRows.length === 0} onClick={handleOpenEditModal} hoverColor="blue"/>
                         {/* button set schedule */}
                         <AddButton onClick={() => setIsSetScheduleModalOpen(true)} label="Set Schedule">
                             <CalendarIcon className="w-4 h-4" />
@@ -281,10 +269,10 @@ const SchedulePage: React.FC = () => {
                         </div>
                     </div>
                     <div className="flex items-center gap-4">
-                        <span>Showing {startItem}-{endItem} of {totalItems}</span>
+                        <span>Showing {startItem}-{endItem} of {filteredSchedules.length}</span>
                         <div className="flex gap-2">
                             <button
-                                onClick={() => setCurrentPage(p => p - 1)}
+                                onClick={() => setCurrentPage(currentPage - 1)}
                                 disabled={currentPage === 1}
                                 className="px-2 py-1 border bg-white border-gray-300 rounded-md hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed"
                                 aria-label="Previous Page"
@@ -292,7 +280,7 @@ const SchedulePage: React.FC = () => {
                                 &lt;
                             </button>
                             <button
-                                onClick={() => setCurrentPage(p => p + 1)}
+                                onClick={() => setCurrentPage(currentPage + 1)}
                                 disabled={currentPage >= totalPages}
                                 className="px-2 py-1 border bg-white border-gray-300 rounded-md hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed"
                                 aria-label="Next Page"

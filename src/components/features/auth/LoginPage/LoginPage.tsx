@@ -5,6 +5,8 @@ import { SystemIcon } from '../../../icons/SystemIcon';
 import { EyeIcon } from '../../../icons/EyeIcon';
 import { EyeSlashIcon } from '../../../icons/EyeSlashIcon';
 import { ExclamationCircleIcon } from '../../../icons/ExclamationCircleIcon';
+import { useLogging } from '../../../../hooks/useLogging';
+import { sessionManager } from '../../../../services/sessionManager';
 
 interface LoginPageProps {
   onLoginSuccess: (user: User) => void;
@@ -15,6 +17,8 @@ const LoginPage: React.FC<LoginPageProps> = ({ onLoginSuccess }) => {
   const [password, setPassword] = useState('');
   const [error, setError] = useState('');
   const [showPassword, setShowPassword] = useState(false);
+  const [failedAttempts, setFailedAttempts] = useState<Record<string, number>>({});
+  const { logAuthentication, logSecurity } = useLogging();
 
   const handleSubmit = (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
@@ -22,6 +26,14 @@ const LoginPage: React.FC<LoginPageProps> = ({ onLoginSuccess }) => {
 
     if (!username || !password) {
       setError('Username and password are required.');
+      // Log missing credentials attempt
+      logAuthentication('login_failed', {
+        username: username || 'empty',
+        reason: 'missing_credentials',
+        ip: '127.0.0.1',
+        userAgent: navigator.userAgent,
+        timestamp: new Date().toISOString()
+      });
       return;
     }
 
@@ -31,9 +43,56 @@ const LoginPage: React.FC<LoginPageProps> = ({ onLoginSuccess }) => {
 
     if (foundUser) {
       const { password, ...userToLogin } = foundUser;
+      
+      // Log successful login
+      logAuthentication('login_success', {
+        username: userToLogin.username,
+        role: userToLogin.role,
+        name: userToLogin.name,
+        ip: '127.0.0.1',
+        userAgent: navigator.userAgent,
+        timestamp: new Date().toISOString()
+      });
+      
       onLoginSuccess(userToLogin);
     } else {
       setError('Invalid username or password.');
+      
+      // Track failed attempts
+      const currentAttempts = (failedAttempts[username] || 0) + 1;
+      setFailedAttempts(prev => ({ ...prev, [username]: currentAttempts }));
+      
+      // Log failed login attempt
+      logAuthentication('login_failed', {
+        username: username,
+        reason: 'invalid_credentials',
+        attemptNumber: currentAttempts,
+        ip: '127.0.0.1',
+        userAgent: navigator.userAgent,
+        timestamp: new Date().toISOString()
+      });
+
+      // Log suspicious activity for multiple failed attempts
+      if (currentAttempts >= 3) {
+        logSecurity('multiple_failed_login_attempts', {
+          username: username,
+          attemptCount: currentAttempts,
+          ip: '127.0.0.1',
+          userAgent: navigator.userAgent,
+          timestamp: new Date().toISOString()
+        }, 'Warning');
+      }
+
+      // Log potential brute force attack
+      if (currentAttempts >= 5) {
+        logSecurity('potential_brute_force_attack', {
+          username: username,
+          attemptCount: currentAttempts,
+          ip: '127.0.0.1',
+          userAgent: navigator.userAgent,
+          timestamp: new Date().toISOString()
+        }, 'Error');
+      }
     }
   };
 
@@ -54,7 +113,7 @@ const LoginPage: React.FC<LoginPageProps> = ({ onLoginSuccess }) => {
 
         {/* Right Panel: Login Form */}
         <div className="p-8 md:p-12 flex flex-col justify-center">
-          <h2 className="text-3xl font-bold text-gray-800">Login to Account</h2>
+          <h2 className="text-2xl font-bold text-gray-800">Login to Account</h2>
           <p className="mt-3 text-sm text-gray-500">
             Please enter username and password to continue
           </p>

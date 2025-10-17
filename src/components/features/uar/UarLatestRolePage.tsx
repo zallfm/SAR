@@ -4,6 +4,7 @@ import type { UarLatestRole } from '../../../../data';
 import { ChevronDownIcon } from '../../icons/ChevronDownIcon';
 import RoleInfoModal from '../../common/Modal/RoleInfoModal';
 import { DownloadButton } from '../../common/Button/DownloadButton';
+import SearchableDropdown from '../../common/SearchableDropdown';
 
 declare var XLSX: any;
 
@@ -78,32 +79,24 @@ const UarLatestRolePage: React.FC = () => {
             <div className="bg-white p-6 rounded-xl border border-gray-200 shadow-sm">
                 <div className="flex justify-between items-center mb-6 flex-wrap gap-4">
                     <div className="flex items-center gap-4">
-                        <div className="relative">
-                            <select
-                                value={appIdFilter}
-                                onChange={(e) => setAppIdFilter(e.target.value)}
-                                className="pl-3 pr-8 py-2 border border-gray-300 rounded-md appearance-none bg-white focus:outline-none focus:ring-2 focus:ring-blue-500 min-w-[150px]"
-                            >
-                                <option value="">Application ID</option>
-                                {applicationIds.map(id => <option key={id} value={id}>{id}</option>)}
-                            </select>
-                            <div className="absolute inset-y-0 right-0 pr-2 flex items-center pointer-events-none">
-                                <ChevronDownIcon className="w-5 h-5 text-gray-400" />
-                            </div>
-                        </div>
-                        <div className="relative">
-                           <select
-                                value={systemIdFilter}
-                                onChange={(e) => setSystemIdFilter(e.target.value)}
-                                className="pl-3 pr-8 py-2 border border-gray-300 rounded-md appearance-none bg-white focus:outline-none focus:ring-2 focus:ring-blue-500 min-w-[150px]"
-                            >
-                                <option value="">System ID</option>
-                                {systemIds.map(id => <option key={id} value={id}>{id}</option>)}
-                            </select>
-                            <div className="absolute inset-y-0 right-0 pr-2 flex items-center pointer-events-none">
-                                <ChevronDownIcon className="w-5 h-5 text-gray-400" />
-                            </div>
-                        </div>
+                        <SearchableDropdown 
+                            label="Application ID" 
+                            value={appIdFilter} 
+                            onChange={setAppIdFilter} 
+                            options={applicationIds}
+                            searchable={false}
+                            placeholder="Application ID"
+                            className="w-full sm:w-40"
+                        />
+                        <SearchableDropdown 
+                            label="System ID" 
+                            value={systemIdFilter} 
+                            onChange={setSystemIdFilter} 
+                            options={systemIds}
+                            searchable={false}
+                            placeholder="System ID"
+                            className="w-full sm:w-40"
+                        />
                     </div>
                     <DownloadButton style={{ paddingLeft: "24px", paddingRight: "24px" }}className='bg-blue-600 text-white font-semibold py-2 rounded-lg hover:bg-blue-700 transition-colors' onClick={handleDownload}/>
                 </div>

@@ -1,6 +1,6 @@
 import React from 'react';
 
-export type StatusType = 'Success' | 'Error' | 'InProgress' | 'Active' | 'Inactive' | 'Finished';
+export type StatusType = 'Success' | 'Error' | 'Warning' | 'InProgress' | 'Active' | 'Inactive' | 'Finished';
 
 interface StatusPillProps {
   status: StatusType;
@@ -21,6 +21,9 @@ const StatusPill: React.FC<StatusPillProps> = ({ status }) => {
     case 'Error':
     case 'Inactive':
       statusClasses = "bg-red-100 text-red-700";
+      break;
+    case 'Warning':
+      statusClasses = "bg-yellow-100 text-yellow-700";
       break;
     case 'InProgress':
       statusClasses = "bg-yellow-100 text-yellow-800";

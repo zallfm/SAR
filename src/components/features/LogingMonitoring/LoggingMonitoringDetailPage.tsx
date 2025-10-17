@@ -95,7 +95,7 @@ const LoggingMonitoringDetailPage: React.FC<LoggingMonitoringDetailPageProps> = 
 
     return (
         <div>
-            <h2 className="text-3xl font-bold text-gray-800 mb-2">Logging Monitoring Detail</h2>
+            <h2 className="text-2xl font-bold text-gray-800 mb-2">Logging Monitoring Detail</h2>
             <div className="text-sm text-gray-500 mb-6 flex items-center flex-wrap">
                 <button 
                     onClick={onBack} 
@@ -135,7 +135,7 @@ const LoggingMonitoringDetailPage: React.FC<LoggingMonitoringDetailPageProps> = 
                         <tbody>
                              {currentDetails.length > 0 ? currentDetails.map((detail, index) => (
                                 <tr key={detail.id} className="bg-white border-b border-gray-200 last:border-b-0 hover:bg-gray-50">
-                                    <td className="px-4 py-4 whitespace-nowrap font-medium text-gray-900 text-sm">{startItem + index}</td>
+                                    <td className="px-4 py-4 whitespace-nowrap text-gray-900 text-sm">{startItem + index}</td>
                                     <td className="px-4 py-4 whitespace-nowrap text-sm">{detail.messageDateTime}</td>
                                     <td className="px-4 py-4 whitespace-nowrap text-sm">{detail.location}</td>
                                     <td className="px-4 py-4 whitespace-nowrap text-sm">{detail.messageDetail}</td>

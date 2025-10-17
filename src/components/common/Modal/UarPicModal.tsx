@@ -184,7 +184,7 @@ const UarPicModal: React.FC<UarPicModalProps> = ({ onClose, onSave, picToEdit })
                     <button
                         onClick={handleSave}
                         disabled={!isFormValid}
-                        className="px-6 py-2 text-sm font-medium text-white bg-blue-600 border border-transparent rounded-md shadow-sm hover:bg-blue-700 focus:outline-none disabled:bg-gray-300 disabled:cursor-not-allowed"
+                        className="px-6 py-2 text-sm font-medium text-white bg-blue-600 border border-transparent rounded-md shadow-sm hover:bg-blue-700 focus:outline-none disabled:bg-gray-100 disabled:text-gray-400 disabled:cursor-not-allowed"
                     >
                         Save
                     </button>

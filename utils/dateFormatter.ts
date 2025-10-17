@@ -83,12 +83,32 @@ export const isValidDdMm = (ddMm: string): boolean => {
     if (!ddMm) return false;
     const trimmedDdMm = ddMm.trim();
     if (!/^\d{1,2}\/\d{1,2}$/.test(trimmedDdMm)) return false;
-    
+
     const parts = trimmedDdMm.split('/');
     const day = parseInt(parts[0], 10);
     const month = parseInt(parts[1], 10);
-    
+
     if (isNaN(day) || isNaN(month)) return false;
 
     return day > 0 && day <= 31 && month > 0 && month <= 12;
+};
+
+/**
+ * Validates if UAR date is after Sync End date.
+ * @param syncEndDate - The sync end date in "dd/mm" format.
+ * @param uarDate - The UAR date in "dd/mm" format.
+ * @returns True if UAR date is after sync end date, false otherwise.
+ */
+export const isUarDateValid = (syncEndDate: string, uarDate: string): boolean => {
+    if (!isValidDdMm(syncEndDate) || !isValidDdMm(uarDate)) return true; // If either date is invalid, don't block
+
+    const [syncEndDay, syncEndMonth] = syncEndDate.split('/').map(Number);
+    const [uarDay, uarMonth] = uarDate.split('/').map(Number);
+
+    // Compare months first
+    if (uarMonth > syncEndMonth) return true;
+    if (uarMonth < syncEndMonth) return false;
+
+    // If same month, compare days
+    return uarDay > syncEndDay;
 };

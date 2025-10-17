@@ -1,29 +1,65 @@
-import React, { useState } from 'react';
-import LoginPage from './src/components/features/auth/LoginPage/LoginPage';
-import Dashboard from './src/components/layout/Dashboard';
-import type { User } from './types';
+import React, { lazy, Suspense, useEffect } from 'react'
+import type { User } from './types'
+import { useGlobalLogging, useNavigationLogging, useInteractionLogging, useApiLogging } from './src/hooks/useGlobalLogging'
+import { useLogging } from './src/hooks/useLogging'
+import { sessionManager } from './src/services/sessionManager'
+import { useAuthStore } from './src/store/authStore'
+
+const LoginPage = lazy(() => import('./src/components/features/auth/LoginPage/LoginPage'))
+const Dashboard = lazy(() => import('./src/components/layout/Dashboard'))
 
 const App: React.FC = () => {
-  const [currentUser, setCurrentUser] = useState<User | null>(null);
+  const { currentUser, login, logout } = useAuthStore()
+  const { logAuthentication } = useLogging()
+
+  // Initialize global logging
+  useGlobalLogging()
+  useNavigationLogging()
+  useInteractionLogging()
+  useApiLogging()
 
   const handleLoginSuccess = (user: User) => {
-    // In a real app, you'd store a token, not the full user object
-    setCurrentUser(user);
-  };
+    sessionManager.createSession({
+      userId: user.username,
+      username: user.username,
+      role: user.role,
+      name: user.name,
+      ip: '127.0.0.1',
+      userAgent: navigator.userAgent,
+    })
+
+    login(user)
+  }
 
   const handleLogout = () => {
-    setCurrentUser(null);
-  };
+    sessionManager.logout()
+    logout()
+  }
+
+  useEffect(() => {
+    const checkSession = () => {
+      if (currentUser && !sessionManager.isSessionValid()) {
+        logout()
+      }
+    }
+
+    const interval = setInterval(checkSession, 60000)
+
+    return () => clearInterval(interval)
+  }, [currentUser, logout])
 
   return (
-    <div className="bg-gray-100 h-screen font-sans">
-      {currentUser ? (
-        <Dashboard user={currentUser} onLogout={handleLogout} />
-      ) : (
-        <LoginPage onLoginSuccess={handleLoginSuccess} />
-      )}
-    </div>
-  );
-};
+    <Suspense fallback={<div className="flex h-screen items-center justify-center bg-gray-100 font-sans">Loading...</div>}>
+      <div className="bg-gray-100 h-screen font-sans">
+        {currentUser ? (
+          <Dashboard onLogout={handleLogout} />
+        ) : (
+          <LoginPage onLoginSuccess={handleLoginSuccess} />
+        )}
+      </div>
+    </Suspense>
+  )
+}
 
-export default App;
+export default App
+

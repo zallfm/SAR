@@ -1,0 +1,46 @@
+/* Simple date picker with dual dropdowns - no complex calendar needed */
+
+/* Fixed Chart.js Legend */
+.chart-container {
+  position: relative;
+}
+
+.chart-container .chartjs-legend {
+  position: sticky !important;
+  top: 0 !important;
+  z-index: 10 !important;
+  background: white !important;
+  padding: 10px 0 !important;
+  border-bottom: 1px solid #e5e7eb !important;
+  margin-bottom: 10px !important;
+}
+
+.chart-container .chartjs-legend ul {
+  display: flex !important;
+  flex-wrap: wrap !important;
+  gap: 20px !important;
+  justify-content: center !important;
+  margin: 0 !important;
+  padding: 0 !important;
+  list-style: none !important;
+}
+
+.chart-container .chartjs-legend li {
+  display: flex !important;
+  align-items: center !important;
+  gap: 8px !important;
+  cursor: pointer !important;
+  padding: 4px 8px !important;
+  border-radius: 4px !important;
+  transition: background-color 0.2s !important;
+}
+
+.chart-container .chartjs-legend li:hover {
+  background-color: #f3f4f6 !important;
+}
+
+.chart-container .chartjs-legend li span {
+  font-size: 12px !important;
+  font-weight: 500 !important;
+  color: #374151 !important;
+}

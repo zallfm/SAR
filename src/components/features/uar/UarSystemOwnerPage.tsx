@@ -1,4 +1,4 @@
-import React, { useState, useMemo } from "react";
+import React, { useEffect, useMemo, useState } from "react";
 import {
   initialUarSystemOwnerData,
   initialUarSystemOwnerDetailData,
@@ -12,6 +12,7 @@ import { DownloadActionIcon } from "../../icons/DownloadActionIcon";
 import StatusPill from "../StatusPill/StatusPill";
 import { ActionReview } from "../../common/Button/ActionReview";
 import { ActionDownload } from "../../common/Button/ActionDownload";
+import SearchableDropdown from "../../common/SearchableDropdown";
 
 interface UarSystemOwnerPageProps {
   onReview: (record: UarSystemOwnerRecord) => void;
@@ -50,76 +51,121 @@ const UarSystemOwnerPage: React.FC<UarSystemOwnerPageProps> = ({
     return progressMap;
   }, []);
 
-  const overallProgress = useMemo(() => {
-    const totalCount = records.length;
-    let finishedCount = 0;
-
-    records.forEach((record) => {
-      const progress = progressData.get(record.uarId);
-      if (progress && progress.reviewed === progress.total) {
-        finishedCount++;
+  const enhancedRecords = useMemo(() => {
+    const computePeriod = (uarId: string) => {
+      const parts = uarId.split("_");
+      if (parts.length > 1 && parts[1].length === 6 && /^\d+$/.test(parts[1])) {
+        const month = parts[1].substring(0, 2);
+        const year = `20${parts[1].substring(2)}`;
+        return `${year}-${month}`;
       }
-    });
+      return null;
+    };
 
-    return { finishedCount, totalCount };
+    return records.map((record) => {
+      const progress = progressData.get(record.uarId);
+      const reviewed = progress?.reviewed ?? 0;
+      const total = progress?.total ?? 0;
+      const isFinished = total > 0 && reviewed === total;
+      const percentComplete = total > 0
+        ? `${Math.round((reviewed / total) * 100)}% (${reviewed} of ${total})`
+        : "0% (0 of 0)";
+
+      return {
+        ...record,
+        percentComplete,
+        status: isFinished ? "Finished" as const : "InProgress" as const,
+        periodKey: computePeriod(record.uarId),
+        searchableUarId: record.uarId.toLowerCase(),
+        searchableOwner: record.divisionOwner.toLowerCase(),
+      };
+    });
   }, [records, progressData]);
 
+  const overallProgress = useMemo(() => {
+    const totalCount = enhancedRecords.length;
+    const finishedCount = enhancedRecords.filter(
+      (record) => record.status === "Finished"
+    ).length;
+
+    return { finishedCount, totalCount };
+  }, [enhancedRecords]);
+
   const filteredRecords = useMemo(() => {
-    return records.filter((record) => {
-      const uarMatch = uarFilter
-        ? record.uarId.toLowerCase().includes(uarFilter.toLowerCase())
-        : true;
-      const ownerMatch = ownerFilter
-        ? record.divisionOwner.toLowerCase().includes(ownerFilter.toLowerCase())
-        : true;
+    const normalizedUarFilter = uarFilter.trim().toLowerCase();
+    const normalizedOwnerFilter = ownerFilter.trim().toLowerCase();
 
-      const progress = progressData.get(record.uarId);
-      const status: "Finished" | "InProgress" =
-        progress && progress.reviewed === progress.total
-          ? "Finished"
-          : "InProgress";
-      const statusMatch = statusFilter ? status === statusFilter : true;
-
-      const periodMatch = (() => {
-        if (!periodFilter) return true; // periodFilter is "YYYY-MM"
-        const parts = record.uarId.split("_");
-        if (
-          parts.length > 1 &&
-          parts[1].length === 6 &&
-          /^\d+$/.test(parts[1])
-        ) {
-          const month = parts[1].substring(0, 2);
-          const year = `20${parts[1].substring(2)}`;
-          const recordPeriod = `${year}-${month}`;
-          return recordPeriod === periodFilter;
-        }
+    return enhancedRecords.filter((record) => {
+      if (
+        normalizedUarFilter &&
+        !record.searchableUarId.includes(normalizedUarFilter)
+      ) {
         return false;
-      })();
+      }
 
-      return periodMatch && uarMatch && ownerMatch && statusMatch;
+      if (
+        normalizedOwnerFilter &&
+        !record.searchableOwner.includes(normalizedOwnerFilter)
+      ) {
+        return false;
+      }
+
+      if (statusFilter && record.status !== statusFilter) {
+        return false;
+      }
+
+      if (periodFilter && record.periodKey !== periodFilter) {
+        return false;
+      }
+
+      return true;
     });
-  }, [
-    records,
-    periodFilter,
-    uarFilter,
-    ownerFilter,
-    statusFilter,
-    progressData,
-  ]);
+  }, [enhancedRecords, periodFilter, statusFilter, uarFilter, ownerFilter]);
 
   const totalItems = filteredRecords.length;
-  const totalPages = Math.ceil(totalItems / itemsPerPage);
-  const startIndex = (currentPage - 1) * itemsPerPage;
-  const currentRecords = filteredRecords.slice(
-    startIndex,
-    startIndex + itemsPerPage
-  );
-  const startItem = totalItems > 0 ? startIndex + 1 : 0;
-  const endItem = Math.min(startIndex + itemsPerPage, totalItems);
+  const totalPages = totalItems === 0 ? 1 : Math.ceil(totalItems / itemsPerPage);
+
+  useEffect(() => {
+    if (totalItems === 0) {
+      if (currentPage !== 1) {
+        setCurrentPage(1);
+      }
+      return;
+    }
+
+    if (currentPage > totalPages) {
+      setCurrentPage(totalPages);
+    }
+  }, [currentPage, totalItems, totalPages]);
+
+  const { paginatedRecords, startItem, endItem } = useMemo(() => {
+    if (totalItems === 0) {
+      return {
+        paginatedRecords: [] as typeof enhancedRecords,
+        startItem: 0,
+        endItem: 0,
+      };
+    }
+
+    const startIndex = (currentPage - 1) * itemsPerPage;
+    const endIndex = Math.min(startIndex + itemsPerPage, totalItems);
+
+    return {
+      paginatedRecords: filteredRecords.slice(startIndex, endIndex),
+      startItem: startIndex + 1,
+      endItem: endIndex,
+    };
+  }, [
+    filteredRecords,
+    totalItems,
+    currentPage,
+    itemsPerPage,
+    enhancedRecords,
+  ]);
 
   return (
     <div>
-      <h2 className="text-3xl font-bold text-gray-800 mb-6">
+      <h2 className="text-2xl font-bold text-gray-800 mb-6">
         UAR System Owner
       </h2>
 
@@ -168,31 +214,21 @@ const UarSystemOwnerPage: React.FC<UarSystemOwnerPageProps> = ({
           </div>
 
           {/* Bottom Row: Other Filters */}
-          <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-4">
-            <div className="relative">
-              <input
-                type="text"
-                placeholder="UAR"
-                value={uarFilter}
-                onChange={(e) => setUarFilter(e.target.value)}
-                className="w-full pl-10 pr-4 py-2 bg-white border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 text-sm"
-              />
-              <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-                <SearchIcon className="w-5 h-5 text-gray-400" />
-              </div>
-            </div>
-            <div className="relative">
-              <input
-                type="text"
-                placeholder="Division Owner"
-                value={ownerFilter}
-                onChange={(e) => setOwnerFilter(e.target.value)}
-                className="w-full pl-10 pr-4 py-2 bg-white border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 text-sm"
-              />
-              <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-                <SearchIcon className="w-5 h-5 text-gray-400" />
-              </div>
-            </div>
+          <div className="flex items-center gap-4 flex-wrap">
+            <SearchableDropdown 
+              label="UAR ID" 
+              value={uarFilter} 
+              onChange={setUarFilter} 
+              options={[...new Set(records.map(r => r.uarId))]}
+              placeholder="UAR ID"
+            />
+            <SearchableDropdown 
+              label="Division Owner" 
+              value={ownerFilter} 
+              onChange={setOwnerFilter} 
+              options={[...new Set(records.map(r => r.divisionOwner))]}
+              placeholder="Division Owner"
+            />
             <div className="relative">
               <input
                 type={createDateFilter ? "date" : "text"}
@@ -205,7 +241,7 @@ const UarSystemOwnerPage: React.FC<UarSystemOwnerPageProps> = ({
                 onBlur={(e) => {
                   if (!e.target.value) e.target.type = "text";
                 }}
-                className="w-full px-3 py-2 border border-gray-300 rounded-lg appearance-none bg-white focus:outline-none focus:ring-2 focus:ring-blue-500 text-sm"
+                className="w-full sm:w-40 px-3 py-2 border border-gray-300 rounded-lg appearance-none bg-white focus:outline-none focus:ring-2 focus:ring-blue-500 text-sm"
               />
             </div>
             <div className="relative">
@@ -220,23 +256,17 @@ const UarSystemOwnerPage: React.FC<UarSystemOwnerPageProps> = ({
                 onBlur={(e) => {
                   if (!e.target.value) e.target.type = "text";
                 }}
-                className="w-full px-3 py-2 border border-gray-300 rounded-lg appearance-none bg-white focus:outline-none focus:ring-2 focus:ring-blue-500 text-sm"
+                className="w-full sm:w-40 px-3 py-2 border border-gray-300 rounded-lg appearance-none bg-white focus:outline-none focus:ring-2 focus:ring-blue-500 text-sm"
               />
             </div>
-            <div className="relative">
-              <select
-                value={statusFilter}
-                onChange={(e) => setStatusFilter(e.target.value)}
-                className="w-full pl-3 pr-8 py-2 border border-gray-300 rounded-lg appearance-none bg-white focus:outline-none focus:ring-2 focus:ring-blue-500 text-sm"
-              >
-                <option value="">Status</option>
-                <option value="Finished">Finished</option>
-                <option value="InProgress">In Progress</option>
-              </select>
-              <div className="absolute inset-y-0 right-0 pr-2 flex items-center pointer-events-none">
-                <ChevronDownIcon className="w-4 h-4 text-gray-400" />
-              </div>
-            </div>
+            <SearchableDropdown 
+              label="Status" 
+              value={statusFilter} 
+              onChange={setStatusFilter} 
+              options={['Finished', 'InProgress']}
+              searchable={false}
+              placeholder="Status"
+            />
           </div>
         </div>
 
@@ -261,32 +291,20 @@ const UarSystemOwnerPage: React.FC<UarSystemOwnerPageProps> = ({
               </tr>
             </thead>
             <tbody>
-              {currentRecords.map((record) => {
-                const progress = progressData.get(record.uarId);
-                const percentComplete =
-                  progress && progress.total > 0
-                    ? `${Math.round(
-                        (progress.reviewed / progress.total) * 100
-                      )}% (${progress.reviewed} of ${progress.total})`
-                    : "0% (0 of 0)";
-                const status: "Finished" | "InProgress" =
-                  progress && progress.reviewed === progress.total
-                    ? "Finished"
-                    : "InProgress";
-
+              {paginatedRecords.map((record) => {
                 return (
                   <tr
                     key={record.id}
                     className="bg-white border-b border-gray-200 last:border-b-0 hover:bg-gray-50"
                   >
-                    <td className="px-4 py-4 whitespace-nowrap text-sm font-medium text-gray-900">
+                    <td className="px-4 py-4 whitespace-nowrap text-sm text-gray-900">
                       {record.uarId}
                     </td>
                     <td className="px-4 py-4 whitespace-nowrap text-sm">
                       {record.divisionOwner}
                     </td>
                     <td className="px-4 py-4 whitespace-nowrap text-sm">
-                      {percentComplete}
+                      {record.percentComplete}
                     </td>
                     <td className="px-4 py-4 whitespace-nowrap text-sm">
                       {record.createDate}
@@ -295,7 +313,7 @@ const UarSystemOwnerPage: React.FC<UarSystemOwnerPageProps> = ({
                       {record.completedDate}
                     </td>
                     <td className="px-4 py-4 whitespace-nowrap text-sm">
-                      <StatusPill status={status} />
+                      <StatusPill status={record.status} />
                     </td>
                     <td className="px-4 py-4 whitespace-nowrap text-sm">
                       <div className="flex items-center gap-3">
@@ -340,19 +358,19 @@ const UarSystemOwnerPage: React.FC<UarSystemOwnerPageProps> = ({
           </div>
           <div className="flex items-center gap-4">
             <span>
-              Showing {startItem}-{endItem} of {totalItems}
+              Showing {totalItems === 0 ? 0 : `${startItem}-${endItem}`} of {totalItems}
             </span>
             <div className="flex gap-2">
               <button
-                onClick={() => setCurrentPage((p) => p - 1)}
-                disabled={currentPage === 1}
+                onClick={() => setCurrentPage((p) => Math.max(1, p - 1))}
+                disabled={currentPage <= 1}
                 className="px-2 py-1 border bg-white border-gray-300 rounded-md hover:bg-gray-50 disabled:opacity-50"
                 aria-label="Previous Page"
               >
                 &lt;
               </button>
               <button
-                onClick={() => setCurrentPage((p) => p + 1)}
+                onClick={() => setCurrentPage((p) => Math.min(totalPages, p + 1))}
                 disabled={currentPage >= totalPages}
                 className="px-2 py-1 border bg-white border-gray-300 rounded-md hover:bg-gray-50 disabled:opacity-50"
                 aria-label="Next Page"

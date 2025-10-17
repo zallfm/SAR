@@ -1,123 +1,156 @@
-import React, { useState } from 'react';
-import type { User } from '../../../types';
-import Header from './Header';
-import Sidebar from './Sidebar';
-import DashboardContent from '../../components/features/DashboardContent/DashboardContent';
-import ApplicationPage from '../features/application/ApplicationPage';
-import LoggingMonitoringPage from '../../components/features/LogingMonitoring/LoggingMonitoringPage';
-import type { LogEntry, UarSystemOwnerRecord, UarDivisionUserRecord } from '../../../data';
-import LoggingMonitoringDetailPage from '../../components/features/LogingMonitoring/LoggingMonitoringDetailPage';
-import UarPicPage from '../features/UarPic/UarPicPage';
-import SystemMasterPage from '../features/system-master/SystemMasterPage';
-import UarLatestRolePage from '../features/uar/UarLatestRolePage';
-import SchedulePage from '../features/schedule/SchedulePage';
-import UarSystemOwnerPage from '../features/uar/UarSystemOwnerPage';
-import UarProgressPage from '../features/uar/UarProgressPage';
-import UarSystemOwnerDetailPage from '../features/uar/UarSystemOwnerDetailPage';
-import UarDivisionUserPage from '../features/uar/UarDivisionUserPage';
-import UarDivisionUserDetailPage from '../features/uar/UarDivisionUserDetailPage';
+import React, { lazy, Suspense } from 'react'
+import Header from './Header'
+import Sidebar from './Sidebar'
+import type { LogEntry, UarSystemOwnerRecord, UarDivisionUserRecord } from '../../../data'
+import { useLogging } from '../../hooks/useLogging'
+import Copyright from '../common/Copyright'
+import { useAuthStore } from '../../store/authStore'
+import { useUIStore } from '../../store/uiStore'
+import { useUarStore } from '../../store/uarStore'
 
-export type ActiveView = 
-  | 'dashboard'
-  | 'application'
-  | 'uar_progress'
-  | 'uar_division_user'
-  | 'uar_division_user_detail'
-  | 'uar_system_owner'
-  | 'uar_system_owner_detail'
-  | 'uar_latest_role'
-  | 'uar_pic'
-  | 'schedule'
-  | 'system_master'
-  | 'logging_monitoring'
-  | 'logging_monitoring_detail';
+const DashboardContent = lazy(() => import('../features/DashboardContent/DashboardContent'))
+const ApplicationPage = lazy(() => import('../features/application/ApplicationPage'))
+const LoggingMonitoringPage = lazy(() => import('../features/LogingMonitoring/LoggingMonitoringPage'))
+const LoggingMonitoringDetailPage = lazy(() => import('../features/LogingMonitoring/LoggingMonitoringDetailPage'))
+const UarPicPage = lazy(() => import('../features/UarPic/UarPicPage'))
+const SystemMasterPage = lazy(() => import('../features/system-master/SystemMasterPage'))
+const UarLatestRolePage = lazy(() => import('../features/uar/UarLatestRolePage'))
+const SchedulePage = lazy(() => import('../features/schedule/SchedulePage'))
+const UarSystemOwnerPage = lazy(() => import('../features/uar/UarSystemOwnerPage'))
+const UarProgressPage = lazy(() => import('../features/uar/UarProgressPage'))
+const UarSystemOwnerDetailPage = lazy(() => import('../features/uar/UarSystemOwnerDetailPage'))
+const UarDivisionUserPage = lazy(() => import('../features/uar/UarDivisionUserPage'))
+const UarDivisionUserDetailPage = lazy(() => import('../features/uar/UarDivisionUserDetailPage'))
 
 interface DashboardProps {
-  user: User;
-  onLogout: () => void;
+  onLogout: () => void
 }
 
-const Dashboard: React.FC<DashboardProps> = ({ user, onLogout }) => {
-  const [activeView, setActiveView] = useState<ActiveView>('dashboard');
-  const [selectedLog, setSelectedLog] = useState<LogEntry | null>(null);
-  const [selectedUarRecord, setSelectedUarRecord] = useState<UarSystemOwnerRecord | null>(null);
-  const [selectedUarDivisionRecord, setSelectedUarDivisionRecord] = useState<UarDivisionUserRecord | null>(null);
+const Dashboard: React.FC<DashboardProps> = ({ onLogout }) => {
+  const { currentUser } = useAuthStore()
+  const { activeView, setActiveView, resetActiveView } = useUIStore()
+  const {
+    selectedLog,
+    setSelectedLog,
+    selectedSystemOwner,
+    selectSystemOwner,
+    selectedDivisionUser,
+    selectDivisionUser,
+  } = useUarStore()
+
+  const user = currentUser!
+
+  const { logUserAction, logNavigation } = useLogging({
+    componentName: 'Dashboard',
+    userId: user.username,
+    enablePerformanceLogging: true,
+  })
 
   const handleViewDetail = (log: LogEntry) => {
-    setSelectedLog(log);
-    setActiveView('logging_monitoring_detail');
-  };
+    setSelectedLog(log)
+    setActiveView('logging_monitoring_detail')
+
+    logNavigation('logging_monitoring', 'logging_monitoring_detail', {
+      logId: log.id,
+      timestamp: new Date().toISOString(),
+    })
+  }
 
   const handleBackToLogs = () => {
-    setSelectedLog(null);
-    setActiveView('logging_monitoring');
-  };
+    setSelectedLog(null)
+    setActiveView('logging_monitoring')
+  }
 
   const handleReviewUarRecord = (record: UarSystemOwnerRecord) => {
-    setSelectedUarRecord(record);
-    setActiveView('uar_system_owner_detail');
+    selectSystemOwner(record)
+    setActiveView('uar_system_owner_detail')
   }
 
   const handleBackToUarSystemOwner = () => {
-    setSelectedUarRecord(null);
-    setActiveView('uar_system_owner');
+    selectSystemOwner(null)
+    setActiveView('uar_system_owner')
   }
 
   const handleReviewUarDivisionRecord = (record: UarDivisionUserRecord) => {
-    setSelectedUarDivisionRecord(record);
-    setActiveView('uar_division_user_detail');
+    selectDivisionUser(record)
+    setActiveView('uar_division_user_detail')
   }
 
   const handleBackToUarDivisionUser = () => {
-    setSelectedUarDivisionRecord(null);
-    setActiveView('uar_division_user');
+    selectDivisionUser(null)
+    setActiveView('uar_division_user')
   }
-
 
   const renderContent = () => {
     switch (activeView) {
       case 'dashboard':
-        return <DashboardContent />;
+        return <DashboardContent />
       case 'application':
-        return <ApplicationPage />;
+        return <ApplicationPage />
       case 'logging_monitoring':
-        return <LoggingMonitoringPage onViewDetail={handleViewDetail} />;
+        return <LoggingMonitoringPage onViewDetail={handleViewDetail} />
       case 'logging_monitoring_detail':
-        return selectedLog ? <LoggingMonitoringDetailPage logEntry={selectedLog} onBack={handleBackToLogs} /> : <LoggingMonitoringPage onViewDetail={handleViewDetail} />;
+        return selectedLog ? (
+          <LoggingMonitoringDetailPage logEntry={selectedLog} onBack={handleBackToLogs} />
+        ) : (
+          <LoggingMonitoringPage onViewDetail={handleViewDetail} />
+        )
       case 'uar_pic':
-        return <UarPicPage />;
+        return <UarPicPage />
       case 'system_master':
-        return <SystemMasterPage user={user} />;
+        return <SystemMasterPage user={user} />
       case 'uar_latest_role':
-        return <UarLatestRolePage />;
+        return <UarLatestRolePage />
       case 'schedule':
-        return <SchedulePage />;
+        return <SchedulePage />
       case 'uar_system_owner':
-        return <UarSystemOwnerPage onReview={handleReviewUarRecord} />;
-       case 'uar_system_owner_detail':
-        return selectedUarRecord ? <UarSystemOwnerDetailPage record={selectedUarRecord} onBack={handleBackToUarSystemOwner} user={user} /> : <UarSystemOwnerPage onReview={handleReviewUarRecord} />;
+        return <UarSystemOwnerPage onReview={handleReviewUarRecord} />
+      case 'uar_system_owner_detail':
+        return selectedSystemOwner ? (
+          <UarSystemOwnerDetailPage record={selectedSystemOwner} onBack={handleBackToUarSystemOwner} user={user} />
+        ) : (
+          <UarSystemOwnerPage onReview={handleReviewUarRecord} />
+        )
       case 'uar_progress':
-        return <UarProgressPage />;
+        return <UarProgressPage />
       case 'uar_division_user':
-        return <UarDivisionUserPage onReview={handleReviewUarDivisionRecord} />;
+        return <UarDivisionUserPage onReview={handleReviewUarDivisionRecord} />
       case 'uar_division_user_detail':
-        return selectedUarDivisionRecord ? <UarDivisionUserDetailPage record={selectedUarDivisionRecord} onBack={handleBackToUarDivisionUser} user={user} /> : <UarDivisionUserPage onReview={handleReviewUarDivisionRecord} />;
+        return selectedDivisionUser ? (
+          <UarDivisionUserDetailPage record={selectedDivisionUser} onBack={handleBackToUarDivisionUser} user={user} />
+        ) : (
+          <UarDivisionUserPage onReview={handleReviewUarDivisionRecord} />
+        )
       default:
-        return <DashboardContent />;
+        return <DashboardContent />
     }
-  };
+  }
 
   return (
     <div className="flex h-screen bg-gray-100">
-      <Sidebar activeView={activeView} setActiveView={setActiveView} />
-      <div className="flex-1 flex flex-col overflow-hidden">
+      <div className="w-64 flex-shrink-0 h-full">
+        <Sidebar
+          activeView={activeView}
+          setActiveView={(view) => {
+            logNavigation(activeView, view, {
+              userId: user.username,
+              timestamp: new Date().toISOString(),
+            })
+            setActiveView(view)
+          }}
+        />
+      </div>
+      <div className="flex-1 flex flex-col overflow-hidden h-full">
         <Header user={user} onLogout={onLogout} />
-        <main className="flex-1 overflow-x-hidden overflow-y-auto bg-gray-100 p-6">
-          {renderContent()}
+        <main className="flex-1 overflow-x-auto overflow-y-auto bg-gray-100 p-6">
+          <Suspense fallback={<div className="flex h-full items-center justify-center text-gray-500">Loading...</div>}>
+            {renderContent()}
+          </Suspense>
         </main>
+        <Copyright />
       </div>
     </div>
-  );
-};
+  )
+}
 
-export default Dashboard;
+export default Dashboard

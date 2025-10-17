@@ -1,80 +1,108 @@
-import React, { useState } from "react";
+import React, { useEffect, useMemo, useState } from "react";
 import { SearchIcon } from "../../icons/SearchIcon";
 import { ActionIcon } from "../../icons/ActionIcon";
 import { ChevronDownIcon } from "../../icons/ChevronDownIcon";
 import AddApplicationModal from "../../common/Modal/AddApplicationModal";
 import SuccessModal from "../../common/Modal/SuccessModal";
-import { initialApplications } from "../../../../data";
+import { systemUsers } from "../../../../data";
 import type { Application } from "../../../../data";
 import StatusConfirmationModal from "../../common/Modal/StatusConfirmationModal";
 import StatusPill from "../StatusPill/StatusPill";
 import { AddButton } from "../../common/Button/AddButton";
 import { IconButton } from "../../common/Button/IconButton";
 import { EditIcon } from "../../icons/EditIcon";
+import { useLogging } from "../../../hooks/useLogging";
+import { loggingUtils } from "../../../utils/loggingIntegration";
+import SearchableDropdown from "../../common/SearchableDropdown";
+import { useApplicationStore } from "../../../store/applicationStore";
 
 const ApplicationPage: React.FC = () => {
-  const [applications, setApplications] =
-    useState<Application[]>(initialApplications);
-  const [isModalOpen, setIsModalOpen] = useState(false);
-  const [editingApplication, setEditingApplication] =
-    useState<Application | null>(null);
+  const {
+    applications,
+    searchTerm,
+    currentPage,
+    itemsPerPage,
+    isModalOpen,
+    editingApplication,
+    isStatusConfirmationOpen,
+    pendingStatusApplication,
+    setSearchTerm,
+    setCurrentPage,
+    setItemsPerPage,
+    addApplication,
+    updateApplication,
+    openAddModal,
+    openEditModal,
+    closeModal,
+    openStatusConfirmation,
+    closeStatusConfirmation,
+  } = useApplicationStore();
+
   const [showSuccessModal, setShowSuccessModal] = useState(false);
-  const [searchTerm, setSearchTerm] = useState("");
-  const [currentPage, setCurrentPage] = useState(1);
-  const [itemsPerPage, setItemsPerPage] = useState(10);
-  const [isStatusConfirmOpen, setIsStatusConfirmOpen] = useState(false);
-  const [appToChangeStatus, setAppToChangeStatus] =
-    useState<Application | null>(null);
+
+  const { logUserAction, logError } = useLogging({
+    componentName: 'ApplicationPage',
+    enablePerformanceLogging: true,
+  });
+
+  const getNameFromNoreg = (noreg: string): string => {
+    const user = systemUsers.find(u => u.id === noreg);
+    return user ? user.name : noreg;
+  };
 
   const handleSearchChange = (event: React.ChangeEvent<HTMLInputElement>) => {
     setSearchTerm(event.target.value);
-    setCurrentPage(1);
   };
 
   const handleOpenAddModal = () => {
-    setEditingApplication(null);
-    setIsModalOpen(true);
+    openAddModal();
+    loggingUtils.logCriticalAction('open_add_application_modal', 'Application', {
+      timestamp: new Date().toISOString(),
+    });
   };
 
   const handleOpenEditModal = (app: Application) => {
-    setEditingApplication(app);
-    setIsModalOpen(true);
+    openEditModal(app);
+    loggingUtils.logCriticalAction('open_edit_application_modal', 'Application', {
+      applicationId: app.id,
+      applicationName: app.name,
+      timestamp: new Date().toISOString(),
+    });
   };
 
   const handleCloseModal = () => {
-    setIsModalOpen(false);
-    setEditingApplication(null);
+    closeModal();
   };
 
   const handleSaveApplication = (application: Application) => {
     if (editingApplication) {
-      // Update existing application
-      setApplications((prev) =>
-        prev.map((app) => (app.id === application.id ? application : app))
-      );
+      updateApplication(application);
+      loggingUtils.logDataChange('Update', 'Application', application.id, {
+        applicationName: application.name,
+        timestamp: new Date().toISOString(),
+      });
     } else {
-      // Add new application
-      setApplications((prev) => [application, ...prev]);
+      addApplication(application);
+      loggingUtils.logDataChange('Create', 'Application', application.id, {
+        applicationName: application.name,
+        timestamp: new Date().toISOString(),
+      });
     }
-    handleCloseModal();
+
     setShowSuccessModal(true);
-    setTimeout(() => {
-      setShowSuccessModal(false);
-    }, 3000);
+    setTimeout(() => setShowSuccessModal(false), 3000);
   };
 
   const handleOpenStatusConfirm = (app: Application) => {
-    setAppToChangeStatus(app);
-    setIsStatusConfirmOpen(true);
+    openStatusConfirmation(app);
   };
 
   const handleCloseStatusConfirm = () => {
-    setAppToChangeStatus(null);
-    setIsStatusConfirmOpen(false);
+    closeStatusConfirmation();
   };
 
   const handleConfirmStatusChange = () => {
-    if (!appToChangeStatus) return;
+    if (!pendingStatusApplication) return;
 
     const now = new Date();
     const formattedDate = `${String(now.getDate()).padStart(2, "0")}-${String(
@@ -85,40 +113,76 @@ const ApplicationPage: React.FC = () => {
     ).padStart(2, "0")}:${String(now.getSeconds()).padStart(2, "0")}`;
     const newUpdateTime = `${formattedDate}\n${formattedTime}`;
 
-    setApplications((prev) =>
-      prev.map((app) =>
-        app.id === appToChangeStatus.id
-          ? {
-              ...app,
-              status: app.status === "Active" ? "Inactive" : "Active",
-              updated: newUpdateTime,
-            }
-          : app
-      )
-    );
+    const updatedApplication: Application = {
+      ...pendingStatusApplication,
+      status: pendingStatusApplication.status === "Active" ? "Inactive" : "Active",
+      updated: newUpdateTime,
+    };
 
+    updateApplication(updatedApplication);
     handleCloseStatusConfirm();
     setShowSuccessModal(true);
-    setTimeout(() => {
-      setShowSuccessModal(false);
-    }, 3000);
+    setTimeout(() => setShowSuccessModal(false), 3000);
   };
 
-  const filteredApplications = applications.filter((app) => {
-    const term = searchTerm.toLowerCase();
-    return Object.values(app).some((value) =>
-      String(value).toLowerCase().includes(term)
+  const enhancedApplications = useMemo(() => {
+    const enhanceString = (value: string) => value.replace("\\n", " ");
+
+    return applications.map((app) => ({
+      ...app,
+      searchableFields: Object.values(app)
+        .map((value) => String(value).toLowerCase())
+        .join("|"),
+      createdDisplay: enhanceString(app.created),
+      updatedDisplay: enhanceString(app.updated),
+    }));
+  }, [applications]);
+
+  const filteredApplications = useMemo(() => {
+    const term = searchTerm.trim().toLowerCase();
+    if (!term) {
+      return enhancedApplications;
+    }
+
+    return enhancedApplications.filter((app) =>
+      app.searchableFields.includes(term)
     );
-  });
+  }, [enhancedApplications, searchTerm]);
 
   const totalItems = filteredApplications.length;
-  const totalPages = Math.ceil(totalItems / itemsPerPage);
-  const startIndex = (currentPage - 1) * itemsPerPage;
-  const endIndex = startIndex + itemsPerPage;
-  const currentApplications = filteredApplications.slice(startIndex, endIndex);
+  const totalPages = totalItems === 0 ? 1 : Math.ceil(totalItems / itemsPerPage);
 
-  const startItem = totalItems > 0 ? startIndex + 1 : 0;
-  const endItem = Math.min(endIndex, totalItems);
+  useEffect(() => {
+    if (totalItems === 0) {
+      if (currentPage !== 1) {
+        setCurrentPage(1);
+      }
+      return;
+    }
+
+    if (currentPage > totalPages) {
+      setCurrentPage(totalPages);
+    }
+  }, [currentPage, totalItems, totalPages, setCurrentPage]);
+
+  const { paginatedApplications, startItem, endItem } = useMemo(() => {
+    if (totalItems === 0) {
+      return {
+        paginatedApplications: [] as typeof enhancedApplications,
+        startItem: 0,
+        endItem: 0,
+      };
+    }
+
+    const startIndex = (currentPage - 1) * itemsPerPage;
+    const endIndex = Math.min(startIndex + itemsPerPage, totalItems);
+
+    return {
+      paginatedApplications: filteredApplications.slice(startIndex, endIndex),
+      startItem: startIndex + 1,
+      endItem: endIndex,
+    };
+  }, [filteredApplications, totalItems, currentPage, itemsPerPage, enhancedApplications]);
 
   return (
     <div>
@@ -177,7 +241,7 @@ const ApplicationPage: React.FC = () => {
               </tr>
             </thead>
             <tbody>
-              {currentApplications.map((app, index) => (
+              {paginatedApplications.map((app, index) => (
                 <tr
                   key={`${app.id}-${index}`}
                   className="bg-white border-b border-gray-200 hover:bg-gray-50"
@@ -192,19 +256,19 @@ const ApplicationPage: React.FC = () => {
                     {app.division}
                   </td>
                   <td className="px-4 py-4 whitespace-nowrap text-sm">
-                    {app.owner}
+                    {getNameFromNoreg(app.owner)}
                   </td>
                   <td className="px-4 py-4 whitespace-nowrap text-sm">
-                    {app.custodian}
+                    {getNameFromNoreg(app.custodian)}
                   </td>
                   <td className="px-4 py-4 whitespace-nowrap text-sm">
                     {app.securityCenter}
                   </td>
                   <td className="px-4 py-4 whitespace-nowrap text-sm">
-                    {app.created.replace("\\n", " ")}
+                    {app.createdDisplay}
                   </td>
                   <td className="px-4 py-4 whitespace-nowrap text-sm">
-                    {app.updated.replace("\\n", " ")}
+                    {app.updatedDisplay}
                   </td>
                   <td className="px-4 py-4 whitespace-nowrap text-sm">
                     <button
@@ -222,6 +286,7 @@ const ApplicationPage: React.FC = () => {
                         onClick={() => handleOpenEditModal(app)}
                         tooltip="Edit"
                         aria-label={`Edit ${app.name}`}
+                        hoverColor="blue"
                       >
                         <EditIcon />
                       </IconButton>
@@ -239,8 +304,11 @@ const ApplicationPage: React.FC = () => {
               <select
                 value={itemsPerPage}
                 onChange={(e) => {
-                  setItemsPerPage(Number(e.target.value));
-                  setCurrentPage(1);
+                  const value = Number(e.target.value);
+                  if (!Number.isNaN(value) && value > 0) {
+                    setItemsPerPage(value);
+                    setCurrentPage(1);
+                  }
                 }}
                 className="pl-3 pr-8 py-1.5 border border-gray-300 rounded-md hover:bg-gray-100 appearance-none bg-white"
                 aria-label="Items per page"
@@ -256,19 +324,19 @@ const ApplicationPage: React.FC = () => {
           </div>
           <div className="flex items-center gap-4">
             <span>
-              Showing {startItem}-{endItem} of {totalItems}
+              Showing {totalItems === 0 ? 0 : `${startItem}-${endItem}`} of {totalItems}
             </span>
             <div className="flex gap-2">
               <button
-                onClick={() => setCurrentPage(currentPage - 1)}
-                disabled={currentPage === 1}
+                onClick={() => setCurrentPage(Math.max(1, currentPage - 1))}
+                disabled={currentPage <= 1}
                 className="px-2 py-1 border border-gray-300 rounded-md hover:bg-gray-50 disabled:bg-gray-100 disabled:text-gray-400 disabled:cursor-not-allowed"
                 aria-label="Previous Page"
               >
                 &lt;
               </button>
               <button
-                onClick={() => setCurrentPage(currentPage + 1)}
+                onClick={() => setCurrentPage(Math.min(totalPages, currentPage + 1))}
                 disabled={currentPage >= totalPages}
                 className="px-2 py-1 border border-gray-300 rounded-md hover:bg-gray-50 disabled:bg-gray-100 disabled:text-gray-400 disabled:cursor-not-allowed"
                 aria-label="Next Page"
@@ -289,11 +357,11 @@ const ApplicationPage: React.FC = () => {
       {showSuccessModal && (
         <SuccessModal onClose={() => setShowSuccessModal(false)} />
       )}
-      {isStatusConfirmOpen && appToChangeStatus && (
+      {isStatusConfirmationOpen && pendingStatusApplication && (
         <StatusConfirmationModal
           onClose={handleCloseStatusConfirm}
           onConfirm={handleConfirmStatusChange}
-          currentStatus={appToChangeStatus.status}
+          currentStatus={pendingStatusApplication.status}
         />
       )}
     </div>

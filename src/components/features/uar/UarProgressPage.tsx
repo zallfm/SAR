@@ -6,8 +6,23 @@ import { SoApprovedIcon } from '../../icons/SoApprovedIcon';
 import { CompletedIcon } from '../../icons/CompletedIcon';
 import { uarDivisionProgress, uarDepartmentProgress, uarSystemProgressData } from '../../../../data';
 import type { UarProgressData } from '../../../../data';
+import { useUarProgressData } from '../../../hooks/useUarProgressData';
+import { UarProgressFilters } from '../../../services/uarProgressService';
+import LoadingSpinner from '../../common/LoadingStates/LoadingSpinner';
+import SkeletonLoader from '../../common/LoadingStates/SkeletonLoader';
+import ErrorBoundary from '../../common/ErrorBoundary/ErrorBoundary';
+import { debounce, performanceMonitor } from '../../../utils/performanceUtils';
+import SearchableDropdown from '../../common/SearchableDropdown';
+import { 
+  useUarProgressData as useUarProgressStoreData,
+  useUarProgressFilters,
+  useUarProgressUIState,
+  useUarProgressActions,
+  useUarProgressComputed,
+  useUarProgressLoading
+} from '../../../hooks/useStoreSelectors';
 
-declare var Chart: any;
+import Chart from 'chart.js/auto';
 
 interface StatCardProps {
     icon: React.ReactNode;
@@ -25,120 +40,36 @@ const StatCard: React.FC<StatCardProps> = ({ icon, value, label }) => (
     </div>
 );
 
-// New SearchableDropdown component
-interface SearchableDropdownProps {
-    label: string;
-    value: string;
-    onChange: (value: string) => void;
-    options: string[];
-}
-
-const SearchableDropdown: React.FC<SearchableDropdownProps> = ({ label, value, onChange, options }) => {
-    const [isOpen, setIsOpen] = useState(false);
-    const [searchTerm, setSearchTerm] = useState('');
-    const dropdownRef = useRef<HTMLDivElement>(null);
-
-    useEffect(() => {
-        setSearchTerm(value || '');
-    }, [value]);
-
-    useEffect(() => {
-        const handleClickOutside = (event: MouseEvent) => {
-            if (dropdownRef.current && !dropdownRef.current.contains(event.target as Node)) {
-                setIsOpen(false);
-                setSearchTerm(value || '');
-            }
-        };
-        document.addEventListener('mousedown', handleClickOutside);
-        return () => document.removeEventListener('mousedown', handleClickOutside);
-    }, [value]);
-
-    const filteredOptions = useMemo(() => {
-        if (!searchTerm) {
-            return options;
-        }
-        return options.filter(option =>
-            option.toLowerCase().includes(searchTerm.toLowerCase())
-        );
-    }, [options, searchTerm]);
-
-    const handleSelect = (option: string) => {
-        onChange(option);
-        setSearchTerm(option);
-        setIsOpen(false);
-    };
-
-    const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-        setSearchTerm(e.target.value);
-        if (!isOpen) setIsOpen(true);
-        if (e.target.value === '') { // If user clears input, deselect
-            onChange('');
-        }
-    };
-    
-    const handleClear = (e: React.MouseEvent) => {
-        e.stopPropagation();
-        onChange('');
-        setSearchTerm('');
-        setIsOpen(false);
-    }
-
-    return (
-        <div className="relative w-full sm:w-40" ref={dropdownRef}>
-            <div className="relative">
-                <input
-                    type="text"
-                    placeholder={label}
-                    value={searchTerm}
-                    onChange={handleInputChange}
-                    onFocus={() => setIsOpen(true)}
-                    className="w-full bg-white border border-gray-300 rounded-lg px-4 py-2 pr-10 focus:outline-none focus:ring-2 focus:ring-blue-500 text-sm"
-                />
-                <div className="absolute inset-y-0 right-0 flex items-center pr-2">
-                    {value && (
-                         <button
-                            type="button"
-                            onClick={handleClear}
-                            className="p-1 text-gray-400 hover:text-gray-600"
-                            aria-label="Clear selection"
-                        >
-                            <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M6 18L18 6M6 6l12 12" /></svg>
-                        </button>
-                    )}
-                    <ChevronDownIcon className={`w-4 h-4 text-gray-500 transition-transform ${isOpen ? 'rotate-180' : ''}`} />
-                </div>
-            </div>
-            {isOpen && (
-                <ul className="absolute z-10 w-full mt-1 bg-white border border-gray-300 rounded-lg shadow-lg max-h-60 overflow-y-auto">
-                    {filteredOptions.length > 0 ? (
-                        filteredOptions.map(option => (
-                            <li
-                                key={option}
-                                onMouseDown={() => handleSelect(option)}
-                                className={`px-4 py-2 text-sm cursor-pointer hover:bg-blue-100 ${value === option ? 'bg-blue-100 text-blue-700' : 'text-gray-800'}`}
-                            >
-                                {option}
-                            </li>
-                        ))
-                    ) : (
-                        <li className="px-4 py-2 text-sm text-gray-500">No options found</li>
-                    )}
-                </ul>
-            )}
-        </div>
-    );
-};
-
 const UarProgressChart: React.FC<{ data: UarProgressData[]; selectedItem: string; yAxisRange?: {min: number, max: number}, onBarClick?: (label: string) => void; }> = ({ data, selectedItem, yAxisRange, onBarClick }) => {
     const chartRef = useRef<HTMLCanvasElement>(null);
+    const [hiddenDatasets, setHiddenDatasets] = useState<Set<number>>(new Set());
 
     const originalColors = {
-        total: '#93C5FD',
-        approved: '#A7F3D0',
-        review: '#FDE047',
-        soApproved: '#F9A8D4',
+        review: '#FDE047',      // 1. Kuning (Review Progress)
+        approved: '#A7F3D0',    // 2. Hijau (Division Approved)
+        soApproved: '#F9A8D4',  // 3. Magenta (SO Approved)
+        total: '#93C5FD',       // 4. Biru (Total Progress)
     };
     const grayColor = '#E5E7EB'; // tailwind gray-200
+
+    const toggleDataset = (index: number) => {
+        setHiddenDatasets(prev => {
+            const newSet = new Set(prev);
+            if (newSet.has(index)) {
+                newSet.delete(index);
+            } else {
+                newSet.add(index);
+            }
+            return newSet;
+        });
+    };
+
+    const legendItems = [
+        { label: 'Review Progress', color: originalColors.review, index: 0 },
+        { label: 'Division Approved', color: originalColors.approved, index: 1 },
+        { label: 'SO Approved', color: originalColors.soApproved, index: 2 },
+        { label: 'Total Progress', color: originalColors.total, index: 3 },
+    ];
 
     useEffect(() => {
         if (chartRef.current) {
@@ -148,36 +79,40 @@ const UarProgressChart: React.FC<{ data: UarProgressData[]; selectedItem: string
                     labels: data.map(d => d.label),
                     datasets: [
                         {
-                            label: 'Total Progress (%)',
-                            data: data.map(d => d.total),
+                            label: 'Review Progress',
+                            data: data.map(d => d.review),
                             backgroundColor: data.map(d => 
-                                (selectedItem && d.label !== selectedItem) ? grayColor : originalColors.total
+                                (selectedItem && d.label !== selectedItem) ? grayColor : originalColors.review
                             ),
                             borderRadius: 4,
+                            hidden: hiddenDatasets.has(0),
                         },
                         {
-                            label: 'Approved Progress (%)',
+                            label: 'Division Approved',
                             data: data.map(d => d.approved),
                             backgroundColor: data.map(d => 
                                 (selectedItem && d.label !== selectedItem) ? grayColor : originalColors.approved
                             ),
                              borderRadius: 4,
+                             hidden: hiddenDatasets.has(1),
                         },
                         {
-                            label: 'Review Progress (%)',
-                            data: data.map(d => d.review),
-                            backgroundColor: data.map(d => 
-                                (selectedItem && d.label !== selectedItem) ? grayColor : originalColors.review
-                            ),
-                             borderRadius: 4,
-                        },
-                        {
-                            label: 'SO Approved (%)',
+                            label: 'SO Approved',
                             data: data.map(d => d.soApproved),
                             backgroundColor: data.map(d => 
                                 (selectedItem && d.label !== selectedItem) ? grayColor : originalColors.soApproved
                             ),
                              borderRadius: 4,
+                             hidden: hiddenDatasets.has(2),
+                        },
+                        {
+                            label: 'Total Progress',
+                            data: data.map(d => d.total),
+                            backgroundColor: data.map(d => 
+                                (selectedItem && d.label !== selectedItem) ? grayColor : originalColors.total
+                            ),
+                             borderRadius: 4,
+                             hidden: hiddenDatasets.has(3),
                         },
                     ],
                 },
@@ -187,7 +122,7 @@ const UarProgressChart: React.FC<{ data: UarProgressData[]; selectedItem: string
                     barPercentage: 0.8,
                     categoryPercentage: 0.7,
                     onClick: (event: any, elements: any[]) => {
-                        if (onBarClick && elements.length > 0) {
+                        if (onBarClick && elements && elements.length > 0) {
                             const elementIndex = elements[0].index;
                             const label = chartInstance.data.labels[elementIndex];
                             if (typeof label === 'string') {
@@ -203,16 +138,15 @@ const UarProgressChart: React.FC<{ data: UarProgressData[]; selectedItem: string
                     },
                     plugins: {
                         legend: {
-                            position: 'top',
-                            align: 'start',
-                            labels: {
-                                usePointStyle: true,
-                                boxWidth: 8,
-                                padding: 20,
-                            }
+                            display: false // Hide Chart.js legend, use custom fixed legend
                         },
-                         tooltip: {
-                            enabled: true
+                        tooltip: {
+                            enabled: true,
+                            callbacks: {
+                                label: function(context: any) {
+                                    return `${context.dataset.label} ${context.parsed.y}%`;
+                                }
+                            }
                         }
                     },
                     scales: {
@@ -220,78 +154,130 @@ const UarProgressChart: React.FC<{ data: UarProgressData[]; selectedItem: string
                             beginAtZero: yAxisRange ? false : true,
                             min: yAxisRange ? yAxisRange.min : 0,
                             max: yAxisRange ? yAxisRange.max : 100,
+                            display: true, // Show Chart.js Y-axis
                             grid: {
                                 drawBorder: false,
                             },
+                            ticks: {
+                                font: {
+                                    size: 12
+                                },
+                                color: '#6B7280',
+                                stepSize: 20, // Only show even numbers: 0, 20, 40, 60, 80, 100
+                                callback: function(value: any) {
+                                    return value % 20 === 0 ? value : '';
+                                }
+                            }
                         },
                         x: {
+                            display: true, // Show X-axis labels (division names)
                             grid: {
                                 display: false,
                             },
+                            ticks: {
+                                font: {
+                                    size: 12
+                                },
+                                color: '#6B7280',
+                            }
                         },
                     },
                 },
             });
             return () => chartInstance.destroy();
         }
-    }, [data, selectedItem, yAxisRange, onBarClick]);
+    }, [data, selectedItem, yAxisRange, onBarClick, hiddenDatasets]);
 
     const chartWidth = Math.max(data.length * 160, 600); // Increased width per item for better visibility
 
     return (
-        <div className="overflow-x-auto p-1">
-            <div style={{ width: `${chartWidth}px`, height: '300px' }}>
-                <canvas ref={chartRef}></canvas>
+        <div className="relative">
+            {/* Custom Fixed Legend - fixed for horizontal scroll, scrollable for vertical */}
+            <div 
+                className="absolute top-0 left-0 z-20 bg-white p-3 rounded-lg"
+                style={{ 
+                    position: 'sticky',
+                    top: '0',
+                    left: '0',
+                    zIndex: 20,
+                    width: 'fit-content'
+                }}
+            >
+                <div className="flex flex-wrap gap-4 text-xs">
+                    {legendItems.map((item) => (
+                        <button
+                            key={item.index}
+                            onClick={() => toggleDataset(item.index)}
+                            className={`flex items-center gap-2 px-2 py-1 rounded transition-colors text-sm ${
+                                hiddenDatasets.has(item.index) 
+                                    ? 'opacity-50 hover:opacity-75' 
+                                    : 'hover:bg-gray-100'
+                            }`}
+                        >
+                            <div 
+                                className="w-3 h-3 rounded-sm" 
+                                style={{ backgroundColor: item.color }}
+                            ></div>
+                            <span>{item.label}</span>
+                        </button>
+                    ))}
+                </div>
+            </div>
+
+            {/* Chart with top padding for legend */}
+            <div className="overflow-x-auto p-1 pt-2">
+                <div style={{ width: `${chartWidth}px`, height: '300px' }}>
+                    <canvas ref={chartRef}></canvas>
+                </div>
             </div>
         </div>
     );
 };
 
 const UarProgressPage: React.FC = () => {
-    const [drilldownDivision, setDrilldownDivision] = useState<string | null>(null);
-    const [selectedPeriod, setSelectedPeriod] = useState('07-2025');
-    const [selectedDivisionFilter, setSelectedDivisionFilter] = useState('');
-    const [selectedDepartmentFilter, setSelectedDepartmentFilter] = useState('');
-    const [selectedSystemFilter, setSelectedSystemFilter] = useState('');
+    // Zustand store hooks
+    const { filters } = useUarProgressFilters();
+    const { 
+        selectedPeriod, 
+        selectedDivisionFilter, 
+        selectedDepartmentFilter, 
+        selectedSystemFilter, 
+        drilldownDivision,
+        setSelectedPeriod,
+        setSelectedDivisionFilter,
+        setSelectedDepartmentFilter,
+        setSelectedSystemFilter,
+        setDrilldownDivision
+    } = useUarProgressUIState();
+    const { setProgressData, setFilteredData } = useUarProgressActions();
+    const { 
+        getDivisionOptions, 
+        getDivisionChartData,
+        getDepartmentOptions, 
+        getSystemOptions, 
+        getDepartmentChartData, 
+        getSystemChartData, 
+        getGrandTotal 
+    } = useUarProgressComputed();
     
-    const divisionOptions = useMemo(() => [...new Set(uarDivisionProgress.map(d => d.label))], []);
-
-    const departmentOptions = useMemo(() => {
-        const relevantDepartments = selectedDivisionFilter 
-            ? uarDepartmentProgress.filter(d => d.division === selectedDivisionFilter)
-            : uarDepartmentProgress;
-        return [...new Set(relevantDepartments.map(d => d.label))];
-    }, [selectedDivisionFilter]);
-
-    const systemOptions = useMemo(() => {
-        let relevantSystems = uarSystemProgressData;
-        if (selectedDivisionFilter) {
-            relevantSystems = relevantSystems.filter(d => d.division === selectedDivisionFilter);
-        }
-        if (selectedDepartmentFilter) {
-            relevantSystems = relevantSystems.filter(d => d.department === selectedDepartmentFilter);
-        }
-        return [...new Set(relevantSystems.map(d => d.label))];
-    }, [selectedDivisionFilter, selectedDepartmentFilter]);
-
-    const departmentChartData = useMemo(() => {
-        if (!drilldownDivision) return [];
-        return uarDepartmentProgress.filter(d => d.division === drilldownDivision);
-    }, [drilldownDivision]);
+    // Get computed values from store with memoization
+    const divisionOptions = useMemo(() => getDivisionOptions(), []);
+    const divisionChartData = useMemo(() => getDivisionChartData(), []);
+    const departmentOptions = useMemo(() => getDepartmentOptions(), [selectedDivisionFilter]);
+    const systemOptions = useMemo(() => getSystemOptions(), [selectedDivisionFilter, selectedDepartmentFilter]);
+    const departmentChartData = useMemo(() => getDepartmentChartData(), [drilldownDivision]);
+    const systemChartData = useMemo(() => getSystemChartData(), [selectedDivisionFilter, selectedDepartmentFilter]);
+    const grandTotal = useMemo(() => getGrandTotal(), []);
 
     const systemAppsChartData = useMemo(() => {
-        let filteredData = uarSystemProgressData;
+        let filteredData = systemChartData;
         
-        if (selectedDivisionFilter) {
-            filteredData = filteredData.filter(app => app.division === selectedDivisionFilter);
-        }
-        
-        if (selectedDepartmentFilter) {
-            filteredData = filteredData.filter(app => app.department === selectedDepartmentFilter);
+        if (selectedSystemFilter) {
+            filteredData = filteredData.filter(app => app.label === selectedSystemFilter);
         }
 
         return filteredData;
-    }, [selectedDivisionFilter, selectedDepartmentFilter]);
+    }, [systemChartData, selectedSystemFilter]);
 
     const handleDivisionBarClick = (divisionLabel: string) => {
         setDrilldownDivision(divisionLabel);
@@ -350,12 +336,14 @@ const UarProgressPage: React.FC = () => {
     
     const isDrilledDown = !!drilldownDivision;
 
+    // Use grand total from store
+    const grandTotalStats = grandTotal;
+
     return (
         <div className="space-y-6">
             <div className="flex justify-between items-center flex-wrap gap-4">
                 <div>
                     <h2 className="text-2xl font-bold text-gray-800">UAR Progress</h2>
-                    <div className="h-1 w-20 bg-blue-600 rounded mt-1"></div>
                 </div>
                 <div className="flex gap-4 flex-wrap">
                     <SearchableDropdown 
@@ -386,39 +374,215 @@ const UarProgressPage: React.FC = () => {
             </div>
 
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
-                <StatCard icon={<UarReviewIcon />} value="70%" label="UAR Review" />
-                <StatCard icon={<DivisionApprovedIcon />} value="49%" label="Division Approved" />
-                <StatCard icon={<SoApprovedIcon />} value="89%" label="SO Approved" />
-                <StatCard icon={<CompletedIcon />} value="69%" label="Completed" />
+                <StatCard icon={<UarReviewIcon />} value={`${grandTotalStats.review}%`} label="UAR Review" />
+                <StatCard icon={<DivisionApprovedIcon />} value={`${grandTotalStats.approved}%`} label="Division Approved" />
+                <StatCard icon={<SoApprovedIcon />} value={`${grandTotalStats.soApproved}%`} label="SO Approved" />
+                <StatCard icon={<CompletedIcon />} value={`${grandTotalStats.completed}%`} label="Completed" />
             </div>
 
-            <div className="bg-white p-6 rounded-xl border border-gray-200 shadow-sm">
-                <h3 
-                  className={`text-xl font-bold text-gray-800 mb-4 ${isDrilledDown ? 'cursor-pointer hover:text-blue-600 transition-colors' : ''}`}
-                  onClick={isDrilledDown ? handleBackToDivisionView : undefined}
-                  aria-label={isDrilledDown ? "Back to Division View" : mainChartTitle}
-                  role="button"
-                >
-                    {mainChartTitle}
-                </h3>
-                {isDrilledDown ? (
-                    <UarProgressChart 
-                        data={departmentChartData} 
-                        selectedItem={selectedDepartmentFilter} 
-                        yAxisRange={{min: 78, max: 92}}
-                        onBarClick={handleDepartmentBarClick}
-                    />
-                ) : (
-                    <UarProgressChart data={uarDivisionProgress} selectedItem={selectedDivisionFilter} onBarClick={handleDivisionBarClick} />
-                )}
+            <div className="bg-white rounded-xl border border-gray-200 shadow-sm overflow-hidden">
+                {/* Fixed Header */}
+                <div className="p-6 border-b border-gray-100">
+                    <h3
+                      className={`text-2xl font-bold text-gray-800 ${isDrilledDown ? 'cursor-pointer hover:text-blue-600 transition-colors' : ''}`}
+                      onClick={isDrilledDown ? handleBackToDivisionView : undefined}
+                      aria-label={isDrilledDown ? "Back to Division View" : mainChartTitle}
+                      role="button"
+                    >
+                        {mainChartTitle}
+                    </h3>
+                </div>
+
+                {/* Chart Container */}
+                <div className="relative p-6 pt-0">
+                    <div className="overflow-x-auto">
+                        <div className="min-w-max">
+                            {isDrilledDown ? (
+                                <UarProgressChart
+                                    data={departmentChartData}
+                                    selectedItem={selectedDepartmentFilter}
+                                    onBarClick={handleDepartmentBarClick}
+                                />
+                            ) : (
+                                <UarProgressChart 
+                                    data={divisionChartData} 
+                                    selectedItem={selectedDivisionFilter} 
+                                    onBarClick={handleDivisionBarClick} 
+                                />
+                            )}
+                        </div>
+                    </div>
+                </div>
             </div>
 
-            <div className="bg-white p-6 rounded-xl border border-gray-200 shadow-sm">
-                <h3 className="text-xl font-bold text-gray-800 mb-4">{systemChartTitle}</h3>
-                <UarProgressChart data={systemAppsChartData} selectedItem={selectedSystemFilter} yAxisRange={{min: 78, max: 92}} />
+            <div className="bg-white rounded-xl border border-gray-200 shadow-sm overflow-hidden">
+                {/* Fixed Header */}
+                <div className="p-6 border-b border-gray-100">
+                    <h3 className="text-2xl font-bold text-gray-800">
+                        {systemChartTitle}
+                    </h3>
+                </div>
+
+                {/* Chart Container */}
+                <div className="relative p-6 pt-0">
+                    <div className="overflow-x-auto">
+                        <div className="min-w-max">
+                            <UarProgressChart data={systemAppsChartData} selectedItem={selectedSystemFilter} />
+                        </div>
+                    </div>
+                </div>
             </div>
         </div>
     );
 };
 
-export default UarProgressPage;
+// Wrapper component with API integration ready
+const UarProgressPageWithAPI: React.FC = () => {
+    // Zustand store hooks
+    const { filters, setFilters } = useUarProgressFilters();
+    const { setProgressData, setLoading, setError, setIsRefreshing } = useUarProgressActions();
+    const { loading, error, isRefreshing } = useUarProgressLoading();
+
+    const { 
+        data: apiData, 
+        loading: apiLoading, 
+        error: apiError, 
+        refresh, 
+        isRefreshing: apiIsRefreshing 
+    } = useUarProgressData(filters, {
+        autoRefresh: true,
+        refreshInterval: 30000, // 30 seconds
+        enableCache: true,
+    });
+
+    // Sync API data with Zustand store
+    useEffect(() => {
+        if (apiData) {
+            setProgressData(apiData);
+        }
+    }, [apiData, setProgressData]);
+
+    useEffect(() => {
+        setLoading(apiLoading);
+    }, [apiLoading, setLoading]);
+
+    useEffect(() => {
+        setError(apiError);
+    }, [apiError, setError]);
+
+    useEffect(() => {
+        setIsRefreshing(apiIsRefreshing);
+    }, [apiIsRefreshing, setIsRefreshing]);
+
+    // Debounced filter updates for better performance
+    const debouncedSetFilters = useMemo(
+        () => debounce((newFilters: UarProgressFilters) => {
+            setFilters(newFilters);
+        }, 300),
+        [setFilters]
+    );
+
+    // Performance monitoring
+    useEffect(() => {
+        const stopTiming = performanceMonitor.startTiming('UarProgressPage');
+        return stopTiming;
+    }, []);
+
+    if (loading && !apiData) {
+        return (
+            <ErrorBoundary>
+                <div className="space-y-6">
+                    <div className="flex justify-between items-center">
+                        <SkeletonLoader type="text" className="w-48" />
+                        <div className="flex gap-4">
+                            {[1, 2, 3, 4].map((i) => (
+                                <SkeletonLoader key={i} type="text" className="w-32" />
+                            ))}
+                        </div>
+                    </div>
+                    <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
+                        {[1, 2, 3, 4].map((i) => (
+                            <SkeletonLoader key={i} type="card" />
+                        ))}
+                    </div>
+                    <SkeletonLoader type="chart" />
+                    <SkeletonLoader type="chart" />
+                </div>
+            </ErrorBoundary>
+        );
+    }
+
+    if (error) {
+        return (
+            <ErrorBoundary>
+                <div className="min-h-screen flex items-center justify-center bg-gray-50">
+                    <div className="max-w-md w-full bg-white shadow-lg rounded-lg p-6">
+                        <div className="flex items-center mb-4">
+                            <div className="flex-shrink-0">
+                                <svg
+                                    className="h-8 w-8 text-red-400"
+                                    fill="none"
+                                    viewBox="0 0 24 24"
+                                    stroke="currentColor"
+                                >
+                                    <path
+                                        strokeLinecap="round"
+                                        strokeLinejoin="round"
+                                        strokeWidth={2}
+                                        d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-2.5L13.732 4c-.77-.833-1.732-.833-2.5 0L4.268 19.5c-.77.833.192 2.5 1.732 2.5z"
+                                    />
+                                </svg>
+                            </div>
+                            <div className="ml-3">
+                                <h3 className="text-lg font-medium text-gray-900">
+                                    Failed to load data
+                                </h3>
+                            </div>
+                        </div>
+                        <div className="mt-2">
+                            <p className="text-sm text-gray-500">
+                                {error}
+                            </p>
+                        </div>
+                        <div className="mt-4 flex gap-2">
+                            <button
+                                onClick={refresh}
+                                disabled={isRefreshing}
+                                className="bg-blue-600 text-white px-4 py-2 rounded-md text-sm font-medium hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 disabled:opacity-50"
+                            >
+                                {isRefreshing ? (
+                                    <div className="flex items-center">
+                                        <LoadingSpinner size="sm" color="white" className="mr-2" />
+                                        Retrying...
+                                    </div>
+                                ) : (
+                                    'Retry'
+                                )}
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </ErrorBoundary>
+        );
+    }
+
+    // For now, use the original component with mock data
+    // TODO: Replace with API data when ready
+    return (
+        <ErrorBoundary>
+            <div className="relative">
+                {isRefreshing && (
+                    <div className="absolute top-4 right-4 z-50">
+                        <div className="bg-white rounded-lg shadow-lg p-3 flex items-center">
+                            <LoadingSpinner size="sm" color="blue" className="mr-2" />
+                            <span className="text-sm text-gray-600">Updating...</span>
+                        </div>
+                    </div>
+                )}
+                <UarProgressPage />
+            </div>
+        </ErrorBoundary>
+    );
+};
+
+export default UarProgressPageWithAPI;

@@ -1,5 +1,4 @@
 import React, { useState, useMemo } from "react";
-import { initialSystemMasterData } from "../../../../data";
 import type { SystemMasterRecord } from "../../../../data";
 import type { User } from "../../../../types";
 import { SearchIcon } from "../../icons/SearchIcon";
@@ -11,24 +10,30 @@ import ConfirmationModal from "../../common/Modal/ConfirmationModal";
 import InfoModal from "../../common/Modal/InfoModal";
 import { AddButton } from "../../common/Button/AddButton";
 import { IconButton } from "../../common/Button/IconButton";
+import SearchableDropdown from "../../common/SearchableDropdown";
+import { 
+  useSystemMasterRecords, 
+  useFilteredSystemMasterRecords,
+  useSystemMasterFilters, 
+  useSystemMasterPagination, 
+  useSystemMasterActions 
+} from "../../../hooks/useStoreSelectors";
 
 interface SystemMasterPageProps {
   user: User;
 }
 
 const SystemMasterPage: React.FC<SystemMasterPageProps> = ({ user }) => {
-  const [records, setRecords] = useState<SystemMasterRecord[]>(
-    initialSystemMasterData
-  );
-  const [systemTypeFilter, setSystemTypeFilter] = useState("");
-  const [systemCodeFilter, setSystemCodeFilter] = useState("");
-  const [currentPage, setCurrentPage] = useState(1);
-  const [itemsPerPage, setItemsPerPage] = useState(10);
-
+  // Zustand store hooks
+  const records = useSystemMasterRecords();
+  const storeFilteredRecords = useFilteredSystemMasterRecords();
+  const { filters, setFilters } = useSystemMasterFilters();
+  const { currentPage, itemsPerPage, setCurrentPage, setItemsPerPage, getTotalPages, getCurrentPageRecords } = useSystemMasterPagination();
+  const { setSystemMasterRecords, setFilteredRecords, setSelectedRecord, addSystemMasterRecord, updateSystemMasterRecord, deleteSystemMasterRecord } = useSystemMasterActions();
+  
+  // Local state for UI interactions
   const [isModalOpen, setIsModalOpen] = useState(false);
-  const [editingRecord, setEditingRecord] = useState<SystemMasterRecord | null>(
-    null
-  );
+  const [editingRecord, setEditingRecord] = useState<SystemMasterRecord | null>(null);
 
   const [isDeleteConfirmOpen, setIsDeleteConfirmOpen] = useState(false);
   const [recordToDelete, setRecordToDelete] =
@@ -44,27 +49,32 @@ const SystemMasterPage: React.FC<SystemMasterPageProps> = ({ user }) => {
 
   const filteredRecords = useMemo(() => {
     return records.filter((record) => {
-      const typeMatch = systemTypeFilter
-        ? record.systemType === systemTypeFilter
+      const typeMatch = filters.systemType
+        ? record.systemType === filters.systemType
         : true;
-      const codeMatch = systemCodeFilter
+      const codeMatch = filters.systemCode
         ? record.systemCode
             .toLowerCase()
-            .includes(systemCodeFilter.toLowerCase())
+            .includes(filters.systemCode.toLowerCase())
         : true;
       return typeMatch && codeMatch;
     });
-  }, [records, systemTypeFilter, systemCodeFilter]);
+  }, [records, filters]);
 
-  const currentRecords = useMemo(() => {
-    const startIndex = (currentPage - 1) * itemsPerPage;
-    return filteredRecords.slice(startIndex, startIndex + itemsPerPage);
-  }, [filteredRecords, currentPage, itemsPerPage]);
+  // Update filtered records in store when filters change
+  React.useEffect(() => {
+    const haveSameLength = storeFilteredRecords.length === filteredRecords.length
+    const haveSameIds = haveSameLength && storeFilteredRecords.every((record, index) => record.id === filteredRecords[index]?.id)
 
-  const totalItems = filteredRecords.length;
-  const totalPages = Math.ceil(totalItems / itemsPerPage);
-  const startItem = totalItems > 0 ? (currentPage - 1) * itemsPerPage + 1 : 0;
-  const endItem = Math.min(currentPage * itemsPerPage, totalItems);
+    if (!haveSameIds) {
+      setFilteredRecords(filteredRecords)
+    }
+  }, [filteredRecords, storeFilteredRecords, setFilteredRecords])
+
+  const totalPages = getTotalPages();
+  const currentRecords = getCurrentPageRecords();
+  const startItem = currentRecords.length > 0 ? (currentPage - 1) * itemsPerPage + 1 : 0;
+  const endItem = Math.min(currentPage * itemsPerPage, filteredRecords.length);
 
   const handleOpenAddModal = () => {
     setEditingRecord(null);
@@ -83,11 +93,9 @@ const SystemMasterPage: React.FC<SystemMasterPageProps> = ({ user }) => {
 
   const handleSaveRecord = (record: SystemMasterRecord) => {
     if (editingRecord) {
-      setRecords((prev) => prev.map((r) => (r.id === record.id ? record : r)));
+      updateSystemMasterRecord(record.id, record);
     } else {
-      const newId =
-        records.length > 0 ? Math.max(...records.map((r) => r.id)) + 1 : 1;
-      setRecords((prev) => [{ ...record, id: newId }, ...prev]);
+      addSystemMasterRecord(record);
     }
     handleCloseModal();
     setInfoMessage("Save Successfully");
@@ -106,7 +114,7 @@ const SystemMasterPage: React.FC<SystemMasterPageProps> = ({ user }) => {
 
   const handleDeleteRecord = () => {
     if (recordToDelete) {
-      setRecords((prev) => prev.filter((r) => r.id !== recordToDelete.id));
+      deleteSystemMasterRecord(recordToDelete.id);
       handleCloseDeleteConfirm();
     }
   };
@@ -117,35 +125,22 @@ const SystemMasterPage: React.FC<SystemMasterPageProps> = ({ user }) => {
       <div className="bg-white p-6 rounded-xl border border-gray-200 shadow-sm">
         <div className="flex justify-between items-center mb-6 flex-wrap gap-4">
           <div className="flex items-center gap-4">
-            <div className="relative">
-              <select
-                value={systemTypeFilter}
-                onChange={(e) => setSystemTypeFilter(e.target.value)}
-                className="pl-3 pr-8 py-2 border border-gray-300 rounded-md appearance-none bg-white focus:outline-none focus:ring-2 focus:ring-blue-500 min-w-[150px]"
-              >
-                <option value="">System Type</option>
-                {systemTypes.map((type) => (
-                  <option key={type} value={type}>
-                    {type}
-                  </option>
-                ))}
-              </select>
-              <div className="absolute inset-y-0 right-0 pr-2 flex items-center pointer-events-none">
-                <ChevronDownIcon className="w-5 h-5 text-gray-400" />
-              </div>
-            </div>
-            <div className="relative w-full max-w-xs">
-              <input
-                type="text"
-                placeholder="System Code"
-                value={systemCodeFilter}
-                onChange={(e) => setSystemCodeFilter(e.target.value)}
-                className="w-full pl-4 pr-10 py-2 bg-white border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-              />
-              <div className="absolute inset-y-0 right-0 pr-3 flex items-center pointer-events-none">
-                <SearchIcon className="w-5 h-5 text-gray-400" />
-              </div>
-            </div>
+            <SearchableDropdown 
+              label="System Type" 
+              value={filters.systemType} 
+              onChange={(value) => setFilters({ systemType: value })} 
+              options={systemTypes}
+              placeholder="System Type"
+              className="w-full sm:w-40"
+            />
+            <SearchableDropdown 
+              label="System Code" 
+              value={filters.systemCode} 
+              onChange={(value) => setFilters({ systemCode: value })} 
+              options={[...new Set(records.map(r => r.systemCode))]}
+              placeholder="System Code"
+              className="w-full sm:w-40"
+            />
           </div>
           <AddButton onClick={handleOpenAddModal} label="+ Add" />
         </div>
@@ -228,6 +223,7 @@ const SystemMasterPage: React.FC<SystemMasterPageProps> = ({ user }) => {
                           onClick={() => handleOpenEditModal(record)}
                           tooltip="Edit"
                           aria-label={`Edit ${record.systemCode}`}
+                          hoverColor="blue"
                         >
                           <EditIcon />
                         </IconButton>
@@ -247,6 +243,7 @@ const SystemMasterPage: React.FC<SystemMasterPageProps> = ({ user }) => {
                           onClick={() => handleOpenDeleteConfirm(record)}
                           tooltip="Delete"
                           aria-label={`Delete ${record.systemCode}`}
+                          hoverColor="red"
                         >
                           <DeleteIcon />
                         </IconButton>
@@ -281,18 +278,18 @@ const SystemMasterPage: React.FC<SystemMasterPageProps> = ({ user }) => {
           </div>
           <div className="flex items-center gap-4">
             <span>
-              Showing {startItem}-{endItem} of {totalItems}
+              Showing {startItem}-{endItem} of {filteredRecords.length}
             </span>
             <div className="flex gap-2">
               <button
-                onClick={() => setCurrentPage((p) => p - 1)}
+                onClick={() => setCurrentPage(currentPage - 1)}
                 disabled={currentPage === 1}
                 className="px-3 py-1.5 border bg-white border-gray-300 rounded-md hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed"
               >
                 &lt;
               </button>
               <button
-                onClick={() => setCurrentPage((p) => p + 1)}
+                onClick={() => setCurrentPage(currentPage + 1)}
                 disabled={currentPage >= totalPages}
                 className="px-3 py-1.5 border bg-white border-gray-300 rounded-md hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed"
               >
