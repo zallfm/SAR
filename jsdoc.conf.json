@@ -1,0 +1,79 @@
+{
+  "source": {
+    "include": [
+      "./src/",
+      "./README.md",
+      "./docs/"
+    ],
+    "includePattern": "\\.(js|jsx|ts|tsx)$",
+    "exclude": [
+      "./node_modules/",
+      "./dist/",
+      "./tests/",
+      "./coverage/",
+      "./playwright-report/",
+      "./test-results/"
+    ]
+  },
+  "opts": {
+    "destination": "./docs/generated/",
+    "recurse": true,
+    "template": "node_modules/docdash"
+  },
+  "plugins": [
+    "plugins/markdown",
+    "plugins/summarize",
+    "jsdoc-plugin-typescript"
+  ],
+  "sourceType": "module",
+  "tags": {
+    "allowUnknownTags": true,
+    "dictionaries": [
+      "jsdoc",
+      "closure"
+    ]
+  },
+  "templates": {
+    "cleverLinks": false,
+    "monospaceLinks": false,
+    "default": {
+      "outputSourceFiles": true,
+      "includeDate": true,
+      "useLongnameInNav": true,
+      "showInheritedInNav": true
+    }
+  },
+  "docdash": {
+    "static": true,
+    "sort": true,
+    "sectionOrder": [
+      "Tutorials",
+      "Classes",
+      "Modules",
+      "Externals",
+      "Events",
+      "Namespaces",
+      "Mixins",
+      "Interfaces"
+    ],
+    "search": true,
+    "collapse": false,
+    "wrap": true,
+    "typedefs": true,
+    "removeQuotes": "none",
+    "menu": {
+      "Project Home": {
+        "href": "https://github.com/your-org/sar-app",
+        "target": "_blank",
+        "class": "menu-item",
+        "id": "project-home"
+      },
+      "Context7 Docs": {
+        "href": "https://context7.dev",
+        "target": "_blank",
+        "class": "menu-item",
+        "id": "context7-docs"
+      }
+    }
+  }
+}

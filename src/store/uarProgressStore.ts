@@ -39,6 +39,7 @@ interface UarProgressState {
   
   // Computed getters
   getDivisionOptions: () => string[]
+  getDivisionChartData: () => UarProgressData[]
   getDepartmentOptions: () => string[]
   getSystemOptions: () => string[]
   getDepartmentChartData: () => UarProgressData[]

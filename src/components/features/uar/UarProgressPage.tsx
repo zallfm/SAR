@@ -30,7 +30,7 @@ interface StatCardProps {
     label: string;
 }
 
-const StatCard: React.FC<StatCardProps> = ({ icon, value, label }) => (
+const StatCard: React.FC<StatCardProps> = React.memo(({ icon, value, label }) => (
     <div className="bg-white flex items-center p-4 rounded-xl shadow-sm border border-gray-200">
         {icon}
         <div className="ml-4">
@@ -38,9 +38,12 @@ const StatCard: React.FC<StatCardProps> = ({ icon, value, label }) => (
             <p className="text-sm text-gray-600">{label}</p>
         </div>
     </div>
-);
+), (prevProps, nextProps) => {
+    return prevProps.value === nextProps.value && 
+           prevProps.label === nextProps.label;
+});
 
-const UarProgressChart: React.FC<{ data: UarProgressData[]; selectedItem: string; yAxisRange?: {min: number, max: number}, onBarClick?: (label: string) => void; }> = ({ data, selectedItem, yAxisRange, onBarClick }) => {
+const UarProgressChart: React.FC<{ data: UarProgressData[]; selectedItem: string; yAxisRange?: {min: number, max: number}, onBarClick?: (label: string) => void; }> = React.memo(({ data, selectedItem, yAxisRange, onBarClick }) => {
     const chartRef = useRef<HTMLCanvasElement>(null);
     const [hiddenDatasets, setHiddenDatasets] = useState<Set<number>>(new Set());
 
@@ -119,12 +122,10 @@ const UarProgressChart: React.FC<{ data: UarProgressData[]; selectedItem: string
                 options: {
                     responsive: true,
                     maintainAspectRatio: false,
-                    barPercentage: 0.8,
-                    categoryPercentage: 0.7,
                     onClick: (event: any, elements: any[]) => {
                         if (onBarClick && elements && elements.length > 0) {
                             const elementIndex = elements[0].index;
-                            const label = chartInstance.data.labels[elementIndex];
+                            const label = chartInstance.data.labels?.[elementIndex];
                             if (typeof label === 'string') {
                                 onBarClick(label);
                             }
@@ -156,7 +157,8 @@ const UarProgressChart: React.FC<{ data: UarProgressData[]; selectedItem: string
                             max: yAxisRange ? yAxisRange.max : 100,
                             display: true, // Show Chart.js Y-axis
                             grid: {
-                                drawBorder: false,
+                                drawOnChartArea: true,
+                                drawTicks: true,
                             },
                             ticks: {
                                 font: {
@@ -232,9 +234,14 @@ const UarProgressChart: React.FC<{ data: UarProgressData[]; selectedItem: string
             </div>
         </div>
     );
-};
+}, (prevProps, nextProps) => {
+    return JSON.stringify(prevProps.data) === JSON.stringify(nextProps.data) &&
+           prevProps.selectedItem === nextProps.selectedItem &&
+           JSON.stringify(prevProps.yAxisRange) === JSON.stringify(nextProps.yAxisRange) &&
+           prevProps.onBarClick === nextProps.onBarClick;
+});
 
-const UarProgressPage: React.FC = () => {
+const UarProgressPage: React.FC = React.memo(() => {
     // Zustand store hooks
     const { filters } = useUarProgressFilters();
     const { 
@@ -287,7 +294,7 @@ const UarProgressPage: React.FC = () => {
     };
 
     const handleDepartmentBarClick = (departmentLabel: string) => {
-        setSelectedDepartmentFilter(prev => prev === departmentLabel ? '' : departmentLabel);
+        setSelectedDepartmentFilter(selectedDepartmentFilter === departmentLabel ? '' : departmentLabel);
     };
 
     const handleBackToDivisionView = () => {
@@ -434,10 +441,10 @@ const UarProgressPage: React.FC = () => {
             </div>
         </div>
     );
-};
+});
 
 // Wrapper component with API integration ready
-const UarProgressPageWithAPI: React.FC = () => {
+const UarProgressPageWithAPI: React.FC = React.memo(() => {
     // Zustand store hooks
     const { filters, setFilters } = useUarProgressFilters();
     const { setProgressData, setLoading, setError, setIsRefreshing } = useUarProgressActions();
@@ -583,6 +590,6 @@ const UarProgressPageWithAPI: React.FC = () => {
             </div>
         </ErrorBoundary>
     );
-};
+});
 
 export default UarProgressPageWithAPI;

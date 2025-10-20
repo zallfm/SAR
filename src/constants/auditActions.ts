@@ -1,0 +1,204 @@
+/**
+ * Audit Actions Constants
+ * ISO 27001 Compliant Audit Action Definitions
+ */
+
+export enum AuditAction {
+  // Authentication & Authorization
+  LOGIN_SUCCESS = 'LOGIN_SUCCESS',
+  LOGIN_FAILED = 'LOGIN_FAILED',
+  LOGOUT = 'LOGOUT',
+  SESSION_TIMEOUT = 'SESSION_TIMEOUT',
+  PASSWORD_CHANGE = 'PASSWORD_CHANGE',
+  ACCOUNT_LOCKED = 'ACCOUNT_LOCKED',
+  ACCOUNT_UNLOCKED = 'ACCOUNT_UNLOCKED',
+  
+  // User Management
+  USER_CREATE = 'USER_CREATE',
+  USER_UPDATE = 'USER_UPDATE',
+  USER_DELETE = 'USER_DELETE',
+  USER_ROLE_CHANGE = 'USER_ROLE_CHANGE',
+  USER_PERMISSION_CHANGE = 'USER_PERMISSION_CHANGE',
+  
+  // Application Management
+  APP_CREATE = 'APP_CREATE',
+  APP_UPDATE = 'APP_UPDATE',
+  APP_DELETE = 'APP_DELETE',
+  APP_STATUS_CHANGE = 'APP_STATUS_CHANGE',
+  APP_ACCESS_GRANTED = 'APP_ACCESS_GRANTED',
+  APP_ACCESS_REVOKED = 'APP_ACCESS_REVOKED',
+  
+  // UAR Operations
+  UAR_BATCH_CREATE = 'UAR_BATCH_CREATE',
+  UAR_BATCH_START = 'UAR_BATCH_START',
+  UAR_BATCH_COMPLETE = 'UAR_BATCH_COMPLETE',
+  UAR_REVIEW_START = 'UAR_REVIEW_START',
+  UAR_REVIEW_SUBMIT = 'UAR_REVIEW_SUBMIT',
+  UAR_APPROVE = 'UAR_APPROVE',
+  UAR_REJECT = 'UAR_REJECT',
+  UAR_COMMENT_ADD = 'UAR_COMMENT_ADD',
+  UAR_COMMENT_UPDATE = 'UAR_COMMENT_UPDATE',
+  UAR_COMMENT_DELETE = 'UAR_COMMENT_DELETE',
+  
+  // Data Operations
+  DATA_VIEW = 'DATA_VIEW',
+  DATA_CREATE = 'DATA_CREATE',
+  DATA_UPDATE = 'DATA_UPDATE',
+  DATA_DELETE = 'DATA_DELETE',
+  DATA_EXPORT = 'DATA_EXPORT',
+  DATA_IMPORT = 'DATA_IMPORT',
+  DATA_BACKUP = 'DATA_BACKUP',
+  DATA_RESTORE = 'DATA_RESTORE',
+  
+  // System Configuration
+  CONFIG_VIEW = 'CONFIG_VIEW',
+  CONFIG_CHANGE = 'CONFIG_CHANGE',
+  SYSTEM_MASTER_UPDATE = 'SYSTEM_MASTER_UPDATE',
+  SCHEDULE_CREATE = 'SCHEDULE_CREATE',
+  SCHEDULE_UPDATE = 'SCHEDULE_UPDATE',
+  SCHEDULE_DELETE = 'SCHEDULE_DELETE',
+  
+  // Security Events
+  SECURITY_ALERT = 'SECURITY_ALERT',
+  SUSPICIOUS_ACTIVITY = 'SUSPICIOUS_ACTIVITY',
+  UNAUTHORIZED_ACCESS = 'UNAUTHORIZED_ACCESS',
+  PRIVILEGE_ESCALATION = 'PRIVILEGE_ESCALATION',
+  DATA_BREACH_ATTEMPT = 'DATA_BREACH_ATTEMPT',
+  
+  // Reporting
+  REPORT_GENERATE = 'REPORT_GENERATE',
+  REPORT_VIEW = 'REPORT_VIEW',
+  REPORT_EXPORT = 'REPORT_EXPORT',
+  DASHBOARD_ACCESS = 'DASHBOARD_ACCESS',
+  
+  // Error & Exception
+  ERROR_OCCURRED = 'ERROR_OCCURRED',
+  EXCEPTION_CAUGHT = 'EXCEPTION_CAUGHT',
+  SYSTEM_ERROR = 'SYSTEM_ERROR',
+  
+  // Compliance
+  COMPLIANCE_CHECK = 'COMPLIANCE_CHECK',
+  AUDIT_TRAIL_ACCESS = 'AUDIT_TRAIL_ACCESS',
+  POLICY_VIOLATION = 'POLICY_VIOLATION',
+  
+  // Network & Communication
+  API_CALL = 'API_CALL',
+  API_ERROR = 'API_ERROR',
+  NETWORK_ERROR = 'NETWORK_ERROR',
+  CONNECTION_TIMEOUT = 'CONNECTION_TIMEOUT'
+}
+
+/**
+ * Audit Action Categories for grouping and reporting
+ */
+export enum AuditCategory {
+  AUTHENTICATION = 'AUTHENTICATION',
+  AUTHORIZATION = 'AUTHORIZATION',
+  DATA_ACCESS = 'DATA_ACCESS',
+  DATA_MODIFICATION = 'DATA_MODIFICATION',
+  SYSTEM_CONFIGURATION = 'SYSTEM_CONFIGURATION',
+  SECURITY_EVENT = 'SECURITY_EVENT',
+  COMPLIANCE = 'COMPLIANCE',
+  ERROR = 'ERROR',
+  NETWORK = 'NETWORK'
+}
+
+/**
+ * Map actions to categories
+ */
+export const AUDIT_ACTION_CATEGORIES: Record<AuditAction, AuditCategory> = {
+  // Authentication
+  [AuditAction.LOGIN_SUCCESS]: AuditCategory.AUTHENTICATION,
+  [AuditAction.LOGIN_FAILED]: AuditCategory.AUTHENTICATION,
+  [AuditAction.LOGOUT]: AuditCategory.AUTHENTICATION,
+  [AuditAction.SESSION_TIMEOUT]: AuditCategory.AUTHENTICATION,
+  [AuditAction.PASSWORD_CHANGE]: AuditCategory.AUTHENTICATION,
+  [AuditAction.ACCOUNT_LOCKED]: AuditCategory.AUTHENTICATION,
+  [AuditAction.ACCOUNT_UNLOCKED]: AuditCategory.AUTHENTICATION,
+  
+  // Authorization
+  [AuditAction.USER_CREATE]: AuditCategory.AUTHORIZATION,
+  [AuditAction.USER_UPDATE]: AuditCategory.AUTHORIZATION,
+  [AuditAction.USER_DELETE]: AuditCategory.AUTHORIZATION,
+  [AuditAction.USER_ROLE_CHANGE]: AuditCategory.AUTHORIZATION,
+  [AuditAction.USER_PERMISSION_CHANGE]: AuditCategory.AUTHORIZATION,
+  [AuditAction.APP_ACCESS_GRANTED]: AuditCategory.AUTHORIZATION,
+  [AuditAction.APP_ACCESS_REVOKED]: AuditCategory.AUTHORIZATION,
+  
+  // Data Access
+  [AuditAction.DATA_VIEW]: AuditCategory.DATA_ACCESS,
+  [AuditAction.REPORT_VIEW]: AuditCategory.DATA_ACCESS,
+  [AuditAction.DASHBOARD_ACCESS]: AuditCategory.DATA_ACCESS,
+  [AuditAction.AUDIT_TRAIL_ACCESS]: AuditCategory.DATA_ACCESS,
+  
+  // Data Modification
+  [AuditAction.DATA_CREATE]: AuditCategory.DATA_MODIFICATION,
+  [AuditAction.DATA_UPDATE]: AuditCategory.DATA_MODIFICATION,
+  [AuditAction.DATA_DELETE]: AuditCategory.DATA_MODIFICATION,
+  [AuditAction.DATA_EXPORT]: AuditCategory.DATA_MODIFICATION,
+  [AuditAction.DATA_IMPORT]: AuditCategory.DATA_MODIFICATION,
+  [AuditAction.DATA_BACKUP]: AuditCategory.DATA_MODIFICATION,
+  [AuditAction.DATA_RESTORE]: AuditCategory.DATA_MODIFICATION,
+  [AuditAction.APP_CREATE]: AuditCategory.DATA_MODIFICATION,
+  [AuditAction.APP_UPDATE]: AuditCategory.DATA_MODIFICATION,
+  [AuditAction.APP_DELETE]: AuditCategory.DATA_MODIFICATION,
+  [AuditAction.APP_STATUS_CHANGE]: AuditCategory.DATA_MODIFICATION,
+  [AuditAction.UAR_BATCH_CREATE]: AuditCategory.DATA_MODIFICATION,
+  [AuditAction.UAR_BATCH_START]: AuditCategory.DATA_MODIFICATION,
+  [AuditAction.UAR_BATCH_COMPLETE]: AuditCategory.DATA_MODIFICATION,
+  [AuditAction.UAR_REVIEW_START]: AuditCategory.DATA_MODIFICATION,
+  [AuditAction.UAR_REVIEW_SUBMIT]: AuditCategory.DATA_MODIFICATION,
+  [AuditAction.UAR_APPROVE]: AuditCategory.DATA_MODIFICATION,
+  [AuditAction.UAR_REJECT]: AuditCategory.DATA_MODIFICATION,
+  [AuditAction.UAR_COMMENT_ADD]: AuditCategory.DATA_MODIFICATION,
+  [AuditAction.UAR_COMMENT_UPDATE]: AuditCategory.DATA_MODIFICATION,
+  [AuditAction.UAR_COMMENT_DELETE]: AuditCategory.DATA_MODIFICATION,
+  [AuditAction.REPORT_GENERATE]: AuditCategory.DATA_MODIFICATION,
+  [AuditAction.REPORT_EXPORT]: AuditCategory.DATA_MODIFICATION,
+  
+  // System Configuration
+  [AuditAction.CONFIG_VIEW]: AuditCategory.SYSTEM_CONFIGURATION,
+  [AuditAction.CONFIG_CHANGE]: AuditCategory.SYSTEM_CONFIGURATION,
+  [AuditAction.SYSTEM_MASTER_UPDATE]: AuditCategory.SYSTEM_CONFIGURATION,
+  [AuditAction.SCHEDULE_CREATE]: AuditCategory.SYSTEM_CONFIGURATION,
+  [AuditAction.SCHEDULE_UPDATE]: AuditCategory.SYSTEM_CONFIGURATION,
+  [AuditAction.SCHEDULE_DELETE]: AuditCategory.SYSTEM_CONFIGURATION,
+  
+  // Security Events
+  [AuditAction.SECURITY_ALERT]: AuditCategory.SECURITY_EVENT,
+  [AuditAction.SUSPICIOUS_ACTIVITY]: AuditCategory.SECURITY_EVENT,
+  [AuditAction.UNAUTHORIZED_ACCESS]: AuditCategory.SECURITY_EVENT,
+  [AuditAction.PRIVILEGE_ESCALATION]: AuditCategory.SECURITY_EVENT,
+  [AuditAction.DATA_BREACH_ATTEMPT]: AuditCategory.SECURITY_EVENT,
+  
+  // Compliance
+  [AuditAction.COMPLIANCE_CHECK]: AuditCategory.COMPLIANCE,
+  [AuditAction.POLICY_VIOLATION]: AuditCategory.COMPLIANCE,
+  
+  // Error
+  [AuditAction.ERROR_OCCURRED]: AuditCategory.ERROR,
+  [AuditAction.EXCEPTION_CAUGHT]: AuditCategory.ERROR,
+  [AuditAction.SYSTEM_ERROR]: AuditCategory.ERROR,
+  
+  // Network
+  [AuditAction.API_CALL]: AuditCategory.NETWORK,
+  [AuditAction.API_ERROR]: AuditCategory.NETWORK,
+  [AuditAction.NETWORK_ERROR]: AuditCategory.NETWORK,
+  [AuditAction.CONNECTION_TIMEOUT]: AuditCategory.NETWORK
+};
+
+/**
+ * Get category for an audit action
+ */
+export function getAuditCategory(action: AuditAction): AuditCategory {
+  return AUDIT_ACTION_CATEGORIES[action];
+}
+
+/**
+ * Get all actions in a category
+ */
+export function getActionsByCategory(category: AuditCategory): AuditAction[] {
+  return Object.entries(AUDIT_ACTION_CATEGORIES)
+    .filter(([_, cat]) => cat === category)
+    .map(([action, _]) => action as AuditAction);
+}

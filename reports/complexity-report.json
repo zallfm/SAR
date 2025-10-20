@@ -1,0 +1,47 @@
+{
+  "timestamp": "2025-10-19T19:40:55.264Z",
+  "summary": {
+    "totalFunctions": 0,
+    "levelCounts": {
+      "low": 0,
+      "medium": 0,
+      "high": 0,
+      "critical": 0
+    },
+    "averageComplexity": {
+      "cyclomatic": 0,
+      "cognitive": 0,
+      "linesOfCode": 0,
+      "riskScore": 0
+    },
+    "distribution": {
+      "low": 0,
+      "medium": 0,
+      "high": 0,
+      "critical": 0
+    }
+  },
+  "results": [],
+  "thresholds": {
+    "low": {
+      "cyclomatic": 5,
+      "cognitive": 8,
+      "linesOfCode": 20
+    },
+    "medium": {
+      "cyclomatic": 10,
+      "cognitive": 15,
+      "linesOfCode": 50
+    },
+    "high": {
+      "cyclomatic": 20,
+      "cognitive": 25,
+      "linesOfCode": 100
+    },
+    "critical": {
+      "cyclomatic": 30,
+      "cognitive": 35,
+      "linesOfCode": 200
+    }
+  }
+}

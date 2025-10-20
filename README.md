@@ -1,130 +1,258 @@
-# System Authorization Review
+# SAR - System Authorization Review
 
-## Overview
+A comprehensive system authorization review application built with React, TypeScript, and modern web technologies.
 
-System Authorization Review (SAR) is a comprehensive application designed to manage and review user access permissions across various systems within an organization. This application follows Test-Driven Development (TDD) and Behavior-Driven Development (BDD) principles to ensure high-quality, reliable code.
+## 🚀 Features
 
-## Features
+- **User Authentication & Authorization** - Secure login with role-based access control
+- **UAR (User Access Review)** - Track and manage user access reviews with progress visualization
+- **Application Management** - Manage applications and their access controls
+- **Audit Logging** - Comprehensive logging and monitoring of all system activities
+- **Responsive Design** - Works seamlessly across desktop, tablet, and mobile devices
+- **Security First** - Built with ISO 27001 compliance in mind
 
-- User authentication and authorization
-- Application management
-- User Access Review (UAR) system
-- System master data management
-- Logging and monitoring
-- Schedule management
-- UAR Person in Charge (PIC) management
+## 🛠️ Technology Stack
 
-## Technology Stack
+- **Frontend**: React 19, TypeScript, Vite
+- **State Management**: Zustand
+- **Routing**: React Router DOM
+- **Charts**: Chart.js with React Chart.js 2
+- **Security**: DOMPurify, Validator.js
+- **Testing**: Playwright (E2E), Jest (Unit), Testing Library
+- **Build Tool**: Vite
+- **Package Manager**: pnpm
 
-- React 18+
-- TypeScript
-- Tailwind CSS
-- Jest
-- React Testing Library
-- Vite
+## 📁 Project Structure
 
-## TDD/BDD Approach
+```
+SAR-1/
+├── src/
+│   ├── components/          # React components
+│   │   ├── features/        # Feature-based components
+│   │   │   ├── auth/        # Authentication components
+│   │   │   ├── uar/         # UAR components
+│   │   │   ├── application/ # Application management
+│   │   │   └── logging/     # Logging components
+│   │   └── common/          # Shared components
+│   ├── services/            # Business logic services
+│   ├── store/               # Zustand state management
+│   ├── hooks/               # Custom React hooks
+│   ├── utils/               # Utility functions
+│   ├── config/              # Configuration files
+│   └── constants/           # Application constants
+├── tests/                   # Playwright E2E tests
+│   ├── auth/                # Authentication tests
+│   ├── uar/                 # UAR tests
+│   ├── application/         # Application tests
+│   ├── api/                 # API tests
+│   ├── page-objects/        # Page Object Models
+│   ├── fixtures/            # Test data
+│   └── utils/               # Test utilities
+├── public/                  # Static assets
+└── dist/                    # Build output
+```
 
-This project follows Test-Driven Development (TDD) and Behavior-Driven Development (BDD) principles:
-
-### Test-Driven Development (TDD)
-
-1. **Write tests first**: Before implementing any new feature or fixing a bug, we write tests that define the expected behavior.
-2. **Run tests**: Initially, these tests will fail because the functionality doesn't exist yet.
-3. **Write minimal code**: Write just enough code to make the tests pass.
-4. **Refactor**: Improve the code while ensuring all tests still pass.
-5. **Repeat**: Continue this cycle for each new feature or improvement.
-
-### Behavior-Driven Development (BDD)
-
-1. **Define behaviors**: We define how the application should behave from a user's perspective using Gherkin syntax (Given-When-Then).
-2. **Collaborate**: BDD encourages collaboration between developers, testers, and business stakeholders to ensure everyone understands the expected behavior.
-3. **Automate**: We automate these behavioral specifications as tests.
-
-For detailed BDD scenarios, please refer to [BDD_DOCUMENTATION.md](BDD_DOCUMENTATION.md).
-
-## Getting Started
+## 🚀 Getting Started
 
 ### Prerequisites
 
-- Node.js (version 16 or higher)
-- pnpm
+- Node.js 18+ 
+- pnpm (recommended) or npm
 
 ### Installation
 
-1. Clone the repository:
+1. **Clone the repository**
    ```bash
    git clone <repository-url>
+   cd SAR-1
    ```
 
-2. Navigate to the project directory:
-   ```bash
-   cd system-authorization-review
-   ```
-
-3. Install dependencies:
+2. **Install dependencies**
    ```bash
    pnpm install
    ```
 
-### Running the Application
+3. **Install Playwright browsers**
+   ```bash
+   pnpm run test:e2e:install
+   ```
 
-To start the development server:
+### Development
+
+1. **Start development server**
+   ```bash
+   pnpm run dev
+   ```
+
+2. **Open browser**
+   Navigate to `http://localhost:3001`
+
+### Testing
+
+#### Unit Tests
 ```bash
-pnpm run dev
+# Run unit tests
+pnpm run test
+
+# Run tests in watch mode
+pnpm run test:watch
+
+# Run tests with coverage
+pnpm run test:coverage
 ```
 
-The application will be available at `http://localhost:3000`.
-
-### Running Tests
-
-To run all tests:
+#### E2E Tests
 ```bash
-pnpm test
+# Run E2E tests
+pnpm run test:e2e
+
+# Run E2E tests with UI
+pnpm run test:e2e:ui
+
+# Run E2E tests in headed mode
+pnpm run test:e2e:headed
+
+# Debug E2E tests
+pnpm run test:e2e:debug
+
+# Generate test code
+pnpm run test:e2e:codegen
+
+# View test report
+pnpm run test:e2e:report
 ```
 
-To run tests in watch mode:
+#### Run All Tests
 ```bash
-pnpm test:watch
+pnpm run test:all
 ```
 
-## Project Structure
+### Building for Production
 
-```
-system-authorization-review/
-├── components/          # React components
-├── utils/               # Utility functions
-├── constants.ts         # Application constants
-├── data.ts              # Mock data
-├── index.html           # HTML entry point
-├── index.tsx            # React entry point
-├── App.tsx              # Main application component
-├── types.ts             # TypeScript types
-├── vite.config.ts       # Vite configuration
-├── tsconfig.json        # TypeScript configuration
-├── jest.config.cjs     # Jest configuration
-├── BDD_DOCUMENTATION.md # BDD scenarios documentation
-└── README.md           # Project documentation
+```bash
+# Build the application
+pnpm run build
+
+# Preview production build
+pnpm run preview
 ```
 
-## Development Guidelines
+## 🔐 Login Credentials
 
-1. **Follow TDD**: Always write tests before implementing new features
-2. **Use BDD**: Define behaviors using Gherkin syntax before implementation
-3. **Component-based architecture**: Keep components small, focused, and reusable
-4. **Type safety**: Use TypeScript to ensure type safety throughout the application
-5. **Responsive design**: Ensure all components are responsive and work well on different screen sizes
-6. **Accessibility**: Follow WCAG guidelines to ensure the application is accessible to all users
+### Development Mode
+- **Username**: `admin` | **Password**: `password123` | **Role**: Admin
+- **Username**: `dph` | **Password**: `password123` | **Role**: DpH  
+- **Username**: `systemowner` | **Password**: `password123` | **Role**: System Owner
 
-## Contributing
+> ⚠️ **Note**: These are mock credentials for development only. In production, use strong passwords and proper authentication.
+
+## 🧪 Testing Strategy
+
+### Test Structure (Context7 Best Practices)
+
+- **Page Object Models** - Reusable page interactions
+- **Test Data Fixtures** - Centralized test data management
+- **Test Utilities** - Common helper functions
+- **Feature-based Organization** - Tests organized by application features
+- **Multi-browser Testing** - Chrome, Firefox, Safari support
+- **API Testing** - Separate API endpoint testing
+- **Visual Regression** - Screenshot comparison testing
+
+### Test Coverage
+
+- **Authentication** - Login, logout, session management
+- **UAR Functionality** - Progress tracking, filtering, data display
+- **Application Management** - CRUD operations, search, filtering
+- **API Endpoints** - Authentication, data retrieval, error handling
+- **Security** - XSS prevention, SQL injection protection, input validation
+- **Responsive Design** - Mobile, tablet, desktop compatibility
+- **Performance** - Network conditions, loading states, error handling
+
+## 🔒 Security Features
+
+- **Input Validation** - Comprehensive client-side validation
+- **XSS Protection** - DOMPurify sanitization
+- **SQL Injection Prevention** - Parameterized queries
+- **Session Management** - Secure token handling
+- **Audit Logging** - Complete activity tracking
+- **Account Lockout** - Brute force protection
+- **CSRF Protection** - Cross-site request forgery prevention
+
+## 📊 Performance Optimizations
+
+- **Code Splitting** - Lazy loading of components
+- **Memoization** - React.memo, useMemo, useCallback
+- **Bundle Optimization** - Tree shaking, minification
+- **Caching** - API response caching
+- **Debouncing** - Search and input debouncing
+- **Virtual Scrolling** - Large list optimization
+
+## 🌐 Browser Support
+
+- **Chrome** 90+
+- **Firefox** 88+
+- **Safari** 14+
+- **Edge** 90+
+
+## 📱 Responsive Breakpoints
+
+- **Mobile**: 375px - 767px
+- **Tablet**: 768px - 1023px
+- **Desktop**: 1024px+
+
+## 🚀 Deployment
+
+### Environment Variables
+
+```env
+REACT_APP_API_BASE_URL=http://localhost:3001/api
+REACT_APP_ENVIRONMENT=development
+```
+
+### Build Commands
+
+```bash
+# Production build
+pnpm run build
+
+# Preview build
+pnpm run preview
+```
+
+## 📈 Monitoring & Analytics
+
+- **Error Tracking** - Comprehensive error logging
+- **Performance Monitoring** - Core Web Vitals tracking
+- **User Analytics** - Usage pattern analysis
+- **Security Monitoring** - Threat detection and response
+
+## 🤝 Contributing
 
 1. Fork the repository
-2. Create a new branch for your feature or bug fix
-3. Write tests for your changes
-4. Implement your changes
-5. Ensure all tests pass
+2. Create a feature branch
+3. Make your changes
+4. Add tests for new functionality
+5. Run the test suite
 6. Submit a pull request
 
-## License
+## 📄 License
 
-This project is licensed under the MIT License - see the LICENSE file for details.
+This project is licensed under the MIT License.
+
+## 🆘 Support
+
+For support and questions:
+- Create an issue in the repository
+- Check the documentation
+- Review the test examples
+
+## 🔄 Changelog
+
+### Version 1.0.0
+- Initial release
+- Authentication system
+- UAR functionality
+- Application management
+- Comprehensive testing suite
+- Security features
+- Responsive design

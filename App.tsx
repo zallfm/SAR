@@ -4,6 +4,9 @@ import { useGlobalLogging, useNavigationLogging, useInteractionLogging, useApiLo
 import { useLogging } from './src/hooks/useLogging'
 import { sessionManager } from './src/services/sessionManager'
 import { useAuthStore } from './src/store/authStore'
+import { initializeSecurity } from './src/config/security'
+import { AuditLogger } from './src/services/auditLogger'
+import { serviceWorkerManager } from './src/utils/serviceWorker'
 
 const LoginPage = lazy(() => import('./src/components/features/auth/LoginPage/LoginPage'))
 const Dashboard = lazy(() => import('./src/components/layout/Dashboard'))
@@ -11,6 +14,21 @@ const Dashboard = lazy(() => import('./src/components/layout/Dashboard'))
 const App: React.FC = () => {
   const { currentUser, login, logout } = useAuthStore()
   const { logAuthentication } = useLogging()
+
+  // Initialize security, logging, and service worker
+  useEffect(() => {
+    initializeSecurity()
+    AuditLogger.initialize()
+    
+    // Initialize service worker
+    serviceWorkerManager.initialize().then((success) => {
+      if (success) {
+        console.log('✅ Service Worker initialized successfully')
+      } else {
+        console.warn('⚠️ Service Worker initialization failed')
+      }
+    })
+  }, [])
 
   // Initialize global logging
   useGlobalLogging()
@@ -34,6 +52,12 @@ const App: React.FC = () => {
   const handleLogout = () => {
     sessionManager.logout()
     logout()
+    // Clear localStorage and force page reload to ensure clean state
+    localStorage.clear()
+    sessionStorage.clear()
+     // Force clear currentUser state immediately
+    useAuthStore.getState().logout()
+    window.location.reload()
   }
 
   useEffect(() => {

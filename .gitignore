@@ -29,3 +29,6 @@ DATABASE_SCHEMA_DOCUMENTATION.md
 DATABASE_README.md
 database_schema.sql
 database_schema.dbml
+
+*storybook.log
+storybook-static

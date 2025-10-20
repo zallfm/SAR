@@ -1,0 +1,328 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    
+    <meta charset="utf-8">
+    <title>Home - Documentation</title>
+    
+    
+    <script src="scripts/prettify/prettify.js"></script>
+    <script src="scripts/prettify/lang-css.js"></script>
+    <!--[if lt IE 9]>
+      <script src="//html5shiv.googlecode.com/svn/trunk/html5.js"></script>
+    <![endif]-->
+    <link type="text/css" rel="stylesheet" href="styles/prettify.css">
+    <link type="text/css" rel="stylesheet" href="styles/jsdoc.css">
+    <script src="scripts/nav.js" defer></script>
+    
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+</head>
+<body>
+
+<input type="checkbox" id="nav-trigger" class="nav-trigger" />
+<label for="nav-trigger" class="navicon-button x">
+  <div class="navicon"></div>
+</label>
+
+<label for="nav-trigger" class="overlay"></label>
+
+<nav class="wrap">
+    
+    <input type="text" id="nav-search" placeholder="Search" />
+    
+    
+    <h2><a href="index.html">Home</a></h2><h2><a href="https://github.com/your-org/sar-app" target="_blank" class="menu-item" id="project-home" >Project Home</a></h2><h2><a href="https://context7.dev" target="_blank" class="menu-item" id="context7-docs" >Context7 Docs</a></h2>
+    
+</nav>
+
+<div id="main">
+    
+
+    
+
+
+
+    
+
+
+    <section class="package">
+        <h3> </h3>		
+    </section>
+
+
+
+
+
+
+
+
+
+    
+
+
+
+    <section class="readme usertext">
+        <article><h1>SAR - System Authorization Review</h1>
+<p>A comprehensive system authorization review application built with React, TypeScript, and modern web technologies.</p>
+<h2>🚀 Features</h2>
+<ul>
+<li><strong>User Authentication &amp; Authorization</strong> - Secure login with role-based access control</li>
+<li><strong>UAR (User Access Review)</strong> - Track and manage user access reviews with progress visualization</li>
+<li><strong>Application Management</strong> - Manage applications and their access controls</li>
+<li><strong>Audit Logging</strong> - Comprehensive logging and monitoring of all system activities</li>
+<li><strong>Responsive Design</strong> - Works seamlessly across desktop, tablet, and mobile devices</li>
+<li><strong>Security First</strong> - Built with ISO 27001 compliance in mind</li>
+</ul>
+<h2>🛠️ Technology Stack</h2>
+<ul>
+<li><strong>Frontend</strong>: React 19, TypeScript, Vite</li>
+<li><strong>State Management</strong>: Zustand</li>
+<li><strong>Routing</strong>: React Router DOM</li>
+<li><strong>Charts</strong>: Chart.js with React Chart.js 2</li>
+<li><strong>Security</strong>: DOMPurify, Validator.js</li>
+<li><strong>Testing</strong>: Playwright (E2E), Jest (Unit), Testing Library</li>
+<li><strong>Build Tool</strong>: Vite</li>
+<li><strong>Package Manager</strong>: pnpm</li>
+</ul>
+<h2>📁 Project Structure</h2>
+<pre class="prettyprint source"><code>SAR-1/
+├── src/
+│   ├── components/          # React components
+│   │   ├── features/        # Feature-based components
+│   │   │   ├── auth/        # Authentication components
+│   │   │   ├── uar/         # UAR components
+│   │   │   ├── application/ # Application management
+│   │   │   └── logging/     # Logging components
+│   │   └── common/          # Shared components
+│   ├── services/            # Business logic services
+│   ├── store/               # Zustand state management
+│   ├── hooks/               # Custom React hooks
+│   ├── utils/               # Utility functions
+│   ├── config/              # Configuration files
+│   └── constants/           # Application constants
+├── tests/                   # Playwright E2E tests
+│   ├── auth/                # Authentication tests
+│   ├── uar/                 # UAR tests
+│   ├── application/         # Application tests
+│   ├── api/                 # API tests
+│   ├── page-objects/        # Page Object Models
+│   ├── fixtures/            # Test data
+│   └── utils/               # Test utilities
+├── public/                  # Static assets
+└── dist/                    # Build output
+</code></pre>
+<h2>🚀 Getting Started</h2>
+<h3>Prerequisites</h3>
+<ul>
+<li>Node.js 18+</li>
+<li>pnpm (recommended) or npm</li>
+</ul>
+<h3>Installation</h3>
+<ol>
+<li>
+<p><strong>Clone the repository</strong></p>
+<pre class="prettyprint source lang-bash"><code>git clone &lt;repository-url>
+cd SAR-1
+</code></pre>
+</li>
+<li>
+<p><strong>Install dependencies</strong></p>
+<pre class="prettyprint source lang-bash"><code>pnpm install
+</code></pre>
+</li>
+<li>
+<p><strong>Install Playwright browsers</strong></p>
+<pre class="prettyprint source lang-bash"><code>pnpm run test:e2e:install
+</code></pre>
+</li>
+</ol>
+<h3>Development</h3>
+<ol>
+<li>
+<p><strong>Start development server</strong></p>
+<pre class="prettyprint source lang-bash"><code>pnpm run dev
+</code></pre>
+</li>
+<li>
+<p><strong>Open browser</strong>
+Navigate to <code>http://localhost:3001</code></p>
+</li>
+</ol>
+<h3>Testing</h3>
+<h4>Unit Tests</h4>
+<pre class="prettyprint source lang-bash"><code># Run unit tests
+pnpm run test
+
+# Run tests in watch mode
+pnpm run test:watch
+
+# Run tests with coverage
+pnpm run test:coverage
+</code></pre>
+<h4>E2E Tests</h4>
+<pre class="prettyprint source lang-bash"><code># Run E2E tests
+pnpm run test:e2e
+
+# Run E2E tests with UI
+pnpm run test:e2e:ui
+
+# Run E2E tests in headed mode
+pnpm run test:e2e:headed
+
+# Debug E2E tests
+pnpm run test:e2e:debug
+
+# Generate test code
+pnpm run test:e2e:codegen
+
+# View test report
+pnpm run test:e2e:report
+</code></pre>
+<h4>Run All Tests</h4>
+<pre class="prettyprint source lang-bash"><code>pnpm run test:all
+</code></pre>
+<h3>Building for Production</h3>
+<pre class="prettyprint source lang-bash"><code># Build the application
+pnpm run build
+
+# Preview production build
+pnpm run preview
+</code></pre>
+<h2>🔐 Login Credentials</h2>
+<h3>Development Mode</h3>
+<ul>
+<li><strong>Username</strong>: <code>admin</code> | <strong>Password</strong>: <code>password123</code> | <strong>Role</strong>: Admin</li>
+<li><strong>Username</strong>: <code>dph</code> | <strong>Password</strong>: <code>password123</code> | <strong>Role</strong>: DpH</li>
+<li><strong>Username</strong>: <code>systemowner</code> | <strong>Password</strong>: <code>password123</code> | <strong>Role</strong>: System Owner</li>
+</ul>
+<blockquote>
+<p>⚠️ <strong>Note</strong>: These are mock credentials for development only. In production, use strong passwords and proper authentication.</p>
+</blockquote>
+<h2>🧪 Testing Strategy</h2>
+<h3>Test Structure (Context7 Best Practices)</h3>
+<ul>
+<li><strong>Page Object Models</strong> - Reusable page interactions</li>
+<li><strong>Test Data Fixtures</strong> - Centralized test data management</li>
+<li><strong>Test Utilities</strong> - Common helper functions</li>
+<li><strong>Feature-based Organization</strong> - Tests organized by application features</li>
+<li><strong>Multi-browser Testing</strong> - Chrome, Firefox, Safari support</li>
+<li><strong>API Testing</strong> - Separate API endpoint testing</li>
+<li><strong>Visual Regression</strong> - Screenshot comparison testing</li>
+</ul>
+<h3>Test Coverage</h3>
+<ul>
+<li><strong>Authentication</strong> - Login, logout, session management</li>
+<li><strong>UAR Functionality</strong> - Progress tracking, filtering, data display</li>
+<li><strong>Application Management</strong> - CRUD operations, search, filtering</li>
+<li><strong>API Endpoints</strong> - Authentication, data retrieval, error handling</li>
+<li><strong>Security</strong> - XSS prevention, SQL injection protection, input validation</li>
+<li><strong>Responsive Design</strong> - Mobile, tablet, desktop compatibility</li>
+<li><strong>Performance</strong> - Network conditions, loading states, error handling</li>
+</ul>
+<h2>🔒 Security Features</h2>
+<ul>
+<li><strong>Input Validation</strong> - Comprehensive client-side validation</li>
+<li><strong>XSS Protection</strong> - DOMPurify sanitization</li>
+<li><strong>SQL Injection Prevention</strong> - Parameterized queries</li>
+<li><strong>Session Management</strong> - Secure token handling</li>
+<li><strong>Audit Logging</strong> - Complete activity tracking</li>
+<li><strong>Account Lockout</strong> - Brute force protection</li>
+<li><strong>CSRF Protection</strong> - Cross-site request forgery prevention</li>
+</ul>
+<h2>📊 Performance Optimizations</h2>
+<ul>
+<li><strong>Code Splitting</strong> - Lazy loading of components</li>
+<li><strong>Memoization</strong> - React.memo, useMemo, useCallback</li>
+<li><strong>Bundle Optimization</strong> - Tree shaking, minification</li>
+<li><strong>Caching</strong> - API response caching</li>
+<li><strong>Debouncing</strong> - Search and input debouncing</li>
+<li><strong>Virtual Scrolling</strong> - Large list optimization</li>
+</ul>
+<h2>🌐 Browser Support</h2>
+<ul>
+<li><strong>Chrome</strong> 90+</li>
+<li><strong>Firefox</strong> 88+</li>
+<li><strong>Safari</strong> 14+</li>
+<li><strong>Edge</strong> 90+</li>
+</ul>
+<h2>📱 Responsive Breakpoints</h2>
+<ul>
+<li><strong>Mobile</strong>: 375px - 767px</li>
+<li><strong>Tablet</strong>: 768px - 1023px</li>
+<li><strong>Desktop</strong>: 1024px+</li>
+</ul>
+<h2>🚀 Deployment</h2>
+<h3>Environment Variables</h3>
+<pre class="prettyprint source lang-env"><code>REACT_APP_API_BASE_URL=http://localhost:3001/api
+REACT_APP_ENVIRONMENT=development
+</code></pre>
+<h3>Build Commands</h3>
+<pre class="prettyprint source lang-bash"><code># Production build
+pnpm run build
+
+# Preview build
+pnpm run preview
+</code></pre>
+<h2>📈 Monitoring &amp; Analytics</h2>
+<ul>
+<li><strong>Error Tracking</strong> - Comprehensive error logging</li>
+<li><strong>Performance Monitoring</strong> - Core Web Vitals tracking</li>
+<li><strong>User Analytics</strong> - Usage pattern analysis</li>
+<li><strong>Security Monitoring</strong> - Threat detection and response</li>
+</ul>
+<h2>🤝 Contributing</h2>
+<ol>
+<li>Fork the repository</li>
+<li>Create a feature branch</li>
+<li>Make your changes</li>
+<li>Add tests for new functionality</li>
+<li>Run the test suite</li>
+<li>Submit a pull request</li>
+</ol>
+<h2>📄 License</h2>
+<p>This project is licensed under the MIT License.</p>
+<h2>🆘 Support</h2>
+<p>For support and questions:</p>
+<ul>
+<li>Create an issue in the repository</li>
+<li>Check the documentation</li>
+<li>Review the test examples</li>
+</ul>
+<h2>🔄 Changelog</h2>
+<h3>Version 1.0.0</h3>
+<ul>
+<li>Initial release</li>
+<li>Authentication system</li>
+<li>UAR functionality</li>
+<li>Application management</li>
+<li>Comprehensive testing suite</li>
+<li>Security features</li>
+<li>Responsive design</li>
+</ul></article>
+    </section>
+
+
+
+
+
+
+    
+    
+</div>
+
+<br class="clear">
+
+<footer>
+    Documentation generated by <a href="https://github.com/jsdoc3/jsdoc">JSDoc 4.0.5</a> on Mon Oct 20 2025 02:10:38 GMT+0700 (Western Indonesia Time) using the <a href="https://github.com/clenemt/docdash">docdash</a> theme.
+</footer>
+
+<script>prettyPrint();</script>
+<script src="scripts/polyfill.js"></script>
+<script src="scripts/linenumber.js"></script>
+
+<script src="scripts/search.js" defer></script>
+
+
+
+</body>
+</html>

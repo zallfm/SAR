@@ -11,9 +11,10 @@ import { useScheduleStore } from '../store/scheduleStore'
 import { useUarPicStore } from '../store/uarPicStore'
 import { useSystemMasterStore } from '../store/systemMasterStore'
 import { useUarProgressStore } from '../store/uarProgressStore'
-import type { User, Application, LogEntry, UarSystemOwnerRecord, UarDivisionUserRecord } from '../data'
-import type { Schedule } from '../data'
-import type { PicUser, SystemMasterRecord } from '../data'
+import type { User } from '../../types'
+import type { Application, LogEntry, UarSystemOwnerRecord, UarDivisionUserRecord } from '../../data'
+import type { Schedule } from '../../data'
+import type { PicUser, SystemMasterRecord } from '../../data'
 import type { UarProgressResponse, UarProgressFilters, UarProgressData } from '../services/uarProgressService'
 
 // Auth Store Selectors
@@ -33,7 +34,7 @@ export const useApplications = (): Application[] => useApplicationStore(state =>
 export const useApplicationSearch = () => useApplicationStore(state => ({
   searchTerm: state.searchTerm,
   setSearchTerm: state.setSearchTerm,
-}), shallow)
+}))
 export const useApplicationPagination = () => useApplicationStore(state => ({
   currentPage: state.currentPage,
   itemsPerPage: state.itemsPerPage,

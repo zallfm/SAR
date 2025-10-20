@@ -1,0 +1,418 @@
+{
+	"schemaVersion": "2.0",
+	"id": 0,
+	"name": "SAR - System Authorization Review",
+	"variant": "project",
+	"kind": 1,
+	"flags": {},
+	"children": [
+		{
+			"id": 1,
+			"name": "default",
+			"variant": "declaration",
+			"kind": 32,
+			"flags": {
+				"isConst": true
+			},
+			"comment": {
+				"summary": [
+					{
+						"kind": "text",
+						"text": "Main Application Component"
+					}
+				],
+				"blockTags": [
+					{
+						"tag": "@description",
+						"content": [
+							{
+								"kind": "text",
+								"text": "Root component that manages the overall application state, authentication, and routing\nHandles user authentication, session management, security initialization, and global logging"
+							}
+						]
+					},
+					{
+						"tag": "@returns",
+						"content": [
+							{
+								"kind": "text",
+								"text": "Rendered application component with conditional routing"
+							}
+						]
+					},
+					{
+						"tag": "@example",
+						"content": [
+							{
+								"kind": "code",
+								"text": "```tsx\n// Used as the root component in index.tsx\n<App />\n```"
+							}
+						]
+					},
+					{
+						"tag": "@component",
+						"content": []
+					},
+					{
+						"tag": "@category",
+						"content": [
+							{
+								"kind": "text",
+								"text": "Application"
+							}
+						]
+					},
+					{
+						"tag": "@since",
+						"content": [
+							{
+								"kind": "text",
+								"text": "1.0.0"
+							}
+						]
+					},
+					{
+						"tag": "@author",
+						"content": [
+							{
+								"kind": "text",
+								"text": "SAR Development Team"
+							}
+						]
+					},
+					{
+						"tag": "@see",
+						"content": [
+							{
+								"kind": "text",
+								"text": " - "
+							},
+							{
+								"kind": "inline-tag",
+								"tag": "@link",
+								"text": "LoginPage",
+								"target": {
+									"packageName": "system-authorization-review",
+									"packagePath": "App.tsx",
+									"qualifiedName": "LoginPage"
+								}
+							},
+							{
+								"kind": "text",
+								"text": " for authentication"
+							},
+							{
+								"kind": "text",
+								"text": "\n"
+							},
+							{
+								"kind": "text",
+								"text": " - "
+							},
+							{
+								"kind": "inline-tag",
+								"tag": "@link",
+								"text": "Dashboard",
+								"target": {
+									"packageName": "system-authorization-review",
+									"packagePath": "App.tsx",
+									"qualifiedName": "Dashboard"
+								}
+							},
+							{
+								"kind": "text",
+								"text": " for main application interface"
+							},
+							{
+								"kind": "text",
+								"text": "\n"
+							},
+							{
+								"kind": "text",
+								"text": " - "
+							},
+							{
+								"kind": "inline-tag",
+								"tag": "@link",
+								"text": "useAuthStore",
+								"target": {
+									"packageName": "system-authorization-review",
+									"packagePath": "src/store/authStore.ts",
+									"qualifiedName": "useAuthStore"
+								}
+							},
+							{
+								"kind": "text",
+								"text": " for authentication state"
+							},
+							{
+								"kind": "text",
+								"text": "\n"
+							},
+							{
+								"kind": "text",
+								"text": " - "
+							},
+							{
+								"kind": "inline-tag",
+								"tag": "@link",
+								"text": "sessionManager",
+								"target": {
+									"packageName": "system-authorization-review",
+									"packagePath": "src/services/sessionManager.ts",
+									"qualifiedName": "sessionManager"
+								}
+							},
+							{
+								"kind": "text",
+								"text": " for session handling"
+							},
+							{
+								"kind": "text",
+								"text": "\n"
+							}
+						]
+					},
+					{
+						"tag": "@features",
+						"content": [
+							{
+								"kind": "text",
+								"text": "- Conditional rendering based on authentication state\n- Lazy loading of main components\n- Global security initialization\n- Service worker management\n- Comprehensive logging and monitoring\n- Session management and timeout handling\n- Error boundary integration"
+							}
+						]
+					},
+					{
+						"tag": "@security",
+						"content": [
+							{
+								"kind": "text",
+								"text": "- Security configuration initialization\n- Audit logging setup\n- Session validation and timeout\n- Secure logout with state cleanup"
+							}
+						]
+					},
+					{
+						"tag": "@performance",
+						"content": [
+							{
+								"kind": "text",
+								"text": "- Lazy loading for code splitting\n- Service worker for caching\n- Optimized re-renders\n- Memory leak prevention"
+							}
+						]
+					}
+				]
+			},
+			"sources": [
+				{
+					"fileName": "App.tsx",
+					"line": 67,
+					"character": 6,
+					"url": "https://github.com/your-org/sar-app/blob/main/App.tsx#L67"
+				}
+			],
+			"type": {
+				"type": "reference",
+				"target": {
+					"packageName": "@types/react",
+					"packagePath": "index.d.ts",
+					"qualifiedName": "React.FC"
+				},
+				"name": "React.FC",
+				"package": "@types/react"
+			},
+			"defaultValue": "..."
+		}
+	],
+	"groups": [
+		{
+			"title": "Variables",
+			"children": [
+				1
+			],
+			"categories": [
+				{
+					"title": "Application",
+					"children": [
+						1
+					]
+				}
+			]
+		}
+	],
+	"packageName": "system-authorization-review",
+	"packageVersion": "1.0.0",
+	"readme": [
+		{
+			"kind": "text",
+			"text": "# SAR - System Authorization Review\n\nA comprehensive system authorization review application built with React, TypeScript, and modern web technologies.\n\n## 🚀 Features\n\n- **User Authentication & Authorization** - Secure login with role-based access control\n- **UAR (User Access Review)** - Track and manage user access reviews with progress visualization\n- **Application Management** - Manage applications and their access controls\n- **Audit Logging** - Comprehensive logging and monitoring of all system activities\n- **Responsive Design** - Works seamlessly across desktop, tablet, and mobile devices\n- **Security First** - Built with ISO 27001 compliance in mind\n\n## 🛠️ Technology Stack\n\n- **Frontend**: React 19, TypeScript, Vite\n- **State Management**: Zustand\n- **Routing**: React Router DOM\n- **Charts**: Chart.js with React Chart.js 2\n- **Security**: DOMPurify, Validator.js\n- **Testing**: Playwright (E2E), Jest (Unit), Testing Library\n- **Build Tool**: Vite\n- **Package Manager**: pnpm\n\n## 📁 Project Structure\n\n"
+		},
+		{
+			"kind": "code",
+			"text": "```\nSAR-1/\n├── src/\n│   ├── components/          # React components\n│   │   ├── features/        # Feature-based components\n│   │   │   ├── auth/        # Authentication components\n│   │   │   ├── uar/         # UAR components\n│   │   │   ├── application/ # Application management\n│   │   │   └── logging/     # Logging components\n│   │   └── common/          # Shared components\n│   ├── services/            # Business logic services\n│   ├── store/               # Zustand state management\n│   ├── hooks/               # Custom React hooks\n│   ├── utils/               # Utility functions\n│   ├── config/              # Configuration files\n│   └── constants/           # Application constants\n├── tests/                   # Playwright E2E tests\n│   ├── auth/                # Authentication tests\n│   ├── uar/                 # UAR tests\n│   ├── application/         # Application tests\n│   ├── api/                 # API tests\n│   ├── page-objects/        # Page Object Models\n│   ├── fixtures/            # Test data\n│   └── utils/               # Test utilities\n├── public/                  # Static assets\n└── dist/                    # Build output\n```"
+		},
+		{
+			"kind": "text",
+			"text": "\n\n## 🚀 Getting Started\n\n### Prerequisites\n\n- Node.js 18+ \n- pnpm (recommended) or npm\n\n### Installation\n\n1. **Clone the repository**\n   "
+		},
+		{
+			"kind": "code",
+			"text": "```bash\n   git clone <repository-url>\n   cd SAR-1\n   ```"
+		},
+		{
+			"kind": "text",
+			"text": "\n\n2. **Install dependencies**\n   "
+		},
+		{
+			"kind": "code",
+			"text": "```bash\n   pnpm install\n   ```"
+		},
+		{
+			"kind": "text",
+			"text": "\n\n3. **Install Playwright browsers**\n   "
+		},
+		{
+			"kind": "code",
+			"text": "```bash\n   pnpm run test:e2e:install\n   ```"
+		},
+		{
+			"kind": "text",
+			"text": "\n\n### Development\n\n1. **Start development server**\n   "
+		},
+		{
+			"kind": "code",
+			"text": "```bash\n   pnpm run dev\n   ```"
+		},
+		{
+			"kind": "text",
+			"text": "\n\n2. **Open browser**\n   Navigate to "
+		},
+		{
+			"kind": "code",
+			"text": "`http://localhost:3001`"
+		},
+		{
+			"kind": "text",
+			"text": "\n\n### Testing\n\n#### Unit Tests\n"
+		},
+		{
+			"kind": "code",
+			"text": "```bash\n# Run unit tests\npnpm run test\n\n# Run tests in watch mode\npnpm run test:watch\n\n# Run tests with coverage\npnpm run test:coverage\n```"
+		},
+		{
+			"kind": "text",
+			"text": "\n\n#### E2E Tests\n"
+		},
+		{
+			"kind": "code",
+			"text": "```bash\n# Run E2E tests\npnpm run test:e2e\n\n# Run E2E tests with UI\npnpm run test:e2e:ui\n\n# Run E2E tests in headed mode\npnpm run test:e2e:headed\n\n# Debug E2E tests\npnpm run test:e2e:debug\n\n# Generate test code\npnpm run test:e2e:codegen\n\n# View test report\npnpm run test:e2e:report\n```"
+		},
+		{
+			"kind": "text",
+			"text": "\n\n#### Run All Tests\n"
+		},
+		{
+			"kind": "code",
+			"text": "```bash\npnpm run test:all\n```"
+		},
+		{
+			"kind": "text",
+			"text": "\n\n### Building for Production\n\n"
+		},
+		{
+			"kind": "code",
+			"text": "```bash\n# Build the application\npnpm run build\n\n# Preview production build\npnpm run preview\n```"
+		},
+		{
+			"kind": "text",
+			"text": "\n\n## 🔐 Login Credentials\n\n### Development Mode\n- **Username**: "
+		},
+		{
+			"kind": "code",
+			"text": "`admin`"
+		},
+		{
+			"kind": "text",
+			"text": " | **Password**: "
+		},
+		{
+			"kind": "code",
+			"text": "`password123`"
+		},
+		{
+			"kind": "text",
+			"text": " | **Role**: Admin\n- **Username**: "
+		},
+		{
+			"kind": "code",
+			"text": "`dph`"
+		},
+		{
+			"kind": "text",
+			"text": " | **Password**: "
+		},
+		{
+			"kind": "code",
+			"text": "`password123`"
+		},
+		{
+			"kind": "text",
+			"text": " | **Role**: DpH  \n- **Username**: "
+		},
+		{
+			"kind": "code",
+			"text": "`systemowner`"
+		},
+		{
+			"kind": "text",
+			"text": " | **Password**: "
+		},
+		{
+			"kind": "code",
+			"text": "`password123`"
+		},
+		{
+			"kind": "text",
+			"text": " | **Role**: System Owner\n\n> ⚠️ **Note**: These are mock credentials for development only. In production, use strong passwords and proper authentication.\n\n## 🧪 Testing Strategy\n\n### Test Structure (Context7 Best Practices)\n\n- **Page Object Models** - Reusable page interactions\n- **Test Data Fixtures** - Centralized test data management\n- **Test Utilities** - Common helper functions\n- **Feature-based Organization** - Tests organized by application features\n- **Multi-browser Testing** - Chrome, Firefox, Safari support\n- **API Testing** - Separate API endpoint testing\n- **Visual Regression** - Screenshot comparison testing\n\n### Test Coverage\n\n- **Authentication** - Login, logout, session management\n- **UAR Functionality** - Progress tracking, filtering, data display\n- **Application Management** - CRUD operations, search, filtering\n- **API Endpoints** - Authentication, data retrieval, error handling\n- **Security** - XSS prevention, SQL injection protection, input validation\n- **Responsive Design** - Mobile, tablet, desktop compatibility\n- **Performance** - Network conditions, loading states, error handling\n\n## 🔒 Security Features\n\n- **Input Validation** - Comprehensive client-side validation\n- **XSS Protection** - DOMPurify sanitization\n- **SQL Injection Prevention** - Parameterized queries\n- **Session Management** - Secure token handling\n- **Audit Logging** - Complete activity tracking\n- **Account Lockout** - Brute force protection\n- **CSRF Protection** - Cross-site request forgery prevention\n\n## 📊 Performance Optimizations\n\n- **Code Splitting** - Lazy loading of components\n- **Memoization** - React.memo, useMemo, useCallback\n- **Bundle Optimization** - Tree shaking, minification\n- **Caching** - API response caching\n- **Debouncing** - Search and input debouncing\n- **Virtual Scrolling** - Large list optimization\n\n## 🌐 Browser Support\n\n- **Chrome** 90+\n- **Firefox** 88+\n- **Safari** 14+\n- **Edge** 90+\n\n## 📱 Responsive Breakpoints\n\n- **Mobile**: 375px - 767px\n- **Tablet**: 768px - 1023px\n- **Desktop**: 1024px+\n\n## 🚀 Deployment\n\n### Environment Variables\n\n"
+		},
+		{
+			"kind": "code",
+			"text": "```env\nREACT_APP_API_BASE_URL=http://localhost:3001/api\nREACT_APP_ENVIRONMENT=development\n```"
+		},
+		{
+			"kind": "text",
+			"text": "\n\n### Build Commands\n\n"
+		},
+		{
+			"kind": "code",
+			"text": "```bash\n# Production build\npnpm run build\n\n# Preview build\npnpm run preview\n```"
+		},
+		{
+			"kind": "text",
+			"text": "\n\n## 📈 Monitoring & Analytics\n\n- **Error Tracking** - Comprehensive error logging\n- **Performance Monitoring** - Core Web Vitals tracking\n- **User Analytics** - Usage pattern analysis\n- **Security Monitoring** - Threat detection and response\n\n## 🤝 Contributing\n\n1. Fork the repository\n2. Create a feature branch\n3. Make your changes\n4. Add tests for new functionality\n5. Run the test suite\n6. Submit a pull request\n\n## 📄 License\n\nThis project is licensed under the MIT License.\n\n## 🆘 Support\n\nFor support and questions:\n- Create an issue in the repository\n- Check the documentation\n- Review the test examples\n\n## 🔄 Changelog\n\n### Version 1.0.0\n- Initial release\n- Authentication system\n- UAR functionality\n- Application management\n- Comprehensive testing suite\n- Security features\n- Responsive design"
+		}
+	],
+	"symbolIdMap": {
+		"0": {
+			"packageName": "system-authorization-review",
+			"packagePath": "App.tsx",
+			"qualifiedName": ""
+		},
+		"1": {
+			"packageName": "system-authorization-review",
+			"packagePath": "App.tsx",
+			"qualifiedName": "App"
+		}
+	},
+	"files": {
+		"entries": {
+			"1": "App.tsx",
+			"2": "README.md",
+			"3": ""
+		},
+		"reflections": {
+			"1": 0,
+			"2": 0,
+			"3": 0
+		}
+	}
+}
