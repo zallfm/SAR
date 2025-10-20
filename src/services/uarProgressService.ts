@@ -86,13 +86,32 @@ class UarProgressService {
   private generateMockData(filters: UarProgressFilters): UarProgressResponse {
     // This will be replaced with real API call
     const divisions = [
-      { label: 'PWPD', total: 85, approved: 78, review: 82, soApproved: 80 },
-      { label: 'PAD', total: 92, approved: 88, review: 90, soApproved: 89 },
-      { label: 'GAD', total: 76, approved: 72, review: 74, soApproved: 73 },
-      { label: 'ISTD', total: 88, approved: 85, review: 87, soApproved: 86 },
-      { label: 'EMD', total: 81, approved: 77, review: 79, soApproved: 78 },
-      { label: 'FSD', total: 94, approved: 91, review: 93, soApproved: 92 },
-      { label: 'HRD', total: 79, approved: 75, review: 77, soApproved: 76 },
+      { label: 'PWPD', total: 90, approved: 85, review: 87, soApproved: 80 },
+      { label: 'PAD', total: 84, approved: 80, review: 81, soApproved: 78 },
+      { label: 'GAD', total: 89, approved: 82, review: 85, soApproved: 80 },
+      { label: 'ISTD', total: 93, approved: 88, review: 90, soApproved: 85 },
+      { label: 'EMD', total: 82, approved: 80, review: 80, soApproved: 77 },
+      { label: 'FSD', total: 75, approved: 72, review: 73, soApproved: 71 },
+      { label: 'HRD', total: 93, approved: 87, review: 90, soApproved: 88 },
+      { label: 'ITD', total: 83, approved: 75, review: 82, soApproved: 78 },
+      { label: 'MKT', total: 91, approved: 85, review: 88, soApproved: 83 },
+      { label: 'RND', total: 92, approved: 85, review: 89, soApproved: 86 },
+      { label: 'QAD', total: 83, approved: 78, review: 82, soApproved: 79 },
+      { label: 'SCD', total: 78, approved: 73, review: 75, soApproved: 72 },
+      { label: 'PRD', total: 90, approved: 85, review: 88, soApproved: 86 },
+      { label: 'FIN', total: 87, approved: 83, review: 85, soApproved: 84 },
+      { label: 'LOG', total: 83, approved: 78, review: 80, soApproved: 75 },
+      { label: 'SAD', total: 80, approved: 74, review: 79, soApproved: 72 },
+      { label: 'TMD', total: 90, approved: 83, review: 87, soApproved: 82 },
+      { label: 'CRD', total: 85, approved: 80, review: 82, soApproved: 80 },
+      { label: 'EVD', total: 94, approved: 88, review: 91, soApproved: 89 },
+      { label: 'BDD', total: 85, approved: 80, review: 84, soApproved: 81 },
+      { label: 'CMD', total: 83, approved: 78, review: 82, soApproved: 77 },
+      { label: 'SPD', total: 93, approved: 88, review: 90, soApproved: 91 },
+      { label: 'HSD', total: 95, approved: 90, review: 92, soApproved: 89 },
+      { label: 'OPD', total: 85, approved: 80, review: 82, soApproved: 79 },
+      { label: 'ASD', total: 92, approved: 87, review: 89, soApproved: 90 },
+      { label: 'CSD', total: 92, approved: 83, review: 87, soApproved: 86 },
     ];
 
     const departments: Record<string, UarProgressData[]> = {
@@ -106,6 +125,84 @@ class UarProgressService {
         { label: 'PAD-QA', total: 89, approved: 85, review: 87, soApproved: 86 },
         { label: 'PAD-Support', total: 90, approved: 87, review: 89, soApproved: 88 },
       ],
+      'ISTD': [
+        { label: 'CIO', total: 90, approved: 84, review: 87, soApproved: 86 },
+        { label: 'NWS', total: 85, approved: 79, review: 82, soApproved: 80 },
+        { label: 'SSL', total: 88, approved: 82, review: 85, soApproved: 84 },
+        { label: 'SCM', total: 92, approved: 86, review: 89, soApproved: 88 },
+      ],
+      'GAD': [
+        { label: 'GAD-Main', total: 89, approved: 82, review: 85, soApproved: 80 },
+      ],
+      'EMD': [
+        { label: 'EMD-1', total: 84, approved: 78, review: 82, soApproved: 80 },
+      ],
+      'FSD': [
+        { label: 'FSD-1', total: 78, approved: 74, review: 76, soApproved: 73 },
+      ],
+      'HRD': [
+        { label: 'HRD-Recruitment', total: 94, approved: 88, review: 91, soApproved: 89 },
+        { label: 'HRD-Payroll', total: 92, approved: 86, review: 89, soApproved: 87 },
+      ],
+      'ITD': [
+        { label: 'ITD-Infra', total: 85, approved: 78, review: 83, soApproved: 80 },
+        { label: 'ITD-Apps', total: 88, approved: 81, review: 85, soApproved: 82 },
+      ],
+      'MKT': [
+        { label: 'MKT-Digital', total: 92, approved: 87, review: 89, soApproved: 85 },
+      ],
+      'RND': [
+        { label: 'RND-Labs', total: 93, approved: 86, review: 90, soApproved: 88 },
+      ],
+      'QAD': [
+        { label: 'QAD-Audit', total: 85, approved: 80, review: 83, soApproved: 81 },
+      ],
+      'SCD': [
+        { label: 'SCD-Logistics', total: 80, approved: 75, review: 78, soApproved: 74 },
+      ],
+      'PRD': [
+        { label: 'PRD-Ops', total: 91, approved: 86, review: 89, soApproved: 87 },
+      ],
+      'FIN': [
+        { label: 'FIN-Accounting', total: 88, approved: 84, review: 86, soApproved: 85 },
+      ],
+      'LOG': [
+        { label: 'LOG-Warehouse', total: 85, approved: 80, review: 82, soApproved: 78 },
+      ],
+      'SAD': [
+        { label: 'SAD-Sales', total: 82, approved: 76, review: 80, soApproved: 75 },
+      ],
+      'TMD': [
+        { label: 'TMD-Training', total: 91, approved: 85, review: 88, soApproved: 84 },
+      ],
+      'CRD': [
+        { label: 'CRD-Internal', total: 86, approved: 81, review: 83, soApproved: 81 },
+      ],
+      'EVD': [
+        { label: 'EVD-Planning', total: 95, approved: 90, review: 92, soApproved: 91 },
+      ],
+      'BDD': [
+        { label: 'BDD-Analytics', total: 86, approved: 81, review: 85, soApproved: 83 },
+      ],
+      'CMD': [
+        { label: 'CMD-Comms', total: 84, approved: 79, review: 83, soApproved: 79 },
+      ],
+      'SPD': [
+        { label: 'SPD-Proc', total: 94, approved: 89, review: 91, soApproved: 92 },
+      ],
+      'HSD': [
+        { label: 'HSD-Safety', total: 96, approved: 91, review: 93, soApproved: 90 },
+      ],
+      'OPD': [
+        { label: 'OPD-Dash', total: 86, approved: 81, review: 83, soApproved: 80 },
+      ],
+      'ASD': [
+        { label: 'ASD-Assets', total: 93, approved: 88, review: 90, soApproved: 91 },
+      ],
+      'CSD': [
+        { label: 'CSD-Support', total: 93, approved: 85, review: 88, soApproved: 87 },
+      ]
+
       // Add more departments as needed
     };
 
@@ -134,7 +231,7 @@ class UarProgressService {
   // Main method to get UAR progress data
   public async getUarProgressData(filters: UarProgressFilters = {}): Promise<UarProgressResponse> {
     const cacheKey = this.getCacheKey(filters);
-    
+
     // Check cache first
     const cachedData = this.getCachedData(cacheKey);
     if (cachedData) {
@@ -144,13 +241,13 @@ class UarProgressService {
     try {
       // TODO: Replace with real API call
       // const data = await this.fetchFromAPI('/uar-progress', filters);
-      
+
       // For now, use mock data
       const data = this.generateMockData(filters);
-      
+
       // Cache the result
       this.setCachedData(cacheKey, data);
-      
+
       return data;
     } catch (error) {
       console.error('Error fetching UAR progress data:', error);
@@ -179,7 +276,7 @@ class UarProgressService {
     // return () => ws.close();
 
     // For now, return a no-op function
-    return () => {};
+    return () => { };
   }
 }
 

@@ -33,7 +33,7 @@ export const initialApplications: Application[] = [
     updated: '19-07-2024\n09:45:00',
     status: 'Active',
   },
-   {
+  {
     id: 'TMS',
     name: 'Toyota Management System',
     division: 'Corporate Planning',
@@ -82,208 +82,208 @@ export interface LogEntry {
 // Sorted from latest to oldest (newest first) - DESC order
 // New activities will appear at the top automatically
 export const mockLogs: LogEntry[] = [
-    // Security Events - Authentication & Security (Latest)
-    {
-        id: 17,
-        processId: '2025011600017',
-        userId: 'admin',
-        module: 'Security',
-        functionName: 'Login Success',
-        startDate: '21-07-2024 16:30:00',
-        endDate: '21-07-2024 16:30:00',
-        status: 'Success',
-        details: 'User admin successfully logged in from IP: 192.168.1.100'
-    },
-    {
-        id: 16,
-        processId: '2025011600016',
-        userId: 'unknown',
-        module: 'Security',
-        functionName: 'Login Failed',
-        startDate: '21-07-2024 16:25:00',
-        endDate: '21-07-2024 16:25:00',
-        status: 'Error',
-        details: 'Failed login attempt for username: testuser (attempt #3) - Potential brute force attack'
-    },
-    
-    // In Progress - Current Operations
-    {
-        id: 15,
-        processId: '2025011600015',
-        userId: 'systemowner',
-        module: 'UAR',
-        functionName: 'Update',
-        startDate: '21-07-2024 16:00:00',
-        endDate: '21-07-2024 16:00:00',
-        status: 'InProgress',
-        details: 'Updating UAR progress for Division: Production Planning Control'
-    },
-    
-    // Error Cases - Important to Track
-    {
-        id: 14,
-        processId: '2025011600014',
-        userId: 'dph',
-        module: 'Application',
-        functionName: 'Update',
-        startDate: '21-07-2024 15:15:00',
-        endDate: '21-07-2024 15:15:01',
-        status: 'Error',
-        details: 'Failed to update application: Database connection timeout'
-    },
-    {
-        id: 13,
-        processId: '2025011600013',
-        userId: 'admin',
-        module: 'UAR',
-        functionName: 'Create',
-        startDate: '21-07-2024 15:00:00',
-        endDate: '21-07-2024 15:00:02',
-        status: 'Error',
-        details: 'Failed to create UAR record: Validation error - Invalid division code'
-    },
-    
-    // Schedule Management - Critical Actions
-    {
-        id: 12,
-        processId: '2025011600012',
-        userId: 'systemowner',
-        module: 'Schedule',
-        functionName: 'Update',
-        startDate: '21-07-2024 14:15:00',
-        endDate: '21-07-2024 14:15:04',
-        status: 'Success',
-        details: 'Updated schedule: UAR Review Schedule for Q2 2025'
-    },
-    {
-        id: 11,
-        processId: '2025011600011',
-        userId: 'admin',
-        module: 'Schedule',
-        functionName: 'Create',
-        startDate: '21-07-2024 14:00:00',
-        endDate: '21-07-2024 14:00:05',
-        status: 'Success',
-        details: 'Created new schedule: UAR Review Schedule for Q1 2025'
-    },
-    
-    // User Management - Critical Actions
-    {
-        id: 10,
-        processId: '2025011600010',
-        userId: 'dph',
-        module: 'User',
-        functionName: 'Update',
-        startDate: '21-07-2024 13:15:00',
-        endDate: '21-07-2024 13:15:03',
-        status: 'Success',
-        details: 'Updated user permissions: UAR PIC for Division: Production Engineering'
-    },
-    {
-        id: 9,
-        processId: '2025011600009',
-        userId: 'admin',
-        module: 'User',
-        functionName: 'Create',
-        startDate: '21-07-2024 13:00:00',
-        endDate: '21-07-2024 13:00:07',
-        status: 'Success',
-        details: 'Created new user: UAR PIC for Division: Production Planning Control'
-    },
-    
-    // System Master Module - Critical Data Changes
-    {
-        id: 8,
-        processId: '2025011600008',
-        userId: 'admin',
-        module: 'System Master',
-        functionName: 'Update',
-        startDate: '21-07-2024 12:15:00',
-        endDate: '21-07-2024 12:15:04',
-        status: 'Success',
-        details: 'Updated system master: Security Center Configuration'
-    },
-    {
-        id: 7,
-        processId: '2025011600007',
-        userId: 'systemowner',
-        module: 'System Master',
-        functionName: 'Create',
-        startDate: '21-07-2024 12:00:00',
-        endDate: '21-07-2024 12:00:06',
-        status: 'Success',
-        details: 'Created new system master record: LDAP Configuration'
-    },
-    
-    // Application Module - Critical Data Changes
-    {
-        id: 6,
-        processId: '2025011600006',
-        userId: 'admin',
-        module: 'Application',
-        functionName: 'Update',
-        startDate: '21-07-2024 11:30:00',
-        endDate: '21-07-2024 11:30:03',
-        status: 'Warning',
-        details: 'Updated application status: Toyota Management System to Inactive'
-    },
-    {
-        id: 5,
-        processId: '2025011600005',
-        userId: 'dph',
-        module: 'Application',
-        functionName: 'Update',
-        startDate: '21-07-2024 11:15:00',
-        endDate: '21-07-2024 11:15:05',
-        status: 'Success',
-        details: 'Updated application: Production Achievement System'
-    },
-    {
-        id: 4,
-        processId: '2025011600004',
-        userId: 'admin',
-        module: 'Application',
-        functionName: 'Create',
-        startDate: '21-07-2024 11:00:00',
-        endDate: '21-07-2024 11:00:08',
-        status: 'Success',
-        details: 'Created new application: Integrated Production Planning Control System'
-    },
-    
-    // UAR Module - Critical Data Changes (Oldest)
-    {
-        id: 3,
-        processId: '2025011600003',
-        userId: 'systemowner',
-        module: 'UAR',
-        functionName: 'Delete',
-        startDate: '21-07-2024 10:30:00',
-        endDate: '21-07-2024 10:30:02',
-        status: 'Success',
-        details: 'Deleted UAR record for Division: Corporate Planning'
-    },
-    {
-        id: 2,
-        processId: '2025011600002',
-        userId: 'dph',
-        module: 'UAR',
-        functionName: 'Update',
-        startDate: '21-07-2024 10:15:00',
-        endDate: '21-07-2024 10:15:03',
-        status: 'Success',
-        details: 'Updated UAR progress for Division: Production Engineering'
-    },
-    {
-        id: 1,
-        processId: '2025011600001',
-        userId: 'admin',
-        module: 'UAR',
-        functionName: 'Create',
-        startDate: '21-07-2024 10:00:00',
-        endDate: '21-07-2024 10:00:05',
-        status: 'Success',
-        details: 'Created new UAR record for Division: Production Planning Control'
-    }
+  // Security Events - Authentication & Security (Latest)
+  {
+    id: 17,
+    processId: '2025011600017',
+    userId: 'admin',
+    module: 'Security',
+    functionName: 'Login Success',
+    startDate: '21-07-2024 16:30:00',
+    endDate: '21-07-2024 16:30:00',
+    status: 'Success',
+    details: 'User admin successfully logged in from IP: 192.168.1.100'
+  },
+  {
+    id: 16,
+    processId: '2025011600016',
+    userId: 'unknown',
+    module: 'Security',
+    functionName: 'Login Failed',
+    startDate: '21-07-2024 16:25:00',
+    endDate: '21-07-2024 16:25:00',
+    status: 'Error',
+    details: 'Failed login attempt for username: testuser (attempt #3) - Potential brute force attack'
+  },
+
+  // In Progress - Current Operations
+  {
+    id: 15,
+    processId: '2025011600015',
+    userId: 'systemowner',
+    module: 'UAR',
+    functionName: 'Update',
+    startDate: '21-07-2024 16:00:00',
+    endDate: '21-07-2024 16:00:00',
+    status: 'InProgress',
+    details: 'Updating UAR progress for Division: Production Planning Control'
+  },
+
+  // Error Cases - Important to Track
+  {
+    id: 14,
+    processId: '2025011600014',
+    userId: 'dph',
+    module: 'Application',
+    functionName: 'Update',
+    startDate: '21-07-2024 15:15:00',
+    endDate: '21-07-2024 15:15:01',
+    status: 'Error',
+    details: 'Failed to update application: Database connection timeout'
+  },
+  {
+    id: 13,
+    processId: '2025011600013',
+    userId: 'admin',
+    module: 'UAR',
+    functionName: 'Create',
+    startDate: '21-07-2024 15:00:00',
+    endDate: '21-07-2024 15:00:02',
+    status: 'Error',
+    details: 'Failed to create UAR record: Validation error - Invalid division code'
+  },
+
+  // Schedule Management - Critical Actions
+  {
+    id: 12,
+    processId: '2025011600012',
+    userId: 'systemowner',
+    module: 'Schedule',
+    functionName: 'Update',
+    startDate: '21-07-2024 14:15:00',
+    endDate: '21-07-2024 14:15:04',
+    status: 'Success',
+    details: 'Updated schedule: UAR Review Schedule for Q2 2025'
+  },
+  {
+    id: 11,
+    processId: '2025011600011',
+    userId: 'admin',
+    module: 'Schedule',
+    functionName: 'Create',
+    startDate: '21-07-2024 14:00:00',
+    endDate: '21-07-2024 14:00:05',
+    status: 'Success',
+    details: 'Created new schedule: UAR Review Schedule for Q1 2025'
+  },
+
+  // User Management - Critical Actions
+  {
+    id: 10,
+    processId: '2025011600010',
+    userId: 'dph',
+    module: 'User',
+    functionName: 'Update',
+    startDate: '21-07-2024 13:15:00',
+    endDate: '21-07-2024 13:15:03',
+    status: 'Success',
+    details: 'Updated user permissions: UAR PIC for Division: Production Engineering'
+  },
+  {
+    id: 9,
+    processId: '2025011600009',
+    userId: 'admin',
+    module: 'User',
+    functionName: 'Create',
+    startDate: '21-07-2024 13:00:00',
+    endDate: '21-07-2024 13:00:07',
+    status: 'Success',
+    details: 'Created new user: UAR PIC for Division: Production Planning Control'
+  },
+
+  // System Master Module - Critical Data Changes
+  {
+    id: 8,
+    processId: '2025011600008',
+    userId: 'admin',
+    module: 'System Master',
+    functionName: 'Update',
+    startDate: '21-07-2024 12:15:00',
+    endDate: '21-07-2024 12:15:04',
+    status: 'Success',
+    details: 'Updated system master: Security Center Configuration'
+  },
+  {
+    id: 7,
+    processId: '2025011600007',
+    userId: 'systemowner',
+    module: 'System Master',
+    functionName: 'Create',
+    startDate: '21-07-2024 12:00:00',
+    endDate: '21-07-2024 12:00:06',
+    status: 'Success',
+    details: 'Created new system master record: LDAP Configuration'
+  },
+
+  // Application Module - Critical Data Changes
+  {
+    id: 6,
+    processId: '2025011600006',
+    userId: 'admin',
+    module: 'Application',
+    functionName: 'Update',
+    startDate: '21-07-2024 11:30:00',
+    endDate: '21-07-2024 11:30:03',
+    status: 'Warning',
+    details: 'Updated application status: Toyota Management System to Inactive'
+  },
+  {
+    id: 5,
+    processId: '2025011600005',
+    userId: 'dph',
+    module: 'Application',
+    functionName: 'Update',
+    startDate: '21-07-2024 11:15:00',
+    endDate: '21-07-2024 11:15:05',
+    status: 'Success',
+    details: 'Updated application: Production Achievement System'
+  },
+  {
+    id: 4,
+    processId: '2025011600004',
+    userId: 'admin',
+    module: 'Application',
+    functionName: 'Create',
+    startDate: '21-07-2024 11:00:00',
+    endDate: '21-07-2024 11:00:08',
+    status: 'Success',
+    details: 'Created new application: Integrated Production Planning Control System'
+  },
+
+  // UAR Module - Critical Data Changes (Oldest)
+  {
+    id: 3,
+    processId: '2025011600003',
+    userId: 'systemowner',
+    module: 'UAR',
+    functionName: 'Delete',
+    startDate: '21-07-2024 10:30:00',
+    endDate: '21-07-2024 10:30:02',
+    status: 'Success',
+    details: 'Deleted UAR record for Division: Corporate Planning'
+  },
+  {
+    id: 2,
+    processId: '2025011600002',
+    userId: 'dph',
+    module: 'UAR',
+    functionName: 'Update',
+    startDate: '21-07-2024 10:15:00',
+    endDate: '21-07-2024 10:15:03',
+    status: 'Success',
+    details: 'Updated UAR progress for Division: Production Engineering'
+  },
+  {
+    id: 1,
+    processId: '2025011600001',
+    userId: 'admin',
+    module: 'UAR',
+    functionName: 'Create',
+    startDate: '21-07-2024 10:00:00',
+    endDate: '21-07-2024 10:00:05',
+    status: 'Success',
+    details: 'Created new UAR record for Division: Production Planning Control'
+  }
 ];
 
 export interface LogDetail {
@@ -294,10 +294,10 @@ export interface LogDetail {
 }
 
 export const mockLogDetails: LogDetail[] = Array.from({ length: 30 }, (_, i) => ({
-    id: i + 1,
-    messageDateTime: `21-07-2024 10:${String(i).padStart(2, '0')}:${String(i*2 % 60).padStart(2,'0')}`,
-    location: `Module.FunctionName.Step${i+1}`,
-    messageDetail: `Execution step ${i+1} completed. ${i % 4 === 0 ? 'Encountered a minor warning.' : 'Proceeding to next step.'}`
+  id: i + 1,
+  messageDateTime: `21-07-2024 10:${String(i).padStart(2, '0')}:${String(i * 2 % 60).padStart(2, '0')}`,
+  location: `Module.FunctionName.Step${i + 1}`,
+  messageDetail: `Execution step ${i + 1} completed. ${i % 4 === 0 ? 'Encountered a minor warning.' : 'Proceeding to next step.'}`
 }));
 
 export interface PicUser {
@@ -338,34 +338,34 @@ export interface SystemMasterRecord {
 }
 
 export const initialSystemMasterData: SystemMasterRecord[] = [
-    {
-        id: 1,
-        systemType: 'UAR_SCHEDULE',
-        systemCode: 'UAR_START_DATE',
-        validFrom: '01-01-2024',
-        validTo: '31-12-2024',
-        systemValueText: 'Start date for UAR process',
-        systemValueNum: 1,
-        systemValueTime: '09:00:00',
-        createdBy: 'Admin',
-        createdDate: '01-01-2024\n08:00:00',
-        changedBy: 'Admin',
-        changedDate: '01-01-2024\n08:00:00',
-    },
-    {
-        id: 2,
-        systemType: 'UAR_SCHEDULE',
-        systemCode: 'UAR_END_DATE',
-        validFrom: '01-01-2024',
-        validTo: '31-12-2024',
-        systemValueText: 'End date for UAR process',
-        systemValueNum: 30,
-        systemValueTime: '17:00:00',
-        createdBy: 'Admin',
-        createdDate: '01-01-2024\n08:00:00',
-        changedBy: 'Admin',
-        changedDate: '01-01-2024\n08:00:00',
-    },
+  {
+    id: 1,
+    systemType: 'UAR_SCHEDULE',
+    systemCode: 'UAR_START_DATE',
+    validFrom: '01-01-2024',
+    validTo: '31-12-2024',
+    systemValueText: 'Start date for UAR process',
+    systemValueNum: 1,
+    systemValueTime: '09:00:00',
+    createdBy: 'Admin',
+    createdDate: '01-01-2024\n08:00:00',
+    changedBy: 'Admin',
+    changedDate: '01-01-2024\n08:00:00',
+  },
+  {
+    id: 2,
+    systemType: 'UAR_SCHEDULE',
+    systemCode: 'UAR_END_DATE',
+    validFrom: '01-01-2024',
+    validTo: '31-12-2024',
+    systemValueText: 'End date for UAR process',
+    systemValueNum: 30,
+    systemValueTime: '17:00:00',
+    createdBy: 'Admin',
+    createdDate: '01-01-2024\n08:00:00',
+    changedBy: 'Admin',
+    changedDate: '01-01-2024\n08:00:00',
+  },
 ];
 
 export interface UarLatestRole {
@@ -382,18 +382,18 @@ export interface UarLatestRole {
 }
 
 export const initialUarLatestRoles: UarLatestRole[] = [
-    { id: 1, applicationId: 'IPPCS', username: 'putri.imelda', noreg: '00223456', name: 'Putri Imelda', roleId: 'IPPCS_FD_AR', roleDescription: 'Finance AR', division: 'ISTD', department: 'CIO', position: 'Section Head' },
-    { id: 2, applicationId: 'IPPCS', username: 'putri.simanjutak', noreg: '02233453', name: 'Putri Simanjuntak', roleId: 'IPPCS_FD_AR', roleDescription: 'HRD', division: 'ISTD', department: 'CIO', position: 'Section Head' },
-    { id: 3, applicationId: 'IPPCS', username: 'budi.sukma', noreg: '02234567', name: 'Budi Sukma', roleId: 'IPPCS_FD_MKT', roleDescription: 'Marketing', division: 'ISTD', department: 'CIO', position: 'Manager' },
-    { id: 4, applicationId: 'IPPCS', username: 'sari.ningsih', noreg: '02234568', name: 'Sari Ningsih', roleId: 'IPPCS_FD_SALES', roleDescription: 'Sales', division: 'ISTD', department: 'CIO', position: 'Manager' },
-    { id: 5, applicationId: 'IPPCS', username: 'adi.wijaya', noreg: '02234569', name: 'Adi Wijaya', roleId: 'IPPCS_FD_IT', roleDescription: 'IT Support', division: 'ISTD', department: 'CIO', position: 'Team Lead' },
-    { id: 6, applicationId: 'IPPCS', username: 'ani.martini', noreg: '02234570', name: 'Ani Martini', roleId: 'IPPCS_FD_DEV', roleDescription: 'Development', division: 'ISTD', department: 'CIO', position: 'Team Lead' },
-    { id: 7, applicationId: 'IPPCS', username: 'rio.hartono', noreg: '02234571', name: 'Rio Hartono', roleId: 'IPPCS_FD_CUST', roleDescription: 'Customer Support', division: 'ISTD', department: 'CIO', position: 'Manager' },
-    { id: 8, applicationId: 'IPPCS', username: 'lina.purnama', noreg: '02234572', name: 'Lina Purnama', roleId: 'IPPCS_FD_PR', roleDescription: 'Public Relations', division: 'ISTD', department: 'CIO', position: 'Manager' },
-    { id: 9, applicationId: 'IPPCS', username: 'fahmi.rahman', noreg: '02234573', name: 'Fahmi Rahman', roleId: 'IPPCS_FD_LOG', roleDescription: 'Logistics', division: 'ISTD', department: 'CIO', position: 'Section Head' },
-    { id: 10, applicationId: 'IPPCS', username: 'nina.sari', noreg: '02234574', name: 'Nina Sari', roleId: 'IPPCS_FD_QA', roleDescription: 'Quality Assurance', division: 'ISTD', department: 'CIO', position: 'Manager' },
-    { id: 11, applicationId: 'PAS', username: 'dedi.irawan', noreg: '02234575', name: 'Dedi Irawan', roleId: 'PAS_PROD_LEAD', roleDescription: 'Production Lead', division: 'PROD', department: 'ENG', position: 'Supervisor' },
-    { id: 12, applicationId: 'PAS', username: 'siti.nurhaliza', noreg: '02234576', name: 'Siti Nurhaliza', roleId: 'PAS_QC_INSPECT', roleDescription: 'QC Inspector', division: 'PROD', department: 'QC', position: 'Staff' },
+  { id: 1, applicationId: 'IPPCS', username: 'putri.imelda', noreg: '00223456', name: 'Putri Imelda', roleId: 'IPPCS_FD_AR', roleDescription: 'Finance AR', division: 'ISTD', department: 'CIO', position: 'Section Head' },
+  { id: 2, applicationId: 'IPPCS', username: 'putri.simanjutak', noreg: '02233453', name: 'Putri Simanjuntak', roleId: 'IPPCS_FD_AR', roleDescription: 'HRD', division: 'ISTD', department: 'CIO', position: 'Section Head' },
+  { id: 3, applicationId: 'IPPCS', username: 'budi.sukma', noreg: '02234567', name: 'Budi Sukma', roleId: 'IPPCS_FD_MKT', roleDescription: 'Marketing', division: 'ISTD', department: 'CIO', position: 'Manager' },
+  { id: 4, applicationId: 'IPPCS', username: 'sari.ningsih', noreg: '02234568', name: 'Sari Ningsih', roleId: 'IPPCS_FD_SALES', roleDescription: 'Sales', division: 'ISTD', department: 'CIO', position: 'Manager' },
+  { id: 5, applicationId: 'IPPCS', username: 'adi.wijaya', noreg: '02234569', name: 'Adi Wijaya', roleId: 'IPPCS_FD_IT', roleDescription: 'IT Support', division: 'ISTD', department: 'CIO', position: 'Team Lead' },
+  { id: 6, applicationId: 'IPPCS', username: 'ani.martini', noreg: '02234570', name: 'Ani Martini', roleId: 'IPPCS_FD_DEV', roleDescription: 'Development', division: 'ISTD', department: 'CIO', position: 'Team Lead' },
+  { id: 7, applicationId: 'IPPCS', username: 'rio.hartono', noreg: '02234571', name: 'Rio Hartono', roleId: 'IPPCS_FD_CUST', roleDescription: 'Customer Support', division: 'ISTD', department: 'CIO', position: 'Manager' },
+  { id: 8, applicationId: 'IPPCS', username: 'lina.purnama', noreg: '02234572', name: 'Lina Purnama', roleId: 'IPPCS_FD_PR', roleDescription: 'Public Relations', division: 'ISTD', department: 'CIO', position: 'Manager' },
+  { id: 9, applicationId: 'IPPCS', username: 'fahmi.rahman', noreg: '02234573', name: 'Fahmi Rahman', roleId: 'IPPCS_FD_LOG', roleDescription: 'Logistics', division: 'ISTD', department: 'CIO', position: 'Section Head' },
+  { id: 10, applicationId: 'IPPCS', username: 'nina.sari', noreg: '02234574', name: 'Nina Sari', roleId: 'IPPCS_FD_QA', roleDescription: 'Quality Assurance', division: 'ISTD', department: 'CIO', position: 'Manager' },
+  { id: 11, applicationId: 'PAS', username: 'dedi.irawan', noreg: '02234575', name: 'Dedi Irawan', roleId: 'PAS_PROD_LEAD', roleDescription: 'Production Lead', division: 'PROD', department: 'ENG', position: 'Supervisor' },
+  { id: 12, applicationId: 'PAS', username: 'siti.nurhaliza', noreg: '02234576', name: 'Siti Nurhaliza', roleId: 'PAS_QC_INSPECT', roleDescription: 'QC Inspector', division: 'PROD', department: 'QC', position: 'Staff' },
 ];
 
 export const roleInformationData: Record<string, string[]> = {
@@ -566,9 +566,9 @@ export const initialUarDivisionUserData: UarDivisionUserRecord[] = [
 ];
 
 export interface Comment {
-    user: string;
-    text: string;
-    timestamp: Date;
+  user: string;
+  text: string;
+  timestamp: Date;
 }
 
 export interface UarDivisionUserReviewDetail {
@@ -585,32 +585,32 @@ export interface UarDivisionUserReviewDetail {
 }
 
 const generateDivisionUserDetailData = (): UarDivisionUserReviewDetail[] => {
-    const details: UarDivisionUserReviewDetail[] = [];
-    let detailId = 1;
+  const details: UarDivisionUserReviewDetail[] = [];
+  let detailId = 1;
 
-    initialUarDivisionUserData.forEach(record => {
-        const totalItems = 47;
-        const isFinished = record.status === 'Finished';
-        const reviewedCount = isFinished ? totalItems : Math.floor(totalItems * 0.6); // ~60% for InProgress
+  initialUarDivisionUserData.forEach(record => {
+    const totalItems = 47;
+    const isFinished = record.status === 'Finished';
+    const reviewedCount = isFinished ? totalItems : Math.floor(totalItems * 0.6); // ~60% for InProgress
 
-        const statuses: ('Mutation' | 'Rotation' | 'Fixed')[] = ['Mutation', 'Rotation', 'Fixed'];
+    const statuses: ('Mutation' | 'Rotation' | 'Fixed')[] = ['Mutation', 'Rotation', 'Fixed'];
 
-        for (let i = 0; i < totalItems; i++) {
-            details.push({
-                id: detailId++,
-                uarId: record.uarId,
-                username: `user.${record.divisionOwner.toLowerCase()}.${i}`,
-                noreg: String(330000 + i + detailId).padStart(8, '0'),
-                name: `Division User ${detailId}`,
-                roleId: 'IPPCS_FD_AR',
-                roleDescription: 'Finance AR',
-                status: statuses[i % 3],
-                reviewed: i < reviewedCount,
-                comments: (i % 5 === 0 && i < reviewedCount) ? [{ user: 'Hesti (Admin)', text: `Initial check for ${detailId}`, timestamp: new Date() }] : undefined,
-            });
-        }
-    });
-    return details;
+    for (let i = 0; i < totalItems; i++) {
+      details.push({
+        id: detailId++,
+        uarId: record.uarId,
+        username: `user.${record.divisionOwner.toLowerCase()}.${i}`,
+        noreg: String(330000 + i + detailId).padStart(8, '0'),
+        name: `Division User ${detailId}`,
+        roleId: 'IPPCS_FD_AR',
+        roleDescription: 'Finance AR',
+        status: statuses[i % 3],
+        reviewed: i < reviewedCount,
+        comments: (i % 5 === 0 && i < reviewedCount) ? [{ user: 'Hesti (Admin)', text: `Initial check for ${detailId}`, timestamp: new Date() }] : undefined,
+      });
+    }
+  });
+  return details;
 };
 
 export const initialUarDivisionUserReviewData: UarDivisionUserReviewDetail[] = generateDivisionUserDetailData();
@@ -627,93 +627,93 @@ export interface UarProgressData {
 }
 
 export const uarDivisionProgress: UarProgressData[] = [
-    { label: 'PWPD', total: 90, approved: 85, review: 87, soApproved: 80 },
-    { label: 'PAD', total: 84, approved: 80, review: 81, soApproved: 78 },
-    { label: 'GAD', total: 89, approved: 82, review: 85, soApproved: 80 },
-    { label: 'ISTD', total: 93, approved: 88, review: 90, soApproved: 85 },
-    { label: 'EMD', total: 82, approved: 80, review: 80, soApproved: 77 },
-    { label: 'FSD', total: 75, approved: 72, review: 73, soApproved: 71 },
-    { label: 'HRD', total: 93, approved: 87, review: 90, soApproved: 88 },
-    { label: 'ITD', total: 83, approved: 75, review: 82, soApproved: 78 },
-    { label: 'MKT', total: 91, approved: 85, review: 88, soApproved: 83 },
-    { label: 'RND', total: 92, approved: 85, review: 89, soApproved: 86 },
-    { label: 'QAD', total: 83, approved: 78, review: 82, soApproved: 79 },
-    { label: 'SCD', total: 78, approved: 73, review: 75, soApproved: 72 },
-    { label: 'PRD', total: 90, approved: 85, review: 88, soApproved: 86 },
-    { label: 'FIN', total: 87, approved: 83, review: 85, soApproved: 84 },
-    { label: 'LOG', total: 83, approved: 78, review: 80, soApproved: 75 },
-    { label: 'SAD', total: 80, approved: 74, review: 79, soApproved: 72 },
-    { label: 'TMD', total: 90, approved: 83, review: 87, soApproved: 82 },
-    { label: 'CRD', total: 85, approved: 80, review: 82, soApproved: 80 },
-    { label: 'EVD', total: 94, approved: 88, review: 91, soApproved: 89 },
-    { label: 'BDD', total: 85, approved: 80, review: 84, soApproved: 81 },
-    { label: 'CMD', total: 83, approved: 78, review: 82, soApproved: 77 },
-    { label: 'SPD', total: 93, approved: 88, review: 90, soApproved: 91 },
-    { label: 'HSD', total: 95, approved: 90, review: 92, soApproved: 89 },
-    { label: 'OPD', total: 85, approved: 80, review: 82, soApproved: 79 },
-    { label: 'ASD', total: 92, approved: 87, review: 89, soApproved: 90 },
-    { label: 'CSD', total: 92, approved: 83, review: 87, soApproved: 86 },
+  { label: 'PWPD', total: 90, approved: 85, review: 87, soApproved: 80 },
+  { label: 'PAD', total: 84, approved: 80, review: 81, soApproved: 78 },
+  { label: 'GAD', total: 89, approved: 82, review: 85, soApproved: 80 },
+  { label: 'ISTD', total: 93, approved: 88, review: 90, soApproved: 85 },
+  { label: 'EMD', total: 82, approved: 80, review: 80, soApproved: 77 },
+  { label: 'FSD', total: 75, approved: 72, review: 73, soApproved: 71 },
+  { label: 'HRD', total: 93, approved: 87, review: 90, soApproved: 88 },
+  { label: 'ITD', total: 83, approved: 75, review: 82, soApproved: 78 },
+  { label: 'MKT', total: 91, approved: 85, review: 88, soApproved: 83 },
+  { label: 'RND', total: 92, approved: 85, review: 89, soApproved: 86 },
+  { label: 'QAD', total: 83, approved: 78, review: 82, soApproved: 79 },
+  { label: 'SCD', total: 78, approved: 73, review: 75, soApproved: 72 },
+  { label: 'PRD', total: 90, approved: 85, review: 88, soApproved: 86 },
+  { label: 'FIN', total: 87, approved: 83, review: 85, soApproved: 84 },
+  { label: 'LOG', total: 83, approved: 78, review: 80, soApproved: 75 },
+  { label: 'SAD', total: 80, approved: 74, review: 79, soApproved: 72 },
+  { label: 'TMD', total: 90, approved: 83, review: 87, soApproved: 82 },
+  { label: 'CRD', total: 85, approved: 80, review: 82, soApproved: 80 },
+  { label: 'EVD', total: 94, approved: 88, review: 91, soApproved: 89 },
+  { label: 'BDD', total: 85, approved: 80, review: 84, soApproved: 81 },
+  { label: 'CMD', total: 83, approved: 78, review: 82, soApproved: 77 },
+  { label: 'SPD', total: 93, approved: 88, review: 90, soApproved: 91 },
+  { label: 'HSD', total: 95, approved: 90, review: 92, soApproved: 89 },
+  { label: 'OPD', total: 85, approved: 80, review: 82, soApproved: 79 },
+  { label: 'ASD', total: 92, approved: 87, review: 89, soApproved: 90 },
+  { label: 'CSD', total: 92, approved: 83, review: 87, soApproved: 86 },
 ];
 
 export const uarDepartmentProgress: UarProgressData[] = [
-    // ISTD
-    { label: 'CIO', total: 90, approved: 84, review: 87, soApproved: 86, division: 'ISTD' },
-    { label: 'NWS', total: 85, approved: 79, review: 82, soApproved: 80, division: 'ISTD' },
-    { label: 'SSL', total: 88, approved: 82, review: 85, soApproved: 84, division: 'ISTD' },
-    { label: 'SCM', total: 92, approved: 86, review: 89, soApproved: 88, division: 'ISTD' },
-    // PWPD
-    { label: 'PWPD-A', total: 88, approved: 82, review: 85, soApproved: 81, division: 'PWPD' },
-    { label: 'PWPD-B', total: 91, approved: 86, review: 88, soApproved: 83, division: 'PWPD' },
-    // PAD
-    { label: 'PAD-A', total: 85, approved: 81, review: 82, soApproved: 79, division: 'PAD' },
-    // GAD
-    { label: 'GAD-Main', total: 89, approved: 82, review: 85, soApproved: 80, division: 'GAD' },
-    // EMD
-    { label: 'EMD-1', total: 84, approved: 78, review: 82, soApproved: 80, division: 'EMD' },
-    // FSD
-    { label: 'FSD-1', total: 78, approved: 74, review: 76, soApproved: 73, division: 'FSD' },
-    // HRD
-    { label: 'HRD-Recruitment', total: 94, approved: 88, review: 91, soApproved: 89, division: 'HRD' },
-    { label: 'HRD-Payroll', total: 92, approved: 86, review: 89, soApproved: 87, division: 'HRD' },
-    // ITD
-    { label: 'ITD-Infra', total: 85, approved: 78, review: 83, soApproved: 80, division: 'ITD' },
-    { label: 'ITD-Apps', total: 88, approved: 81, review: 85, soApproved: 82, division: 'ITD' },
-    // MKT
-    { label: 'MKT-Digital', total: 92, approved: 87, review: 89, soApproved: 85, division: 'MKT' },
-    // RND
-    { label: 'RND-Labs', total: 93, approved: 86, review: 90, soApproved: 88, division: 'RND' },
-    // QAD
-    { label: 'QAD-Audit', total: 85, approved: 80, review: 83, soApproved: 81, division: 'QAD' },
-    // SCD
-    { label: 'SCD-Logistics', total: 80, approved: 75, review: 78, soApproved: 74, division: 'SCD' },
-    // PRD
-    { label: 'PRD-Ops', total: 91, approved: 86, review: 89, soApproved: 87, division: 'PRD' },
-    // FIN
-    { label: 'FIN-Accounting', total: 88, approved: 84, review: 86, soApproved: 85, division: 'FIN' },
-    // LOG
-    { label: 'LOG-Warehouse', total: 85, approved: 80, review: 82, soApproved: 78, division: 'LOG' },
-    // SAD
-    { label: 'SAD-Sales', total: 82, approved: 76, review: 80, soApproved: 75, division: 'SAD' },
-    // TMD
-    { label: 'TMD-Training', total: 91, approved: 85, review: 88, soApproved: 84, division: 'TMD' },
-    // CRD
-    { label: 'CRD-Internal', total: 86, approved: 81, review: 83, soApproved: 81, division: 'CRD' },
-    // EVD
-    { label: 'EVD-Planning', total: 95, approved: 90, review: 92, soApproved: 91, division: 'EVD' },
-    // BDD
-    { label: 'BDD-Analytics', total: 86, approved: 81, review: 85, soApproved: 83, division: 'BDD' },
-    // CMD
-    { label: 'CMD-Comms', total: 84, approved: 79, review: 83, soApproved: 79, division: 'CMD' },
-    // SPD
-    { label: 'SPD-Proc', total: 94, approved: 89, review: 91, soApproved: 92, division: 'SPD' },
-    // HSD
-    { label: 'HSD-Safety', total: 96, approved: 91, review: 93, soApproved: 90, division: 'HSD' },
-    // OPD
-    { label: 'OPD-Dash', total: 86, approved: 81, review: 83, soApproved: 80, division: 'OPD' },
-    // ASD
-    { label: 'ASD-Assets', total: 93, approved: 88, review: 90, soApproved: 91, division: 'ASD' },
-    // CSD
-    { label: 'CSD-Support', total: 93, approved: 85, review: 88, soApproved: 87, division: 'CSD' },
+  // ISTD
+  { label: 'CIO', total: 90, approved: 84, review: 87, soApproved: 86 },
+  { label: 'NWS', total: 85, approved: 79, review: 82, soApproved: 80 },
+  { label: 'SSL', total: 88, approved: 82, review: 85, soApproved: 84 },
+  { label: 'SCM', total: 92, approved: 86, review: 89, soApproved: 88 },
+  // PWPD
+  { label: 'PWPD-A', total: 88, approved: 82, review: 85, soApproved: 81 },
+  { label: 'PWPD-B', total: 91, approved: 86, review: 88, soApproved: 83 },
+  // PAD
+  { label: 'PAD-A', total: 85, approved: 81, review: 82, soApproved: 79 },
+  // GAD
+  { label: 'GAD-Main', total: 89, approved: 82, review: 85, soApproved: 80 },
+  // EMD
+  { label: 'EMD-1', total: 84, approved: 78, review: 82, soApproved: 80 },
+  // FSD
+  { label: 'FSD-1', total: 78, approved: 74, review: 76, soApproved: 73 },
+  // HRD
+  { label: 'HRD-Recruitment', total: 94, approved: 88, review: 91, soApproved: 89 },
+  { label: 'HRD-Payroll', total: 92, approved: 86, review: 89, soApproved: 87 },
+  // ITD
+  { label: 'ITD-Infra', total: 85, approved: 78, review: 83, soApproved: 80 },
+  { label: 'ITD-Apps', total: 88, approved: 81, review: 85, soApproved: 82 },
+  // MKT
+  { label: 'MKT-Digital', total: 92, approved: 87, review: 89, soApproved: 85 },
+  // RND
+  { label: 'RND-Labs', total: 93, approved: 86, review: 90, soApproved: 88 },
+  // QAD
+  { label: 'QAD-Audit', total: 85, approved: 80, review: 83, soApproved: 81 },
+  // SCD
+  { label: 'SCD-Logistics', total: 80, approved: 75, review: 78, soApproved: 74 },
+  // PRD
+  { label: 'PRD-Ops', total: 91, approved: 86, review: 89, soApproved: 87 },
+  // FIN
+  { label: 'FIN-Accounting', total: 88, approved: 84, review: 86, soApproved: 85 },
+  // LOG
+  { label: 'LOG-Warehouse', total: 85, approved: 80, review: 82, soApproved: 78 },
+  // SAD
+  { label: 'SAD-Sales', total: 82, approved: 76, review: 80, soApproved: 75 },
+  // TMD
+  { label: 'TMD-Training', total: 91, approved: 85, review: 88, soApproved: 84 },
+  // CRD
+  { label: 'CRD-Internal', total: 86, approved: 81, review: 83, soApproved: 81 },
+  // EVD
+  { label: 'EVD-Planning', total: 95, approved: 90, review: 92, soApproved: 91 },
+  // BDD
+  { label: 'BDD-Analytics', total: 86, approved: 81, review: 85, soApproved: 83 },
+  // CMD
+  { label: 'CMD-Comms', total: 84, approved: 79, review: 83, soApproved: 79 },
+  // SPD
+  { label: 'SPD-Proc', total: 94, approved: 89, review: 91, soApproved: 92 },
+  // HSD
+  { label: 'HSD-Safety', total: 96, approved: 91, review: 93, soApproved: 90 },
+  // OPD
+  { label: 'OPD-Dash', total: 86, approved: 81, review: 83, soApproved: 80 },
+  // ASD
+  { label: 'ASD-Assets', total: 93, approved: 88, review: 90, soApproved: 91 },
+  // CSD
+  { label: 'CSD-Support', total: 93, approved: 85, review: 88, soApproved: 87 },
 ];
 
 export const uarSystemProgressData: UarProgressData[] = [
@@ -746,7 +746,7 @@ export const uarSystemProgressData: UarProgressData[] = [
   { label: 'GAD-UTIL', total: 88, approved: 83, review: 85, soApproved: 84, division: 'GAD', department: 'GAD-Main' },
   { label: 'FLEET-MGMT', total: 87, approved: 82, review: 84, soApproved: 81, division: 'GAD', department: 'GAD-Main' },
   { label: 'BLDG-MAINT', total: 86, approved: 80, review: 83, soApproved: 79, division: 'GAD', department: 'GAD-Main' },
-  
+
   // EMD Division (3 apps)
   { label: 'EMD-APP', total: 83, approved: 79, review: 81, soApproved: 78, division: 'EMD', department: 'EMD-1' },
   { label: 'ENG-DOC', total: 85, approved: 80, review: 82, soApproved: 79, division: 'EMD', department: 'EMD-1' },
