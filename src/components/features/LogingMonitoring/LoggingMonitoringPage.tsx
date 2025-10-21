@@ -9,6 +9,8 @@ import { DownloadButton } from '../../common/Button/DownloadButton';
 import { loggingService, LogFilter } from '../../../services/loggingService';
 import { useLogging } from '../../../hooks/useLogging';
 import SearchableDropdown from '../../common/SearchableDropdown';
+import * as XLSX from "xlsx";
+
 import { 
   useLogs, 
   useFilteredLogs, 
@@ -17,7 +19,6 @@ import {
   useLoggingActions 
 } from '../../../hooks/useStoreSelectors';
 
-declare var XLSX: any;
 
 const FilterInput: React.FC<{ 
     placeholder: string;
