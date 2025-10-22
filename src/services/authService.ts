@@ -3,10 +3,10 @@
  * ISO 27001 Compliant Frontend Authentication
  * Currently using mock service for development
  */
-import { User, UserRole } from '../../types';
-import { AuditLogger } from './auditLogger';
-import { AuditAction } from '../constants/auditActions';
-import { mockAuthService } from './mockAuthService';
+import { User, UserRole } from "../../types";
+import { AuditLogger } from "./auditLogger";
+import { AuditAction } from "../constants/auditActions";
+import { mockAuthService } from "./mockAuthService";
 
 interface LoginCredentials {
   username: string;
@@ -21,10 +21,11 @@ interface AuthResponse {
 }
 
 class SecureAuthService {
-  private readonly API_BASE_URL = process.env.REACT_APP_API_BASE_URL || 'http://localhost:3001/api';
-  private readonly TOKEN_KEY = 'sar_auth_token';
-  private readonly REFRESH_TOKEN_KEY = 'sar_refresh_token';
-  private readonly USER_KEY = 'sar_user_data';
+  private readonly API_BASE_URL =
+    process.env.REACT_APP_API_BASE_URL || "http://localhost:3000/api";
+  private readonly TOKEN_KEY = "sar_auth_token";
+  private readonly REFRESH_TOKEN_KEY = "sar_refresh_token";
+  private readonly USER_KEY = "sar_user_data";
 
   /**
    * Secure login with proper validation and error handling
@@ -45,12 +46,11 @@ class SecureAuthService {
       this.storeTokensSecurely(authData);
 
       return authData;
-
     } catch (error) {
       // Log failed login attempt
       AuditLogger.logFailure(AuditAction.LOGIN_FAILED, error as Error, {
         userName: credentials.username,
-        description: `Failed login attempt for ${credentials.username}`
+        description: `Failed login attempt for ${credentials.username}`,
       });
 
       throw error;
@@ -67,11 +67,10 @@ class SecureAuthService {
 
       // Clear all stored data
       this.clearStoredData();
-
     } catch (error) {
       // Even if API call fails, clear local data
       this.clearStoredData();
-      console.error('Logout error:', error);
+      console.error("Logout error:", error);
     }
   }
 
@@ -80,21 +79,21 @@ class SecureAuthService {
    */
   private validateCredentials(credentials: LoginCredentials): void {
     if (!credentials.username || !credentials.password) {
-      throw new Error('Username and password are required');
+      throw new Error("Username and password are required");
     }
 
     if (credentials.username.length < 3 || credentials.username.length > 50) {
-      throw new Error('Username must be between 3 and 50 characters');
+      throw new Error("Username must be between 3 and 50 characters");
     }
 
     if (credentials.password.length < 8) {
-      throw new Error('Password must be at least 8 characters long');
+      throw new Error("Password must be at least 8 characters long");
     }
 
     // Check for dangerous characters
     const dangerousPatterns = /[<>'"&]/;
     if (dangerousPatterns.test(credentials.username)) {
-      throw new Error('Username contains invalid characters');
+      throw new Error("Username contains invalid characters");
     }
   }
 
@@ -104,7 +103,7 @@ class SecureAuthService {
   private sanitizeInput(credentials: LoginCredentials): LoginCredentials {
     return {
       username: credentials.username.trim().toLowerCase(),
-      password: credentials.password // Don't modify password
+      password: credentials.password, // Don't modify password
     };
   }
 
@@ -113,15 +112,15 @@ class SecureAuthService {
    */
   private validateAuthResponse(authData: AuthResponse): void {
     if (!authData.user || !authData.token || !authData.refreshToken) {
-      throw new Error('Invalid authentication response');
+      throw new Error("Invalid authentication response");
     }
 
     if (!Object.values(UserRole).includes(authData.user.role)) {
-      throw new Error('Invalid user role');
+      throw new Error("Invalid user role");
     }
 
     if (authData.expiresIn <= 0) {
-      throw new Error('Invalid token expiration');
+      throw new Error("Invalid token expiration");
     }
   }
 
@@ -140,12 +139,11 @@ class SecureAuthService {
       localStorage.setItem(this.USER_KEY, encryptedUser);
 
       // Set expiration time
-      const expirationTime = Date.now() + (authData.expiresIn * 1000);
-      localStorage.setItem('sar_token_expires', expirationTime.toString());
-
+      const expirationTime = Date.now() + authData.expiresIn * 1000;
+      localStorage.setItem("sar_token_expires", expirationTime.toString());
     } catch (error) {
-      console.error('Error storing tokens:', error);
-      throw new Error('Failed to store authentication data');
+      console.error("Error storing tokens:", error);
+      throw new Error("Failed to store authentication data");
     }
   }
 
@@ -158,7 +156,7 @@ class SecureAuthService {
       if (!encryptedToken) return null;
 
       // Check if token is expired
-      const expirationTime = localStorage.getItem('sar_token_expires');
+      const expirationTime = localStorage.getItem("sar_token_expires");
       if (expirationTime && Date.now() > parseInt(expirationTime)) {
         this.clearStoredData();
         return null;
@@ -166,7 +164,7 @@ class SecureAuthService {
 
       return this.decryptData(encryptedToken);
     } catch (error) {
-      console.error('Error retrieving token:', error);
+      console.error("Error retrieving token:", error);
       this.clearStoredData();
       return null;
     }
@@ -183,7 +181,7 @@ class SecureAuthService {
       const userData = this.decryptData(encryptedUser);
       return JSON.parse(userData);
     } catch (error) {
-      console.error('Error retrieving user data:', error);
+      console.error("Error retrieving user data:", error);
       return null;
     }
   }
@@ -195,7 +193,7 @@ class SecureAuthService {
     localStorage.removeItem(this.TOKEN_KEY);
     localStorage.removeItem(this.REFRESH_TOKEN_KEY);
     localStorage.removeItem(this.USER_KEY);
-    localStorage.removeItem('sar_token_expires');
+    localStorage.removeItem("sar_token_expires");
   }
 
   /**
@@ -214,7 +212,7 @@ class SecureAuthService {
     try {
       return decodeURIComponent(atob(encryptedData));
     } catch (error) {
-      throw new Error('Failed to decrypt data');
+      throw new Error("Failed to decrypt data");
     }
   }
 

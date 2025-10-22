@@ -9,7 +9,7 @@ import { TEST_USERS, TEST_API_ENDPOINTS } from '../fixtures/test-data';
  */
 
 test.describe('API - Authentication', () => {
-  const baseURL = 'http://localhost:3001';
+  const baseURL = 'http://localhost:3000';
 
   test('should login successfully with valid credentials', async ({ request }) => {
     const response = await request.post(`${baseURL}${TEST_API_ENDPOINTS.auth.login}`, {

@@ -24,6 +24,8 @@
     "test:all": "npm run test && npm run test:e2e"
   },
   "dependencies": {
+    "@tanstack/react-query": "^5.90.5",
+    "chart.js": "^4.4.7",
     "clsx": "^2.1.1",
     "dompurify": "^3.2.2",
     "react": "^19.2.0",
@@ -40,6 +42,7 @@
     "@testing-library/user-event": "^14.5.2",
     "@types/dompurify": "^3.2.0",
     "@types/jest": "^29.5.14",
+    "@types/node": "^24.8.1",
     "@types/react": "^19.2.2",
     "@types/react-dom": "^19.2.2",
     "@types/validator": "^13.12.0",

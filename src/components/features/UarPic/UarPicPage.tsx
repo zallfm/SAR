@@ -11,12 +11,12 @@ import InfoModal from "../../common/Modal/InfoModal";
 import { AddButton } from "../../common/Button/AddButton";
 import { IconButton } from "../../common/Button/IconButton";
 import SearchableDropdown from "../../common/SearchableDropdown";
-import { 
-  usePics, 
+import {
+  usePics,
   useFilteredPics,
   useUarPicFilters,
-  useUarPicPagination, 
-  useUarPicActions 
+  useUarPicPagination,
+  useUarPicActions,
 } from "../../../hooks/useStoreSelectors";
 
 const UarPicPage: React.FC = () => {
@@ -24,9 +24,24 @@ const UarPicPage: React.FC = () => {
   const pics = usePics();
   const storeFilteredPics = useFilteredPics();
   const { filters, setFilters } = useUarPicFilters();
-  const { currentPage, itemsPerPage, setCurrentPage, setItemsPerPage, getTotalPages, getCurrentPagePics } = useUarPicPagination();
-  const { setPics, setFilteredPics, setSelectedPic, addPic, updatePic, deletePic } = useUarPicActions();
-  
+  const {
+    currentPage,
+    itemsPerPage,
+    setCurrentPage,
+    setItemsPerPage,
+    getTotalPages,
+    getCurrentPagePics,
+  } = useUarPicPagination();
+  const {
+    getPics,
+    setPics,
+    setFilteredPics,
+    setSelectedPic,
+    addPic,
+    updatePic,
+    deletePic,
+  } = useUarPicActions();
+
   // Local state for UI interactions
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [editingPic, setEditingPic] = useState<PicUser | null>(null);
@@ -40,29 +55,34 @@ const UarPicPage: React.FC = () => {
 
   const filteredPics = useMemo(() => {
     return pics.filter((pic) => {
-      const nameMatch = pic.name
-        .toLowerCase()
-        .includes(filters.name.toLowerCase());
+      const nameMatch = pic.PIC_NAME.toLowerCase().includes(
+        filters.name.toLowerCase()
+      );
       const divisionMatch = filters.division
-        ? pic.division === filters.division
+        ? divisions[pic.DIVISION_ID - 1] === filters.division
         : true;
       return nameMatch && divisionMatch;
     });
   }, [pics, filters]);
 
-  // Update filtered pics in store when filters change
   React.useEffect(() => {
-    const haveSameLength = storeFilteredPics.length === filteredPics.length
-    const haveSameIds = haveSameLength && storeFilteredPics.every((pic, index) => pic.id === filteredPics[index]?.id)
+    getPics();
+    const haveSameLength = storeFilteredPics.length === filteredPics.length;
+    const haveSameIds =
+      haveSameLength &&
+      storeFilteredPics.every(
+        (pic, index) => pic.ID === filteredPics[index]?.ID
+      );
 
     if (!haveSameIds) {
-      setFilteredPics(filteredPics)
+      setFilteredPics(filteredPics);
     }
-  }, [filteredPics, storeFilteredPics, setFilteredPics])
+  }, [filteredPics, storeFilteredPics, setFilteredPics, getPics]);
 
   const totalPages = getTotalPages();
   const currentPics = getCurrentPagePics();
-  const startItem = currentPics.length > 0 ? (currentPage - 1) * itemsPerPage + 1 : 0;
+  const startItem =
+    currentPics.length > 0 ? (currentPage - 1) * itemsPerPage + 1 : 0;
   const endItem = Math.min(currentPage * itemsPerPage, filteredPics.length);
 
   const handleOpenAddModal = () => {
@@ -96,7 +116,7 @@ const UarPicPage: React.FC = () => {
 
   const handleConfirmEdit = () => {
     if (picToEdit) {
-      updatePic(picToEdit.id, picToEdit);
+      updatePic(picToEdit.ID, picToEdit);
       setInfoMessage("Save Successfully");
       setIsInfoOpen(true);
     }
@@ -116,7 +136,7 @@ const UarPicPage: React.FC = () => {
 
   const handleDeletePic = () => {
     if (picToDelete) {
-      deletePic(picToDelete.id);
+      deletePic(picToDelete.ID);
       handleCloseDeleteConfirm();
     }
   };
@@ -127,18 +147,18 @@ const UarPicPage: React.FC = () => {
       <div className="bg-white p-6 rounded-xl border border-gray-200 shadow-sm">
         <div className="flex justify-between items-center mb-6 flex-wrap gap-4">
           <div className="flex items-center gap-4">
-            <SearchableDropdown 
-              label="Name" 
-              value={filters.name} 
-              onChange={(value) => setFilters({ name: value })} 
-              options={[...new Set(pics.map(pic => pic.name))]}
+            <SearchableDropdown
+              label="Name"
+              value={filters.name}
+              onChange={(value) => setFilters({ name: value })}
+              options={[...new Set(pics.map((pic) => pic.PIC_NAME))]}
               placeholder="Name"
               className="w-full sm:w-40"
             />
-            <SearchableDropdown 
-              label="Division" 
-              value={filters.division} 
-              onChange={(value) => setFilters({ division: value })} 
+            <SearchableDropdown
+              label="Division"
+              value={filters.division}
+              onChange={(value) => setFilters({ division: value })}
               options={[...new Set(divisions)].sort()}
               searchable={false}
               placeholder="Division"
@@ -173,20 +193,20 @@ const UarPicPage: React.FC = () => {
               {currentPics.length > 0 ? (
                 currentPics.map((pic, index) => (
                   <tr
-                    key={pic.id}
+                    key={pic.ID}
                     className="bg-white border-b border-gray-200 last:border-b-0 hover:bg-gray-50"
                   >
                     <td className="px-4 py-4 whitespace-nowrap text-gray-900 text-sm">
                       {startItem + index}
                     </td>
                     <td className="px-4 py-4 whitespace-nowrap text-sm">
-                      {pic.name}
+                      {pic.PIC_NAME}
                     </td>
                     <td className="px-4 py-4 whitespace-nowrap text-sm">
-                      {pic.division}
+                      {divisions[pic.DIVISION_ID - 1]}
                     </td>
                     <td className="px-4 py-4 whitespace-nowrap text-sm">
-                      {pic.email}
+                      {pic.MAIL}
                     </td>
                     <td className="px-4 py-4 whitespace-nowrap text-sm">
                       <div className="flex items-center justify-start gap-4">
@@ -194,7 +214,7 @@ const UarPicPage: React.FC = () => {
                           <IconButton
                             onClick={() => handleOpenEditModal(pic)}
                             tooltip="Edit"
-                            aria-label={`Edit ${pic.name}`}
+                            aria-label={`Edit ${pic.PIC_NAME}`}
                             hoverColor="blue"
                           >
                             <EditIcon />
@@ -204,7 +224,7 @@ const UarPicPage: React.FC = () => {
                           <IconButton
                             onClick={() => handleOpenDeleteConfirm(pic)}
                             tooltip="Delete"
-                            aria-label={`Delete ${pic.name}`}
+                            aria-label={`Delete ${pic.PIC_NAME}`}
                             hoverColor="red"
                           >
                             <DeleteIcon />

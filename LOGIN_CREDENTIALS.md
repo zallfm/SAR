@@ -22,7 +22,7 @@
 
 ## **🔧 Cara Login**
 
-1. Buka aplikasi di browser (http://localhost:3001)
+1. Buka aplikasi di browser (http://localhost:3000)
 2. Masukkan salah satu username di atas
 3. Masukkan password: `password123`
 4. Klik tombol "Login"

@@ -24,7 +24,7 @@ async function globalSetup(config: FullConfig) {
     const loginPage = new LoginPage(page);
     
     // Navigate to login page
-    await page.goto('http://localhost:3001/');
+    await page.goto('http://localhost:3000/');
     
     // Authenticate as admin user
     console.log('🔐 Authenticating admin user...');
@@ -57,15 +57,15 @@ async function globalSetup(config: FullConfig) {
 async function setupTestData(page: any) {
   try {
     // Navigate to UAR page to ensure it's accessible
-    await page.goto('http://localhost:3001/uar');
+    await page.goto('http://localhost:3000/uar');
     await page.waitForLoadState('networkidle');
     
     // Navigate to Application Management page
-    await page.goto('http://localhost:3001/application');
+    await page.goto('http://localhost:3000/application');
     await page.waitForLoadState('networkidle');
     
     // Navigate to Logging page
-    await page.goto('http://localhost:3001/logging');
+    await page.goto('http://localhost:3000/logging');
     await page.waitForLoadState('networkidle');
     
     console.log('✅ Test data setup completed');

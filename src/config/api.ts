@@ -1,7 +1,7 @@
 // API Configuration
 export const API_CONFIG = {
   BASE_URL: process.env.REACT_APP_API_URL || '/api',
-  WS_URL: process.env.REACT_APP_WS_URL || 'ws://localhost:3001/ws',
+  WS_URL: process.env.REACT_APP_WS_URL || 'ws://localhost:3000/ws',
   CACHE_DURATION: parseInt(process.env.REACT_APP_CACHE_DURATION || '300000'), // 5 minutes
   AUTO_REFRESH_INTERVAL: parseInt(process.env.REACT_APP_AUTO_REFRESH_INTERVAL || '30000'), // 30 seconds
   ENABLE_WEBSOCKET: process.env.REACT_APP_ENABLE_WEBSOCKET === 'true',
