@@ -18,6 +18,7 @@ import {
   useUarPicPagination,
   useUarPicActions,
 } from "../../../hooks/useStoreSelectors";
+import { useUarPicStore } from "@/src/store/uarPicStore";
 
 const UarPicPage: React.FC = () => {
   // Zustand store hooks
@@ -33,7 +34,6 @@ const UarPicPage: React.FC = () => {
     getCurrentPagePics,
   } = useUarPicPagination();
   const {
-    getPics,
     setPics,
     setFilteredPics,
     setSelectedPic,
@@ -42,6 +42,7 @@ const UarPicPage: React.FC = () => {
     deletePic,
   } = useUarPicActions();
 
+  const getPics = useUarPicStore((state) => state.getPics);
   // Local state for UI interactions
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [editingPic, setEditingPic] = useState<PicUser | null>(null);
@@ -66,7 +67,6 @@ const UarPicPage: React.FC = () => {
   }, [pics, filters]);
 
   React.useEffect(() => {
-    getPics();
     const haveSameLength = storeFilteredPics.length === filteredPics.length;
     const haveSameIds =
       haveSameLength &&
@@ -77,7 +77,11 @@ const UarPicPage: React.FC = () => {
     if (!haveSameIds) {
       setFilteredPics(filteredPics);
     }
-  }, [filteredPics, storeFilteredPics, setFilteredPics, getPics]);
+  }, [filteredPics, setFilteredPics, storeFilteredPics]);
+
+  React.useEffect(() => {
+    getPics();
+  }, [getPics]);
 
   const totalPages = getTotalPages();
   const currentPics = getCurrentPagePics();

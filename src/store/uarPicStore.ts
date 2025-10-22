@@ -71,7 +71,7 @@ export const useUarPicStore = create<UarPicState>()(
       (set, get) => ({
         // Initial state
         pics: [],
-        filteredPics: initialPicUsers,
+        filteredPics: [],
         selectedPic: null,
         filters: initialFilters,
         currentPage: 1,
