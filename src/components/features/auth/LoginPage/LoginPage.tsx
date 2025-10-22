@@ -6,11 +6,14 @@ import { EyeSlashIcon } from '../../../icons/EyeSlashIcon';
 import { ExclamationCircleIcon } from '../../../icons/ExclamationCircleIcon';
 import { useLogging } from '../../../../hooks/useLogging';
 import { sessionManager } from '../../../../services/sessionManager';
-import { authService } from '../../../../services/authService';
 import { SecurityValidator } from '../../../../services/securityValidator';
 import { AuditLogger } from '../../../../services/auditLogger';
 import { AuditAction } from '../../../../constants/auditActions';
 import { SECURITY_CONFIG } from '../../../../config/security';
+
+// ⬇️ import hook React Query untuk login
+import { useLogin } from '../../../../hooks/useAuth';
+import { useAuthStore } from '../../../../store/authStore';
 
 interface LoginPageProps {
   onLoginSuccess: (user: User) => void;
@@ -19,9 +22,9 @@ interface LoginPageProps {
 const LoginPage: React.FC<LoginPageProps> = ({ onLoginSuccess }) => {
   const [username, setUsername] = useState('');
   const [password, setPassword] = useState('');
+  // error dari server / validasi UI
   const [error, setError] = useState('');
   const [showPassword, setShowPassword] = useState(false);
-  const [isLoading, setIsLoading] = useState(false);
   const [validationErrors, setValidationErrors] = useState<{
     username?: string[];
     password?: string[];
@@ -30,30 +33,31 @@ const LoginPage: React.FC<LoginPageProps> = ({ onLoginSuccess }) => {
   const [isLocked, setIsLocked] = useState<Record<string, boolean>>({});
   const { logAuthentication, logSecurity } = useLogging();
 
-  // Initialize security on component mount
-  useEffect(() => {
-    // Check if user is already authenticated
-    if (authService.isAuthenticated()) {
-      const user = authService.getCurrentUser();
-      if (user) {
-        onLoginSuccess(user);
-        return;
-      }
-    }
+  // ⬇️ React Query login hook
+  const { mutateAsync: doLogin, isPending } = useLogin();
+  // ambil user dari store kalau mau
+  const currentUser = useAuthStore((s) => s.currentUser);
 
+  useEffect(() => {
+    // Kalau sudah ada user di store (mis. reload halaman & state dipersist), langsung lanjut
+    if (currentUser) {
+      onLoginSuccess(currentUser);
+      return;
+    }
     // Initialize audit logger
     AuditLogger.initialize();
-  }, [onLoginSuccess]);
+  }, [onLoginSuccess, currentUser]);
+
+  const unameKey = username.trim().toLowerCase();
 
   const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
     setError('');
     setValidationErrors({});
-    setIsLoading(true);
 
     try {
-      // Check if account is locked
-      if (isLocked[username]) {
+      // Check lock
+      if (isLocked[unameKey]) {
         setError('Account is temporarily locked due to multiple failed attempts. Please try again later.');
         AuditLogger.logWarning(AuditAction.ACCOUNT_LOCKED, {
           userName: username,
@@ -62,9 +66,9 @@ const LoginPage: React.FC<LoginPageProps> = ({ onLoginSuccess }) => {
         return;
       }
 
-      // Validate input (using development mode for relaxed password validation)
+      // Validate input (development mode untuk password rule)
       const usernameValidation = SecurityValidator.validateUsername(username);
-      const passwordValidation = SecurityValidator.validatePassword(password, true); // true = development mode
+      const passwordValidation = SecurityValidator.validatePassword(password, true);
 
       if (!usernameValidation.isValid || !passwordValidation.isValid) {
         setValidationErrors({
@@ -75,49 +79,62 @@ const LoginPage: React.FC<LoginPageProps> = ({ onLoginSuccess }) => {
         return;
       }
 
-      // Attempt login with secure service
-      const authResponse = await authService.login({
+      // ⬇️ PANGGIL API lewat React Query
+      const res = await doLogin({
         username: usernameValidation.sanitizedValue,
         password: passwordValidation.sanitizedValue
       });
 
-      // Reset failed attempts on successful login
-      setFailedAttempts(prev => ({ ...prev, [username]: 0 }));
-      setIsLocked(prev => ({ ...prev, [username]: false }));
+      // React Query hook sudah mengisi Zustand: token, user, expiry
+      const user = res.data.user;
 
-      // Create session
+      // Reset counters
+      setFailedAttempts(prev => ({ ...prev, [unameKey]: 0 }));
+      setIsLocked(prev => ({ ...prev, [unameKey]: false }));
+
+      // Buat session (opsional)
       sessionManager.createSession({
-        userId: authResponse.user.username,
-        username: authResponse.user.username,
-        role: authResponse.user.role,
-        name: authResponse.user.name,
+        userId: user.username,
+        username: user.username,
+        role: user.role,
+        name: user.name,
         ip: '127.0.0.1',
         userAgent: navigator.userAgent,
       });
 
-      // Log successful login
+      // Audit log
       logAuthentication('login_success', {
-        username: authResponse.user.username,
-        role: authResponse.user.role,
-        name: authResponse.user.name,
+        username: user.username,
+        role: user.role,
+        name: user.name,
         ip: '127.0.0.1',
         userAgent: navigator.userAgent,
         timestamp: new Date().toISOString()
       });
 
-      onLoginSuccess(authResponse.user);
+      // Beri tahu parent
+      onLoginSuccess(user);
 
-    } catch (error) {
-      const errorMessage = error instanceof Error ? error.message : 'Login failed';
-      setError(errorMessage);
+    } catch (err: any) {
+      setError(err?.message || 'Login failed');
 
-      // Track failed attempts
-      const currentAttempts = (failedAttempts[username] || 0) + 1;
-      setFailedAttempts(prev => ({ ...prev, [username]: currentAttempts }));
+      if (err?.status === 423 || err?.details?.locked) {
+        const ms = Number(err?.details?.remainingMs ?? 0);
+        setIsLocked(prev => ({ ...prev, [unameKey]: true }));
+        setTimeout(() => {
+          setIsLocked(prev => ({ ...prev, [unameKey]: false }));
+          setFailedAttempts(prev => ({ ...prev, [unameKey]: 0 }));
+        }, Math.max(ms, 0));
+      }
 
-      // Log failed login attempt
+
+      // Track attempts
+      const currentAttempts = (failedAttempts[unameKey] || 0) + 1;
+      setFailedAttempts(prev => ({ ...prev, [unameKey]: currentAttempts }));
+
+      // Audit log gagal
       logAuthentication('login_failed', {
-        username: username,
+        username,
         reason: 'invalid_credentials',
         attemptNumber: currentAttempts,
         ip: '127.0.0.1',
@@ -125,14 +142,13 @@ const LoginPage: React.FC<LoginPageProps> = ({ onLoginSuccess }) => {
         timestamp: new Date().toISOString()
       });
 
-      // Lock account after max attempts
+      // Lock setelah mencapai batas
       if (currentAttempts >= SECURITY_CONFIG.MAX_LOGIN_ATTEMPTS) {
-        setIsLocked(prev => ({ ...prev, [username]: true }));
-        
-        // Set auto-unlock timer
+        setIsLocked(prev => ({ ...prev, [unameKey]: true }));
+
         setTimeout(() => {
-          setIsLocked(prev => ({ ...prev, [username]: false }));
-          setFailedAttempts(prev => ({ ...prev, [username]: 0 }));
+          setIsLocked(prev => ({ ...prev, [unameKey]: false }));
+          setFailedAttempts(prev => ({ ...prev, [unameKey]: 0 }));
         }, SECURITY_CONFIG.LOCKOUT_DURATION_MS);
 
         AuditLogger.logWarning(AuditAction.ACCOUNT_LOCKED, {
@@ -141,61 +157,43 @@ const LoginPage: React.FC<LoginPageProps> = ({ onLoginSuccess }) => {
         });
       }
 
-      // Log suspicious activity for multiple failed attempts
+      // Warning & brute force signals
       if (currentAttempts >= 3) {
         logSecurity('multiple_failed_login_attempts', {
-          username: username,
-          attemptCount: currentAttempts,
-          ip: '127.0.0.1',
-          userAgent: navigator.userAgent,
+          username, attemptCount: currentAttempts,
+          ip: '127.0.0.1', userAgent: navigator.userAgent,
           timestamp: new Date().toISOString()
         }, 'Warning');
       }
-
-      // Log potential brute force attack
       if (currentAttempts >= 5) {
         logSecurity('potential_brute_force_attack', {
-          username: username,
-          attemptCount: currentAttempts,
-          ip: '127.0.0.1',
-          userAgent: navigator.userAgent,
+          username, attemptCount: currentAttempts,
+          ip: '127.0.0.1', userAgent: navigator.userAgent,
           timestamp: new Date().toISOString()
         }, 'Error');
       }
-
-    } finally {
-      setIsLoading(false);
     }
   };
 
   return (
     <div className="flex items-center justify-center min-h-screen p-4">
       <div className="w-full max-w-5xl mx-auto bg-white rounded-2xl shadow-2xl grid md:grid-cols-2 overflow-hidden">
-        {/* Left Panel: Branding */}
+        {/* Left Panel */}
         <div className="hidden md:flex flex-col items-center justify-center p-12 bg-stone-50 text-center">
           <SystemIcon className="w-48 h-48" />
           <h1 className="mt-8 text-4xl font-bold tracking-wider text-[#0F3460]">
-            SYSTEM
-            <br />
-            AUTHORIZATION
-            <br />
-            REVIEW
+            SYSTEM<br />AUTHORIZATION<br />REVIEW
           </h1>
         </div>
 
         {/* Right Panel: Login Form */}
         <div className="p-8 md:p-12 flex flex-col justify-center">
           <h2 className="text-2xl font-bold text-gray-800">Login to Account</h2>
-          <p className="mt-3 text-sm text-gray-500">
-            Please enter username and password to continue
-          </p>
+          <p className="mt-3 text-sm text-gray-500">Please enter username and password to continue</p>
 
           <form onSubmit={handleSubmit} className="mt-8 space-y-6">
             <div>
-              <label
-                htmlFor="username"
-                className="text-sm font-semibold text-gray-700 block"
-              >
+              <label htmlFor="username" className="text-sm font-semibold text-gray-700 block">
                 Username <span className="text-red-500">*</span>
               </label>
               <input
@@ -208,26 +206,18 @@ const LoginPage: React.FC<LoginPageProps> = ({ onLoginSuccess }) => {
                 onChange={(e) => setUsername(e.target.value)}
                 placeholder="Enter the username"
                 maxLength={SECURITY_CONFIG.MAX_INPUT_LENGTH.username}
-                className={`mt-2 block w-full px-4 py-3 bg-gray-50 border rounded-lg placeholder-gray-400 focus:outline-none focus:ring-2 focus:border-transparent transition ${
-                  validationErrors.username 
-                    ? 'border-red-300 focus:ring-red-500' 
-                    : 'border-gray-300 focus:ring-blue-500'
-                }`}
+                className={`mt-2 block w-full px-4 py-3 bg-gray-50 border rounded-lg placeholder-gray-400 focus:outline-none focus:ring-2 focus:border-transparent transition ${validationErrors.username ? 'border-red-300 focus:ring-red-500' : 'border-gray-300 focus:ring-blue-500'
+                  }`}
               />
               {validationErrors.username && (
                 <div className="mt-1 text-sm text-red-600">
-                  {validationErrors.username.map((error, index) => (
-                    <div key={index}>{error}</div>
-                  ))}
+                  {validationErrors.username.map((err, i) => <div key={i}>{err}</div>)}
                 </div>
               )}
             </div>
 
             <div>
-              <label
-                htmlFor="password"
-                className="text-sm font-semibold text-gray-700 block"
-              >
+              <label htmlFor="password" className="text-sm font-semibold text-gray-700 block">
                 Password <span className="text-red-500">*</span>
               </label>
               <div className="relative mt-2">
@@ -241,11 +231,8 @@ const LoginPage: React.FC<LoginPageProps> = ({ onLoginSuccess }) => {
                   onChange={(e) => setPassword(e.target.value)}
                   placeholder="Enter your password"
                   maxLength={SECURITY_CONFIG.MAX_INPUT_LENGTH.password}
-                  className={`block w-full px-4 py-3 bg-gray-50 border rounded-lg placeholder-gray-400 focus:outline-none focus:ring-2 focus:border-transparent transition ${
-                    validationErrors.password 
-                      ? 'border-red-300 focus:ring-red-500' 
-                      : 'border-gray-300 focus:ring-blue-500'
-                  }`}
+                  className={`block w-full px-4 py-3 bg-gray-50 border rounded-lg placeholder-gray-400 focus:outline-none focus:ring-2 focus:border-transparent transition ${validationErrors.password ? 'border-red-300 focus:ring-red-500' : 'border-gray-300 focus:ring-blue-500'
+                    }`}
                 />
                 <button
                   type="button"
@@ -253,40 +240,35 @@ const LoginPage: React.FC<LoginPageProps> = ({ onLoginSuccess }) => {
                   className="absolute inset-y-0 right-0 flex items-center pr-3 text-gray-400 hover:text-gray-600 focus:outline-none"
                   aria-label={showPassword ? 'Hide password' : 'Show password'}
                 >
-                  {showPassword ? (
-                    <EyeSlashIcon className="w-5 h-5" />
-                  ) : (
-                    <EyeIcon className="w-5 h-5" />
-                  )}
+                  {showPassword ? <EyeSlashIcon className="w-5 h-5" /> : <EyeIcon className="w-5 h-5" />}
                 </button>
               </div>
               {validationErrors.password && (
                 <div className="mt-1 text-sm text-red-600">
-                  {validationErrors.password.map((error, index) => (
-                    <div key={index}>{error}</div>
-                  ))}
+                  {validationErrors.password.map((err, i) => <div key={i}>{err}</div>)}
                 </div>
               )}
             </div>
 
-            {error && (
+            {(error) && (
               <div className="flex items-center p-4 text-sm text-red-700 bg-red-100 rounded-lg border border-red-300" role="alert">
                 <ExclamationCircleIcon className="w-5 h-5 mr-3 flex-shrink-0" />
-                <span className="font-medium">{error}</span>
+                <span className="font-medium">
+                  {error || 'Login failed'}
+                </span>
               </div>
             )}
 
             <div>
               <button
                 type="submit"
-                disabled={isLoading || isLocked[username]}
-                className={`w-full flex justify-center py-3 px-4 border border-transparent rounded-lg shadow-sm text-base font-medium text-white focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 transition-transform transform ${
-                  isLoading || isLocked[username]
-                    ? 'bg-gray-400 cursor-not-allowed'
-                    : 'bg-blue-600 hover:bg-blue-700 hover:scale-105'
-                }`}
+                disabled={isPending || isLocked[username]}
+                className={`w-full flex justify-center py-3 px-4 border border-transparent rounded-lg shadow-sm text-base font-medium text-white focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 transition-transform transform ${isPending || isLocked[username]
+                  ? 'bg-gray-400 cursor-not-allowed'
+                  : 'bg-blue-600 hover:bg-blue-700 hover:scale-105'
+                  }`}
               >
-                {isLoading ? (
+                {isPending ? (
                   <div className="flex items-center">
                     <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white mr-2"></div>
                     Logging in...

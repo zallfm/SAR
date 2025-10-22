@@ -63,8 +63,8 @@ const MyComponent = () => {
 ### Step 1: Configure Environment Variables
 Add to your `.env` file:
 ```env
-REACT_APP_API_URL=http://localhost:3001/api
-REACT_APP_WS_URL=ws://localhost:3001/ws
+REACT_APP_API_URL=http://localhost:3000/api
+REACT_APP_WS_URL=ws://localhost:3000/ws
 ```
 
 ### Step 2: Update Service Implementation

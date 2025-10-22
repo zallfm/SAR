@@ -21,7 +21,7 @@ interface AuthResponse {
 }
 
 class SecureAuthService {
-  private readonly API_BASE_URL = process.env.REACT_APP_API_BASE_URL || 'http://localhost:3001/api';
+  private readonly API_BASE_URL = process.env.REACT_APP_API_BASE_URL || 'http://localhost:3000/api';
   private readonly TOKEN_KEY = 'sar_auth_token';
   private readonly REFRESH_TOKEN_KEY = 'sar_refresh_token';
   private readonly USER_KEY = 'sar_user_data';

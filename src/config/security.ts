@@ -57,7 +57,7 @@ export const SECURITY_CONFIG = {
       "'self'",
       "ws://localhost:*", // WebSocket for development
       "wss://localhost:*",
-      process.env.REACT_APP_API_BASE_URL || "http://localhost:3001"
+      process.env.REACT_APP_API_BASE_URL || "http://localhost:3000"
     ],
     'media-src': ["'self'"],
     'object-src': ["'none'"],

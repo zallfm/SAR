@@ -97,7 +97,7 @@ export const mockLogs: LogEntry[] = [
   {
     id: 16,
     processId: '2025011600016',
-    userId: 'unknown',
+    userId: 'unkidwn',
     module: 'Security',
     functionName: 'Login Failed',
     startDate: '21-07-2024 16:25:00',

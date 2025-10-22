@@ -142,7 +142,7 @@ export default defineConfig({
       name: 'api',
       testMatch: /.*\.api\.spec\.ts/,
       use: {
-        baseURL: process.env.PLAYWRIGHT_BASE_URL || 'http://localhost:3001',
+        baseURL: process.env.PLAYWRIGHT_BASE_URL || 'http://localhost:3000',
         extraHTTPHeaders: {
           'Accept': 'application/json',
         },

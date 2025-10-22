@@ -288,7 +288,7 @@
 		},
 		{
 			"kind": "code",
-			"text": "`http://localhost:3001`"
+			"text": "`http://localhost:3000`"
 		},
 		{
 			"kind": "text",
@@ -376,7 +376,7 @@
 		},
 		{
 			"kind": "code",
-			"text": "```env\nREACT_APP_API_BASE_URL=http://localhost:3001/api\nREACT_APP_ENVIRONMENT=development\n```"
+			"text": "```env\nREACT_APP_API_BASE_URL=http://localhost:3000/api\nREACT_APP_ENVIRONMENT=development\n```"
 		},
 		{
 			"kind": "text",

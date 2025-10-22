@@ -7,6 +7,9 @@ import Copyright from '../common/Copyright'
 import { useAuthStore } from '../../store/authStore'
 import { useUIStore } from '../../store/uiStore'
 import { useUarStore } from '../../store/uarStore'
+// import { useLogout } from '@/src/hooks/useAuth'
+import { useLogout } from '../../hooks/useAuth'
+import { useNavigate } from 'react-router-dom';
 
 const DashboardContent = lazy(() => import('../features/DashboardContent/DashboardContent'))
 const ApplicationPage = lazy(() => import('../features/application/ApplicationPage'))
@@ -22,11 +25,11 @@ const UarSystemOwnerDetailPage = lazy(() => import('../features/uar/UarSystemOwn
 const UarDivisionUserPage = lazy(() => import('../features/uar/UarDivisionUserPage'))
 const UarDivisionUserDetailPage = lazy(() => import('../features/uar/UarDivisionUserDetailPage'))
 
-interface DashboardProps {
-  onLogout: () => void
-}
+// interface DashboardProps {
+//   onLogout: () => void
+// }
 
-const Dashboard: React.FC<DashboardProps> = ({ onLogout }) => {
+const Dashboard: React.FC = () => {
   const { currentUser } = useAuthStore()
   const { activeView, setActiveView, resetActiveView } = useUIStore()
   const {
@@ -45,6 +48,22 @@ const Dashboard: React.FC<DashboardProps> = ({ onLogout }) => {
     userId: user.username,
     enablePerformanceLogging: true,
   })
+
+  const { mutateAsync: doLogout, isPending: isLoggingOut } = useLogout()
+  const handleLogout = async () => {
+    try {
+      await doLogout()
+      const { token, currentUser, tokenExpiryMs } = useAuthStore.getState();
+      console.debug('[After logout]', { token, currentUser, tokenExpiryMs });
+      console.assert(token === null, 'Token should be null after logout');
+      console.assert(currentUser === null, 'User should be null after logout');
+      console.assert(tokenExpiryMs === null, 'Expiry should be null after logout');
+      resetActiveView()
+      window.location.href = '/'
+    } catch (e) {
+      console.error('Logout error:', e)
+    }
+  }
 
   const handleViewDetail = (log: LogEntry) => {
     setSelectedLog(log)
@@ -141,7 +160,7 @@ const Dashboard: React.FC<DashboardProps> = ({ onLogout }) => {
         />
       </div>
       <div className="flex-1 flex flex-col overflow-hidden h-full">
-        <Header user={user} onLogout={onLogout} />
+        <Header user={user} onLogout={handleLogout} />
         <main className="flex-1 overflow-x-auto overflow-y-auto bg-gray-100 p-6">
           <Suspense fallback={<div className="flex h-full items-center justify-center text-gray-500">Loading...</div>}>
             {renderContent()}

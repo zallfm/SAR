@@ -89,7 +89,7 @@ SAR-1/
    ```
 
 2. **Open browser**
-   Navigate to `http://localhost:3001`
+   Navigate to `http://localhost:3000`
 
 ### Testing
 
@@ -209,7 +209,7 @@ pnpm run preview
 ### Environment Variables
 
 ```env
-REACT_APP_API_BASE_URL=http://localhost:3001/api
+REACT_APP_API_BASE_URL=http://localhost:3000/api
 REACT_APP_ENVIRONMENT=development
 ```
 

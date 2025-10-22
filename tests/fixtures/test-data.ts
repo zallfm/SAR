@@ -161,7 +161,7 @@ export const TEST_TIMEOUTS = {
 };
 
 export const TEST_URLS = {
-  base: 'http://localhost:3001',
+  base: 'http://localhost:3000',
   login: '/',
   dashboard: '/dashboard',
   uar: '/uar',
