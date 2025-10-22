@@ -1,7 +1,10 @@
+import { LogEntry } from '../../data'
 import { create } from 'zustand'
 import { persist } from 'zustand/middleware'
 import { devtools } from 'zustand/middleware'
-import type { LogEntry } from '../data'
+import { getLogMonitoringApi } from '../api/log_monitoring'
+import { LogMonitoring } from '../types/log_montoring'
+// import type { LogEntry } from '../data'
 
 export interface LoggingFilters {
   process: string
@@ -40,6 +43,10 @@ export interface LoggingState {
   setItemsPerPage: (size: number) => void
   setLoading: (loading: boolean) => void
   setError: (error: string | null) => void
+
+  // CRUD Operations
+    getLogMonitoring: () => Promise<void>;
+
   
   // Computed
   getTotalPages: () => number
@@ -69,6 +76,27 @@ export const useLoggingStore = create<LoggingState>()(
   itemsPerPage: 10,
   isLoading: false,
   error: null,
+
+  getLogMonitoring: async () => {
+            set({ isLoading: true, error: null });
+            try {
+              const data = await getLogMonitoringApi();
+              const logs: LogEntry[] = data.data.map((item: LogMonitoring) => ({
+                NO: item.NO,
+                PROCESS_ID: item.PROCESS_ID,
+                USER_ID: item.USER_ID,
+                MODULE: item.MODULE,
+                FUNCTION_NAME: item.FUNCTION_NAME,
+                START_DATE: item.START_DATE,
+                END_DATE: item.END_DATE,
+                STATUS: item.STATUS,
+                DETAILS: item.DETAILS,
+              }));
+              set({ logs, filteredLogs: logs, isLoading: false });
+            } catch (error) {
+              set({ error: (error as Error).message, isLoading: false });
+            }
+          },
   
   // Actions
   setLogs: (logs) => set({ logs, filteredLogs: logs }),
