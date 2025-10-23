@@ -49,9 +49,8 @@ const FilterSelect: React.FC<{
     <select
       value={value}
       onChange={onChange}
-      className={`w-full px-4 py-2.5 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 bg-white appearance-none text-sm ${
-        value ? "text-gray-800" : "text-gray-400"
-      }`}
+      className={`w-full px-4 py-2.5 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 bg-white appearance-none text-sm ${value ? "text-gray-800" : "text-gray-400"
+        }`}
     >
       {children}
     </select>
@@ -83,9 +82,8 @@ const FilterDate: React.FC<{
       onBlur={(e) => {
         if (!e.target.value) e.target.type = "text";
       }}
-      className={`w-full px-4 py-2.5 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 bg-white appearance-none text-sm ${
-        value ? "text-gray-800" : "text-gray-400"
-      }`}
+      className={`w-full px-4 py-2.5 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 bg-white appearance-none text-sm ${value ? "text-gray-800" : "text-gray-400"
+        }`}
     />
   </div>
 );
@@ -108,6 +106,8 @@ const LoggingMonitoringPage: React.FC<{
   const { setLogs, setFilteredLogs, setSelectedLog } = useLoggingActions();
 
   const getLogMonitorings = useLoggingStore((state) => state.getLogMonitoring);
+  // console.log("logs", logs)
+  // console.log("getLogMonitorings", getLogMonitorings)
 
   // Local state for real-time logs
   const [realTimeLogs, setRealTimeLogs] = useState<any[]>([]);
@@ -118,55 +118,55 @@ const LoggingMonitoringPage: React.FC<{
     enablePerformanceLogging: true,
   });
 
-  useEffect(() => {
-    const loadLogs = () => {
-      const serviceLogs = loggingService.getLogs();
-      const realTimeLogsFormatted: LogEntry[] = serviceLogs.map((s, idx) => {
-        let details: any[] = [];
-        if (Array.isArray((s as any).DETAILS)) {
-          details = (s as any).DETAILS as any[];
-        } else if (typeof (s as any).DETAILS === "string") {
-          try {
-            const parsed = JSON.parse((s as any).DETAILS as string);
-            details = Array.isArray(parsed) ? parsed : [parsed];
-          } catch {
-            details = [];
-          }
-        }
+  // useEffect(() => {
+  //   const loadLogs = () => {
+  //     const serviceLogs = loggingService.getLogs();
+  //     const realTimeLogsFormatted: LogEntry[] = serviceLogs.map((s, idx) => {
+  //       let details: any[] = [];
+  //       if (Array.isArray((s as any).DETAILS)) {
+  //         details = (s as any).DETAILS as any[];
+  //       } else if (typeof (s as any).DETAILS === "string") {
+  //         try {
+  //           const parsed = JSON.parse((s as any).DETAILS as string);
+  //           details = Array.isArray(parsed) ? parsed : [parsed];
+  //         } catch {
+  //           details = [];
+  //         }
+  //       }
 
-        return {
-          NO: (s as any).NO ?? s.NO ?? idx + 1,
-          PROCESS_ID: (s as any).PROCESS_ID,
-          USER_ID: (s as any).USER_ID,
-          MODULE: (s as any).MODULE,
-          FUNCTION_NAME: (s as any).FUNCTION_NAME,
-          START_DATE: (s as any).START_DATE,
-          END_DATE: (s as any).END_DATE,
-          STATUS: (s as any).STATUS as
-            | "Success"
-            | "Error"
-            | "Warning"
-            | "InProgress",
-          DETAILS: details,
-        };
-      });
-      const combinedLogs: LogEntry[] = [...realTimeLogsFormatted, ...mockLogs];
-      setLogs(combinedLogs);
-    };
+  //       return {
+  //         NO: (s as any).NO ?? s.NO ?? idx,
+  //         PROCESS_ID: (s as any).PROCESS_ID,
+  //         USER_ID: (s as any).USER_ID,
+  //         MODULE: (s as any).MODULE,
+  //         FUNCTION_NAME: (s as any).FUNCTION_NAME,
+  //         START_DATE: (s as any).START_DATE,
+  //         END_DATE: (s as any).END_DATE,
+  //         STATUS: (s as any).STATUS as
+  //           | "Success"
+  //           | "Error"
+  //           | "Warning"
+  //           | "InProgress",
+  //         DETAILS: details,
+  //       };
+  //     });
+  //     const combinedLogs: LogEntry[] = [...realTimeLogsFormatted];
+  //     setLogs(combinedLogs);
+  //   };
 
-    loadLogs();
-    const interval = setInterval(loadLogs, 2000);
+  //   loadLogs();
+  //   const interval = setInterval(loadLogs, 2000);
 
-    logUserAction("access_logging_monitoring_page", {
-      timestamp: new Date().toISOString(),
-    });
-    return () => {
-      clearInterval(interval);
-      logUserAction("leave_logging_monitoring_page", {
-        timestamp: new Date().toISOString(),
-      });
-    };
-  }, [logUserAction, setLogs]);
+  //   logUserAction("access_logging_monitoring_page", {
+  //     timestamp: new Date().toISOString(),
+  //   });
+  //   return () => {
+  //     clearInterval(interval);
+  //     logUserAction("leave_logging_monitoring_page", {
+  //       timestamp: new Date().toISOString(),
+  //     });
+  //   };
+  // }, [logUserAction, setLogs]);
   const uniqueModules: string[] = useMemo(
     () => [...new Set(logs.map((log) => log.MODULE))],
     [logs]
@@ -191,61 +191,123 @@ const LoggingMonitoringPage: React.FC<{
     );
   };
 
-  useEffect(() => {
-    const filtered = logs.filter((log) => {
-      if (
-        filters.process &&
-        !log.PROCESS_ID.toLowerCase().includes(filters.process.toLowerCase())
-      ) {
-        return false;
-      }
-      if (
-        filters.user &&
-        !log.USER_ID.toLowerCase().includes(filters.user.toLowerCase())
-      ) {
-        return false;
-      }
-      if (filters.module && log.MODULE !== filters.module) {
-        return false;
-      }
-      if (filters.function && log.FUNCTION_NAME !== filters.function) {
-        return false;
-      }
-      if (filters.status && log.STATUS !== filters.status) {
-        return false;
-      }
-      const logStartDate = parseDate(log.START_DATE);
-      if (filters.startDate && logStartDate) {
-        if (logStartDate < new Date(filters.startDate)) return false;
-      }
-      const logEndDate = parseDate(log.END_DATE);
-      if (filters.endDate && logEndDate) {
-        const filterEndDate = new Date(filters.endDate);
-        filterEndDate.setHours(23, 59, 59, 999);
-        if (logEndDate > filterEndDate) return false;
-      }
-      return true;
-    });
+  // useEffect(() => {
+  //   const filtered = logs.filter((log) => {
+  //     if (
+  //       filters.process &&
+  //       !log.PROCESS_ID.toLowerCase().includes(filters.process.toLowerCase())
+  //     ) {
+  //       return false;
+  //     }
+  //     if (
+  //       filters.user &&
+  //       !log.USER_ID.toLowerCase().includes(filters.user.toLowerCase())
+  //     ) {
+  //       return false;
+  //     }
+  //     if (filters.module && log.MODULE !== filters.module) {
+  //       return false;
+  //     }
+  //     if (filters.function && log.FUNCTION_NAME !== filters.function) {
+  //       return false;
+  //     }
+  //     if (filters.status && log.STATUS !== filters.status) {
+  //       return false;
+  //     }
+  //     const logStartDate = parseDate(log.START_DATE);
+  //     if (filters.startDate && logStartDate) {
+  //       if (logStartDate < new Date(filters.startDate)) return false;
+  //     }
+  //     const logEndDate = parseDate(log.END_DATE);
+  //     if (filters.endDate && logEndDate) {
+  //       const filterEndDate = new Date(filters.endDate);
+  //       filterEndDate.setHours(23, 59, 59, 999);
+  //       if (logEndDate > filterEndDate) return false;
+  //     }
+  //     return true;
+  //   });
 
-    const haveSameLength = filteredLogs.length === filtered.length;
-    const haveSameIds =
-      haveSameLength &&
-      filteredLogs.every((log, index) => log.NO === filtered[index]?.NO);
+  //   const haveSameLength = filteredLogs.length === filtered.length;
+  //   const haveSameIds =
+  //     haveSameLength &&
+  //     filteredLogs.every((log, index) => log.NO === filtered[index]?.NO);
 
-    if (!haveSameIds) {
-      setFilteredLogs(filtered);
-    }
-  }, [logs, filters, filteredLogs, setFilteredLogs]);
+  //   if (!haveSameIds) {
+  //     setFilteredLogs(filtered);
+  //   }
+  // }, [logs, filters, filteredLogs, setFilteredLogs]);
 
   // getLogMonitorings
 
-  React.useEffect(() => {
-    getLogMonitorings();
-  }, [getLogMonitorings]);
+  // React.useEffect(() => {
+  //   getLogMonitorings();
+  // }, [getLogMonitorings]);
 
-  const totalPages = getTotalPages();
-  const currentLogs = getCurrentPageLogs();
-  const totalItems = filteredLogs.length;
+  type StatusUnion = LogEntry['STATUS'];
+
+
+  // ambil meta & loading kalau perlu
+  const meta = useLoggingStore((s) => s.meta);
+  const isLoading = useLoggingStore((s) => s.isLoading);
+
+  // Normalisasi status “In Progress” → “InProgress”
+  const normalizeStatus = (s?: string): StatusUnion | undefined => {
+    if (!s) return undefined;
+    if (s === 'In Progress') return 'InProgress';
+    if (s === 'Success' || s === 'Error' || s === 'Warning' || s === 'InProgress') {
+      return s;
+    }
+    return undefined;
+  };
+
+  // 'YYYY-MM-DD' -> 'DD-MM-YYYY HH:mm:ss'
+  const toBeDate = (d: string, end = false) => {
+    if (!d) return '';
+    const [y, m, day] = d.split('-');
+    const dd = `${day}-${m}-${y}`;
+    return end ? `${dd} 23:59:59` : `${dd} 00:00:00`;
+  };
+
+  // Pilih apa yang mau diisi ke q (BE cuma punya satu q)
+  const buildQ = (f: typeof filters) => {
+    // prioritas: process → function → (boleh kosong)
+    if (f.process) return f.process;
+    if (f.function) return f.function;
+    // JANGAN masukkan module ke q karena sudah ada param module tersendiri
+    return '';
+  };
+
+  useEffect(() => {
+    getLogMonitorings({
+      page: currentPage,
+      limit: itemsPerPage,
+
+      // BE expects camelCase:
+      module: filters.module || undefined,
+      userId: filters.user || undefined,
+      status: normalizeStatus(filters.status || '') || undefined,
+
+      // q untuk PROCESS_ID / FUNCTION_NAME / MODULE (tapi module sudah kirim terpisah)
+      q: buildQ(filters) || undefined,
+
+      startDate: toBeDate(filters.startDate, false) || undefined,
+      endDate: toBeDate(filters.endDate, true) || undefined,
+
+      // opsional
+      sortBy: 'START_DATE',
+      order: 'desc',
+    });
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [
+    currentPage, itemsPerPage,
+    filters.process, filters.user, filters.module, filters.function,
+    filters.status, filters.startDate, filters.endDate
+  ]);
+
+
+  const totalPages = meta?.totalPages ?? 1;
+  const currentLogs = logs;
+  const totalItems = meta?.total ?? logs.length;
   const startItem = totalItems > 0 ? (currentPage - 1) * itemsPerPage + 1 : 0;
   const endItem = Math.min(currentPage * itemsPerPage, totalItems);
 
@@ -307,6 +369,33 @@ const LoggingMonitoringPage: React.FC<{
     XLSX.writeFile(workbook, fileName);
   };
 
+  const processOptions = useMemo(() => {
+    const fromPage = new Set(logs.map(l => l.PROCESS_ID));
+    if (filters.process && !fromPage.has(filters.process)) fromPage.add(filters.process);
+    return [...fromPage];
+  }, [logs, filters.process]);
+
+  const userOptions = useMemo(() => {
+    const fromPage = new Set(logs.map(l => l.USER_ID));
+    if (filters.user && !fromPage.has(filters.user)) fromPage.add(filters.user);
+    return [...fromPage];
+  }, [logs, filters.user]);
+  console.log("userOptions", userOptions)
+
+  const moduleOptions = useMemo(() => {
+    const fromPage = new Set(logs.map(l => l.MODULE));
+    if (filters.module && !fromPage.has(filters.module)) fromPage.add(filters.module);
+    return [...fromPage];
+  }, [logs, filters.module]);
+  console.log("moduleOptions", moduleOptions)
+
+  const functionOptions = useMemo(() => {
+    const fromPage = new Set(logs.map(l => l.FUNCTION_NAME));
+    if (filters.function && !fromPage.has(filters.function)) fromPage.add(filters.function);
+    return [...fromPage];
+  }, [logs, filters.function]);
+
+
   return (
     <div>
       <h2 className="text-2xl font-bold text-gray-800 mb-6">
@@ -319,7 +408,7 @@ const LoggingMonitoringPage: React.FC<{
               label="Process"
               value={filters.process}
               onChange={(value) => handleFilterChange("process", value)}
-              options={[...new Set(logs.map((log: any) => log.PROCESS_ID))]}
+              options={processOptions}
               placeholder="Process"
               className="w-36"
             />
@@ -327,7 +416,7 @@ const LoggingMonitoringPage: React.FC<{
               label="User"
               value={filters.user}
               onChange={(value) => handleFilterChange("user", value)}
-              options={[...new Set(logs.map((log: any) => log.USER_ID))]}
+              options={userOptions}
               placeholder="User"
               className="w-28"
             />
@@ -335,7 +424,7 @@ const LoggingMonitoringPage: React.FC<{
               label="Module"
               value={filters.module}
               onChange={(value) => handleFilterChange("module", value)}
-              options={uniqueModules}
+              options={moduleOptions}
               searchable={false}
               placeholder="Module"
               className="w-36"
@@ -344,7 +433,7 @@ const LoggingMonitoringPage: React.FC<{
               label="Function"
               value={filters.function}
               onChange={(value) => handleFilterChange("function", value)}
-              options={uniqueFunctions}
+              options={functionOptions}
               searchable={false}
               placeholder="Function"
               className="w-36"
@@ -363,7 +452,7 @@ const LoggingMonitoringPage: React.FC<{
               label="Status"
               value={filters.status}
               onChange={(value) => handleFilterChange("status", value)}
-              options={["Success", "Error", "In Progress"]}
+              options={["Success", "Error", "Warning", "InProgress"]}
               searchable={false}
               placeholder="Status"
               className="w-28"

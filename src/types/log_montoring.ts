@@ -6,11 +6,16 @@ export type LogMonitoring = {
   FUNCTION_NAME: string;
   START_DATE: string;
   END_DATE: string;
-  STATUS: "Success" | "Error" | "Warning" | "InProgress";
-  DETAILS: []
+  STATUS: 'Success' | 'Error' | 'Warning' | 'InProgress';
+  DETAILS?: any[];
 };
 
 export type BackendGetLogMonitoringResponse = {
-  requestId: string;
   data: LogMonitoring[];
+  meta: {
+    page: number;
+    limit: number;
+    total: number;
+    totalPages: number;
+  };
 };
