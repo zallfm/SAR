@@ -15,13 +15,14 @@ import { SECURITY_CONFIG } from "../../../../config/security";
 // ⬇️ import hook React Query untuk login
 import { useLogin } from "../../../../hooks/useAuth";
 import { useAuthStore } from "../../../../store/authStore";
+import { postLogMonitoringApi } from "@/src/api/log_monitoring";
 
 interface LoginPageProps {
   onLoginSuccess: (user: User) => void;
 }
 
 const LoginPage: React.FC<LoginPageProps> = ({ onLoginSuccess }) => {
-  const [username, setUsername] = useState("");  const [password, setPassword] = useState("");
+  const [username, setUsername] = useState(""); const [password, setPassword] = useState("");
   const [isLoading, setIsLoading] = useState(false);
   // error dari server / validasi UI
   const [error, setError] = useState("");
@@ -251,6 +252,18 @@ const LoginPage: React.FC<LoginPageProps> = ({ onLoginSuccess }) => {
         timestamp: new Date().toISOString()
       });
 
+      // ⬇️ Log ke backend
+      await postLogMonitoringApi({
+        userId: user.username,
+        module: "Login",
+        action: AuditAction.LOGIN_SUCCESS,
+        status: "Success",
+        description: `User ${user.username} berhasil login`,
+        location: "LoginPage",
+        timestamp: new Date().toISOString(),
+      });
+
+
       // Beri tahu parent
       onLoginSuccess(user);
 
@@ -280,6 +293,17 @@ const LoginPage: React.FC<LoginPageProps> = ({ onLoginSuccess }) => {
         userAgent: navigator.userAgent,
         timestamp: new Date().toISOString()
       });
+
+      await postLogMonitoringApi({
+        userId: username,
+        module: "Login",
+        action: AuditAction.LOGIN_FAILED,
+        status: "Error",
+        description: `User ${username} gagal login (${err?.message || "invalid credentials"})`,
+        location: "LoginPage",
+        timestamp: new Date().toISOString(),
+      });
+
 
       // Lock setelah mencapai batas
       if (currentAttempts >= SECURITY_CONFIG.MAX_LOGIN_ATTEMPTS) {
@@ -354,11 +378,10 @@ const LoginPage: React.FC<LoginPageProps> = ({ onLoginSuccess }) => {
                 onChange={(e) => setUsername(e.target.value)}
                 placeholder="Enter the username"
                 maxLength={SECURITY_CONFIG.MAX_INPUT_LENGTH.username}
-                className={`mt-2 block w-full px-4 py-3 bg-gray-50 border rounded-lg placeholder-gray-400 focus:outline-none focus:ring-2 focus:border-transparent transition ${
-                  validationErrors.username
-                    ? "border-red-300 focus:ring-red-500"
-                    : "border-gray-300 focus:ring-blue-500"
-                }`}
+                className={`mt-2 block w-full px-4 py-3 bg-gray-50 border rounded-lg placeholder-gray-400 focus:outline-none focus:ring-2 focus:border-transparent transition ${validationErrors.username
+                  ? "border-red-300 focus:ring-red-500"
+                  : "border-gray-300 focus:ring-blue-500"
+                  }`}
               />
               {validationErrors.username && (
                 <div className="mt-1 text-sm text-red-600">
@@ -387,11 +410,10 @@ const LoginPage: React.FC<LoginPageProps> = ({ onLoginSuccess }) => {
                   onChange={(e) => setPassword(e.target.value)}
                   placeholder="Enter your password"
                   maxLength={SECURITY_CONFIG.MAX_INPUT_LENGTH.password}
-                  className={`block w-full px-4 py-3 bg-gray-50 border rounded-lg placeholder-gray-400 focus:outline-none focus:ring-2 focus:border-transparent transition ${
-                    validationErrors.password
-                      ? "border-red-300 focus:ring-red-500"
-                      : "border-gray-300 focus:ring-blue-500"
-                  }`}
+                  className={`block w-full px-4 py-3 bg-gray-50 border rounded-lg placeholder-gray-400 focus:outline-none focus:ring-2 focus:border-transparent transition ${validationErrors.password
+                    ? "border-red-300 focus:ring-red-500"
+                    : "border-gray-300 focus:ring-blue-500"
+                    }`}
                 />
                 <button
                   type="button"
@@ -429,11 +451,10 @@ const LoginPage: React.FC<LoginPageProps> = ({ onLoginSuccess }) => {
               <button
                 type="submit"
                 disabled={isPending || isLocked[username]}
-                className={`w-full flex justify-center py-3 px-4 border border-transparent rounded-lg shadow-sm text-base font-medium text-white focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 transition-transform transform ${
-                  isPending || isLocked[username]
-                    ? "bg-gray-400 cursor-not-allowed"
-                    : "bg-blue-600 hover:bg-blue-700 hover:scale-105"
-                }`}
+                className={`w-full flex justify-center py-3 px-4 border border-transparent rounded-lg shadow-sm text-base font-medium text-white focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 transition-transform transform ${isPending || isLocked[username]
+                  ? "bg-gray-400 cursor-not-allowed"
+                  : "bg-blue-600 hover:bg-blue-700 hover:scale-105"
+                  }`}
               >
                 {isPending ? (
                   <div className="flex items-center">

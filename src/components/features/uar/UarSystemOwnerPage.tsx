@@ -13,6 +13,9 @@ import StatusPill from "../StatusPill/StatusPill";
 import { ActionReview } from "../../common/Button/ActionReview";
 import { ActionDownload } from "../../common/Button/ActionDownload";
 import SearchableDropdown from "../../common/SearchableDropdown";
+import { postLogMonitoringApi } from "@/src/api/log_monitoring";
+import { AuditAction } from "@/src/constants/auditActions";
+import { useAuthStore } from "@/src/store/authStore";
 
 interface UarSystemOwnerPageProps {
   onReview: (record: UarSystemOwnerRecord) => void;
@@ -34,6 +37,7 @@ const UarSystemOwnerPage: React.FC<UarSystemOwnerPageProps> = ({
   // Pagination
   const [currentPage, setCurrentPage] = useState(1);
   const [itemsPerPage, setItemsPerPage] = useState(10);
+  const { currentUser } = useAuthStore()
 
   const progressData = useMemo(() => {
     const progressMap = new Map<string, { reviewed: number; total: number }>();
@@ -138,6 +142,42 @@ const UarSystemOwnerPage: React.FC<UarSystemOwnerPageProps> = ({
     }
   }, [currentPage, totalItems, totalPages]);
 
+  const handleReviewClick = async (record: UarSystemOwnerRecord) => {
+    // 1️⃣ Jalankan fungsi review yang dikirim dari parent
+    onReview(record);
+
+    // 2️⃣ Kirim log monitoring
+    try {
+      await postLogMonitoringApi({
+        userId: currentUser?.username ?? "anonymous",
+        module: "UAR System Owner",
+        action: AuditAction.DATA_REVIEW,
+        status: "Success",
+        description: `User ${currentUser?.username ?? "unknown"} reviewed UAR ${record.uarId}`,
+        location: "UarSystemOwnerPage.handleReviewClick",
+        timestamp: new Date().toISOString(),
+      });
+    } catch (err) {
+      console.warn("Gagal mencatat log review:", err);
+    }
+  };
+
+  const handleDownloadClick = async (record: UarSystemOwnerRecord) => {
+    try {
+      await postLogMonitoringApi({
+        userId: currentUser?.username ?? "anonymous",
+        module: "UAR System Owner",
+        action: AuditAction.DATA_DOWNLOAD,
+        status: "Success",
+        description: `User ${currentUser?.username ?? "unknown"} downloaded UAR ${record.uarId}`,
+        location: "UarSystemOwnerPage.handleDownloadClick",
+        timestamp: new Date().toISOString(),
+      });
+    } catch (err) {
+      console.warn("Gagal mencatat log download:", err);
+    }
+  };
+
   const { paginatedRecords, startItem, endItem } = useMemo(() => {
     if (totalItems === 0) {
       return {
@@ -215,17 +255,17 @@ const UarSystemOwnerPage: React.FC<UarSystemOwnerPageProps> = ({
 
           {/* Bottom Row: Other Filters */}
           <div className="flex items-center gap-4 flex-wrap">
-            <SearchableDropdown 
-              label="UAR ID" 
-              value={uarFilter} 
-              onChange={setUarFilter} 
+            <SearchableDropdown
+              label="UAR ID"
+              value={uarFilter}
+              onChange={setUarFilter}
               options={[...new Set(records.map(r => r.uarId))]}
               placeholder="UAR ID"
             />
-            <SearchableDropdown 
-              label="Division Owner" 
-              value={ownerFilter} 
-              onChange={setOwnerFilter} 
+            <SearchableDropdown
+              label="Division Owner"
+              value={ownerFilter}
+              onChange={setOwnerFilter}
               options={[...new Set(records.map(r => r.divisionOwner))]}
               placeholder="Division Owner"
             />
@@ -259,10 +299,10 @@ const UarSystemOwnerPage: React.FC<UarSystemOwnerPageProps> = ({
                 className="w-full sm:w-40 px-3 py-2 border border-gray-300 rounded-lg appearance-none bg-white focus:outline-none focus:ring-2 focus:ring-blue-500 text-sm"
               />
             </div>
-            <SearchableDropdown 
-              label="Status" 
-              value={statusFilter} 
-              onChange={setStatusFilter} 
+            <SearchableDropdown
+              label="Status"
+              value={statusFilter}
+              onChange={setStatusFilter}
               options={['Finished', 'InProgress']}
               searchable={false}
               placeholder="Status"
@@ -294,7 +334,7 @@ const UarSystemOwnerPage: React.FC<UarSystemOwnerPageProps> = ({
               {paginatedRecords.map((record) => {
                 return (
                   <tr
-                    key={record.id}
+                    key={record.ID}
                     className="bg-white border-b border-gray-200 last:border-b-0 hover:bg-gray-50"
                   >
                     <td className="px-4 py-4 whitespace-nowrap text-sm text-gray-900">
@@ -319,11 +359,11 @@ const UarSystemOwnerPage: React.FC<UarSystemOwnerPageProps> = ({
                       <div className="flex items-center gap-3">
                         <div className="group relative">
                           {/* Button Review */}
-                          <ActionReview onClick={() => onReview(record)} />
+                          <ActionReview onClick={() => handleReviewClick(record)} />
                         </div>
                         <div className="group relative">
                           {/* Button download */}
-                          <ActionDownload />
+                          <ActionDownload onClick={() => handleDownloadClick(record)} />
                         </div>
                       </div>
                     </td>

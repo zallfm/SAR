@@ -156,7 +156,7 @@ const UarLatestRolePage: React.FC = () => {
             <tbody>
               {currentRoles.map((role) => (
                 <tr
-                  key={role.id}
+                  key={role.ID}
                   className="bg-white border-b hover:bg-gray-50"
                 >
                   <td className="px-4 py-3 whitespace-nowrap text-sm">

@@ -11,13 +11,16 @@ import InfoModal from "../../common/Modal/InfoModal";
 import { AddButton } from "../../common/Button/AddButton";
 import { IconButton } from "../../common/Button/IconButton";
 import SearchableDropdown from "../../common/SearchableDropdown";
-import { 
-  useSystemMasterRecords, 
+import {
+  useSystemMasterRecords,
   useFilteredSystemMasterRecords,
-  useSystemMasterFilters, 
-  useSystemMasterPagination, 
-  useSystemMasterActions 
+  useSystemMasterFilters,
+  useSystemMasterPagination,
+  useSystemMasterActions
 } from "../../../hooks/useStoreSelectors";
+import { useAuthStore } from "@/src/store/authStore";
+import { postLogMonitoringApi } from "@/src/api/log_monitoring";
+import { AuditAction } from "@/src/constants/auditActions";
 
 interface SystemMasterPageProps {
   user: User;
@@ -30,7 +33,10 @@ const SystemMasterPage: React.FC<SystemMasterPageProps> = ({ user }) => {
   const { filters, setFilters } = useSystemMasterFilters();
   const { currentPage, itemsPerPage, setCurrentPage, setItemsPerPage, getTotalPages, getCurrentPageRecords } = useSystemMasterPagination();
   const { setSystemMasterRecords, setFilteredRecords, setSelectedRecord, addSystemMasterRecord, updateSystemMasterRecord, deleteSystemMasterRecord } = useSystemMasterActions();
-  
+
+  // 🧩 Current user from Auth store
+  const { currentUser } = useAuthStore();
+
   // Local state for UI interactions
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [editingRecord, setEditingRecord] = useState<SystemMasterRecord | null>(null);
@@ -54,8 +60,8 @@ const SystemMasterPage: React.FC<SystemMasterPageProps> = ({ user }) => {
         : true;
       const codeMatch = filters.systemCode
         ? record.systemCode
-            .toLowerCase()
-            .includes(filters.systemCode.toLowerCase())
+          .toLowerCase()
+          .includes(filters.systemCode.toLowerCase())
         : true;
       return typeMatch && codeMatch;
     });
@@ -64,7 +70,7 @@ const SystemMasterPage: React.FC<SystemMasterPageProps> = ({ user }) => {
   // Update filtered records in store when filters change
   React.useEffect(() => {
     const haveSameLength = storeFilteredRecords.length === filteredRecords.length
-    const haveSameIds = haveSameLength && storeFilteredRecords.every((record, index) => record.id === filteredRecords[index]?.id)
+    const haveSameIds = haveSameLength && storeFilteredRecords.every((record, index) => record.ID === filteredRecords[index]?.ID)
 
     if (!haveSameIds) {
       setFilteredRecords(filteredRecords)
@@ -91,11 +97,42 @@ const SystemMasterPage: React.FC<SystemMasterPageProps> = ({ user }) => {
     setEditingRecord(null);
   };
 
-  const handleSaveRecord = (record: SystemMasterRecord) => {
+  const handleSaveRecord = async (record: SystemMasterRecord) => {
+    const username = currentUser?.username ?? "anonymous";
     if (editingRecord) {
-      updateSystemMasterRecord(record.id, record);
+      updateSystemMasterRecord(record.ID, record);
+
+      try {
+        await postLogMonitoringApi({
+          userId: username,
+          module: "SystemMaster",
+          action: AuditAction.DATA_UPDATE,
+          status: "Success",
+          description: `User ${username} updated SystemMaster record ${record.systemCode}`,
+          location: "SystemMasterPage.handleSaveRecord",
+          timestamp: new Date().toISOString(),
+        });
+      } catch (err) {
+        console.warn("Failed to log update:", err);
+      }
+
     } else {
       addSystemMasterRecord(record);
+
+      try {
+        await postLogMonitoringApi({
+          userId: username,
+          module: "SystemMaster",
+          action: AuditAction.DATA_CREATE,
+          status: "Success",
+          description: `User ${username} added new SystemMaster record ${record.systemCode}`,
+          location: "SystemMasterPage.handleSaveRecord",
+          timestamp: new Date().toISOString(),
+        });
+      } catch (err) {
+        console.warn("Failed to log create:", err);
+      }
+
     }
     handleCloseModal();
     setInfoMessage("Save Successfully");
@@ -112,12 +149,29 @@ const SystemMasterPage: React.FC<SystemMasterPageProps> = ({ user }) => {
     setIsDeleteConfirmOpen(false);
   };
 
-  const handleDeleteRecord = () => {
-    if (recordToDelete) {
-      deleteSystemMasterRecord(recordToDelete.id);
-      handleCloseDeleteConfirm();
+  const handleDeleteRecord = async () => {
+    if (!recordToDelete) return;
+    const username = currentUser?.username ?? "anonymous";
+
+    deleteSystemMasterRecord(recordToDelete.ID);
+    handleCloseDeleteConfirm();
+
+    // 🧩 Log Delete
+    try {
+      await postLogMonitoringApi({
+        userId: username,
+        module: "SystemMaster",
+        action: AuditAction.DATA_DELETE,
+        status: "Success",
+        description: `User ${username} deleted SystemMaster record ${recordToDelete.systemCode}`,
+        location: "SystemMasterPage.handleDeleteRecord",
+        timestamp: new Date().toISOString(),
+      });
+    } catch (err) {
+      console.warn("Failed to log delete:", err);
     }
   };
+
 
   return (
     <div>
@@ -125,18 +179,18 @@ const SystemMasterPage: React.FC<SystemMasterPageProps> = ({ user }) => {
       <div className="bg-white p-6 rounded-xl border border-gray-200 shadow-sm">
         <div className="flex justify-between items-center mb-6 flex-wrap gap-4">
           <div className="flex items-center gap-4">
-            <SearchableDropdown 
-              label="System Type" 
-              value={filters.systemType} 
-              onChange={(value) => setFilters({ systemType: value })} 
+            <SearchableDropdown
+              label="System Type"
+              value={filters.systemType}
+              onChange={(value) => setFilters({ systemType: value })}
               options={systemTypes}
               placeholder="System Type"
               className="w-full sm:w-40"
             />
-            <SearchableDropdown 
-              label="System Code" 
-              value={filters.systemCode} 
-              onChange={(value) => setFilters({ systemCode: value })} 
+            <SearchableDropdown
+              label="System Code"
+              value={filters.systemCode}
+              onChange={(value) => setFilters({ systemCode: value })}
               options={[...new Set(records.map(r => r.systemCode))]}
               placeholder="System Code"
               className="w-full sm:w-40"
@@ -176,7 +230,7 @@ const SystemMasterPage: React.FC<SystemMasterPageProps> = ({ user }) => {
             <tbody>
               {currentRecords.map((record) => (
                 <tr
-                  key={record.id}
+                  key={record.ID}
                   className="bg-white border-b hover:bg-gray-50"
                 >
                   <td className="px-4 py-3 whitespace-nowrap text-sm">

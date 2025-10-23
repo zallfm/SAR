@@ -10,6 +10,9 @@ import StatusPill from '../StatusPill/StatusPill';
 import { ActionReview } from '../../common/Button/ActionReview';
 import { ActionDownload } from '../../common/Button/ActionDownload';
 import SearchableDropdown from '../../common/SearchableDropdown';
+import { useAuthStore } from '@/src/store/authStore';
+import { postLogMonitoringApi } from '@/src/api/log_monitoring';
+import { AuditAction } from '@/src/constants/auditActions';
 
 interface UarDivisionUserPageProps {
     onReview: (record: UarDivisionUserRecord) => void;
@@ -17,7 +20,7 @@ interface UarDivisionUserPageProps {
 
 const UarDivisionUserPage: React.FC<UarDivisionUserPageProps> = ({ onReview }) => {
     const [records] = useState<UarDivisionUserRecord[]>(initialUarDivisionUserData);
-    
+
     // Filters
     const [periodFilter, setPeriodFilter] = useState('');
     const [uarFilter, setUarFilter] = useState('');
@@ -29,7 +32,9 @@ const UarDivisionUserPage: React.FC<UarDivisionUserPageProps> = ({ onReview }) =
     // Pagination
     const [currentPage, setCurrentPage] = useState(1);
     const [itemsPerPage, setItemsPerPage] = useState(10);
-    
+
+    const { currentUser } = useAuthStore()
+
     const progressData = useMemo(() => {
         const progressMap = new Map<string, { reviewed: number; total: number }>();
         initialUarDivisionUserReviewData.forEach(detail => {
@@ -42,6 +47,43 @@ const UarDivisionUserPage: React.FC<UarDivisionUserPageProps> = ({ onReview }) =
         });
         return progressMap;
     }, []);
+
+    const handleReviewClick = async (record: UarDivisionUserRecord) => {
+        // 1️⃣ Jalankan fungsi review yang dikirim dari parent
+        onReview(record);
+
+        // 2️⃣ Kirim log monitoring
+        try {
+            await postLogMonitoringApi({
+                userId: currentUser?.username ?? "anonymous",
+                module: "UAR Division User",
+                action: AuditAction.DATA_REVIEW,
+                status: "Success",
+                description: `User ${currentUser?.username ?? "unknown"} reviewed UAR ${record.uarId}`,
+                location: "UarDivisionUserPage.handleReviewClick",
+                timestamp: new Date().toISOString(),
+            });
+        } catch (err) {
+            console.warn("Gagal mencatat log review:", err);
+        }
+    };
+
+    const handleDownloadClick = async (record: UarDivisionUserRecord) => {
+        try {
+            await postLogMonitoringApi({
+                userId: currentUser?.username ?? "anonymous",
+                module: "UAR Division User",
+                action: AuditAction.DATA_DOWNLOAD,
+                status: "Success",
+                description: `User ${currentUser?.username ?? "unknown"} downloaded UAR ${record.uarId}`,
+                location: "UarDivisionUserPage.handleDownloadClick",
+                timestamp: new Date().toISOString(),
+            });
+        } catch (err) {
+            console.warn("Gagal mencatat log download:", err);
+        }
+    };
+
 
     const enhancedRecords = useMemo(() => {
         const computePeriod = (uarId: string) => {
@@ -144,7 +186,7 @@ const UarDivisionUserPage: React.FC<UarDivisionUserPageProps> = ({ onReview }) =
     return (
         <div>
             <h2 className="text-2xl font-bold text-gray-800 mb-6">UAR Division User</h2>
-            
+
             <div className="bg-white p-6 rounded-xl border border-gray-200 shadow-sm">
                 <div className="mb-6">
                     {/* Top Row: Period and Progress Card */}
@@ -159,8 +201,8 @@ const UarDivisionUserPage: React.FC<UarDivisionUserPageProps> = ({ onReview }) =
                                     setPeriodFilter(e.target.value);
                                     setCurrentPage(1);
                                 }}
-                                onFocus={(e) => { e.target.type = 'month'; try { e.currentTarget.showPicker() } catch(e) { /* ignore */ } }}
-                                onBlur={(e) => { if(!e.target.value) e.target.type = 'text' }}
+                                onFocus={(e) => { e.target.type = 'month'; try { e.currentTarget.showPicker() } catch (e) { /* ignore */ } }}
+                                onBlur={(e) => { if (!e.target.value) e.target.type = 'text' }}
                                 className="w-full px-3 py-2 border border-gray-300 rounded-lg appearance-none bg-white focus:outline-none focus:ring-2 focus:ring-blue-500 text-sm"
                             />
                         </div>
@@ -180,17 +222,17 @@ const UarDivisionUserPage: React.FC<UarDivisionUserPageProps> = ({ onReview }) =
 
                     {/* Bottom Row: Other Filters */}
                     <div className="flex items-center gap-4 flex-wrap">
-                        <SearchableDropdown 
-                            label="UAR ID" 
-                            value={uarFilter} 
-                            onChange={setUarFilter} 
+                        <SearchableDropdown
+                            label="UAR ID"
+                            value={uarFilter}
+                            onChange={setUarFilter}
                             options={[...new Set(records.map(r => r.uarId))]}
                             placeholder="UAR ID"
                         />
-                        <SearchableDropdown 
-                            label="Division Owner" 
-                            value={ownerFilter} 
-                            onChange={setOwnerFilter} 
+                        <SearchableDropdown
+                            label="Division Owner"
+                            value={ownerFilter}
+                            onChange={setOwnerFilter}
                             options={[...new Set(records.map(r => r.divisionOwner))]}
                             placeholder="Division Owner"
                         />
@@ -200,10 +242,10 @@ const UarDivisionUserPage: React.FC<UarDivisionUserPageProps> = ({ onReview }) =
                         <div className="relative">
                             <input type={completedDateFilter ? 'date' : 'text'} placeholder="Completed Date" value={completedDateFilter} onChange={e => setCompletedDateFilter(e.target.value)} onFocus={e => { e.target.type = 'date'; }} onBlur={e => { if (!e.target.value) e.target.type = 'text'; }} className="w-full sm:w-40 px-3 py-2 border border-gray-300 rounded-lg appearance-none bg-white focus:outline-none focus:ring-2 focus:ring-blue-500 text-sm" />
                         </div>
-                        <SearchableDropdown 
-                            label="Status" 
-                            value={statusFilter} 
-                            onChange={setStatusFilter} 
+                        <SearchableDropdown
+                            label="Status"
+                            value={statusFilter}
+                            onChange={setStatusFilter}
                             options={['Finished', 'InProgress']}
                             searchable={false}
                             placeholder="Status"
@@ -224,7 +266,7 @@ const UarDivisionUserPage: React.FC<UarDivisionUserPageProps> = ({ onReview }) =
                         </thead>
                         <tbody>
                             {paginatedRecords.map((record) => (
-                                <tr key={record.id} className="bg-white border-b border-gray-200 last:border-b-0 hover:bg-gray-50">
+                                <tr key={record.ID} className="bg-white border-b border-gray-200 last:border-b-0 hover:bg-gray-50">
                                     <td className="px-4 py-4 whitespace-nowrap text-gray-900 text-sm">{record.uarId}</td>
                                     <td className="px-4 py-4 whitespace-nowrap text-sm">{record.divisionOwner}</td>
                                     <td className="px-4 py-4 whitespace-nowrap text-sm">{record.percentComplete}</td>
@@ -235,11 +277,11 @@ const UarDivisionUserPage: React.FC<UarDivisionUserPageProps> = ({ onReview }) =
                                         <div className="flex items-center gap-3">
                                             <div className="group relative">
                                                 {/* Button Review */}
-                                                <ActionReview onClick={() => onReview(record)}/>
+                                                <ActionReview onClick={() => handleReviewClick(record)} />
                                             </div>
                                             <div className="group relative">
                                                 {/* Button download */}
-                                                <ActionDownload />
+                                                <ActionDownload onClick={() => handleDownloadClick(record)} />
                                             </div>
                                         </div>
                                     </td>
