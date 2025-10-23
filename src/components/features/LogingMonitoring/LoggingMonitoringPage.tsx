@@ -104,6 +104,7 @@ const LoggingMonitoringPage: React.FC<{
     getCurrentPageLogs,
   } = useLoggingPagination();
   const { setLogs, setFilteredLogs, setSelectedLog } = useLoggingActions();
+  const selectedLog = useLoggingStore(s => s.selectedLog);
 
   const getLogMonitorings = useLoggingStore((state) => state.getLogMonitoring);
   // console.log("logs", logs)
@@ -248,6 +249,7 @@ const LoggingMonitoringPage: React.FC<{
 
   // ambil meta & loading kalau perlu
   const meta = useLoggingStore((s) => s.meta);
+  const getLogByProcessId = useLoggingStore(s => s.getLogByProcessId);
   const isLoading = useLoggingStore((s) => s.isLoading);
 
   // Normalisasi status “In Progress” → “InProgress”
@@ -540,8 +542,9 @@ const LoggingMonitoringPage: React.FC<{
                         <button
                           type="button"
                           onClick={() => {
+                            getLogByProcessId(log.PROCESS_ID)
                             setSelectedLog(log);
-                            onViewDetail(log);
+                            onViewDetail?.(log);
                             logUserAction("view_log_detail", {
                               logId: log.NO,
                               logModule: log.MODULE,

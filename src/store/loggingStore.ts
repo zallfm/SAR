@@ -2,7 +2,7 @@ import { LogEntry } from '../../data'
 import { create } from 'zustand'
 import { persist } from 'zustand/middleware'
 import { devtools } from 'zustand/middleware'
-import { getLogMonitoringApi } from '../api/log_monitoring'
+import { getLogByProcessIdApi, getLogMonitoringApi } from '../api/log_monitoring'
 import { LogMonitoring } from '../types/log_montoring'
 
 export interface LoggingFilters {
@@ -78,6 +78,7 @@ export interface LoggingState {
   //   endDate?: string
   // }) => Promise<void>
   getLogMonitoring: (params?: LogMonitoringQuery) => Promise<void>
+  getLogByProcessId: (processId: string) => Promise<void>
 
 
   // Computed
@@ -151,6 +152,36 @@ export const useLoggingStore = create<LoggingState>()(
             set({ error: (error as Error).message, isLoading: false });
           }
         },
+
+        getLogByProcessId: async (processId) => {
+          set({ isLoading: true, error: null });
+          try {
+            console.log("processId", processId)
+            const res = await getLogByProcessIdApi(processId);
+            // res.data: LogMonitoring (header + DETAILS[])
+            const item = res.data;
+
+            const selected: LogEntry = {
+              NO: item.NO,
+              PROCESS_ID: item.PROCESS_ID,
+              USER_ID: item.USER_ID,
+              MODULE: item.MODULE,
+              FUNCTION_NAME: item.FUNCTION_NAME,
+              START_DATE: item.START_DATE,
+              END_DATE: item.END_DATE,
+              STATUS: item.STATUS,
+              DETAILS: item.DETAILS, // array LogDetail sudah lengkap
+            };
+
+            set({
+              selectedLog: selected,
+              isLoading: false,
+            });
+          } catch (e) {
+            set({ error: (e as Error).message, isLoading: false });
+          }
+        },
+
 
 
         // Actions

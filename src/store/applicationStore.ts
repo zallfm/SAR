@@ -50,7 +50,7 @@ export const useApplicationStore = create<ApplicationState>()(
       updateApplication: (updatedApp) =>
         set((state) => ({
           applications: state.applications.map((app) =>
-            app.id === updatedApp.id ? updatedApp : app
+            app.ID === updatedApp.ID ? updatedApp : app
           ),
           isModalOpen: false,
           editingApplication: null,

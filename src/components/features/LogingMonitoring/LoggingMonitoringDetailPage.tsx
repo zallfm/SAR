@@ -1,9 +1,11 @@
-import React, { useState, useMemo } from "react";
+import React, { useState, useMemo, useEffect } from "react";
 import { SearchIcon } from "../../../components/icons/SearchIcon";
 import { ChevronDownIcon } from "../../../components/icons/ChevronDownIcon";
 import { mockLogDetails } from "../../../../data";
 import type { LogEntry, LogDetail } from "../../../../data";
 import * as XLSX from "xlsx";
+// import { getLogByProcessIdApi } from "@/src/api/log_monitoring";
+import { getLogByProcessIdApi } from "../../../../src/api/log_monitoring";
 
 const FilterDisplay: React.FC<{
   label: string;
@@ -53,9 +55,37 @@ interface LoggingMonitoringDetailPageProps {
 const LoggingMonitoringDetailPage: React.FC<
   LoggingMonitoringDetailPageProps
 > = ({ logEntry, onBack }) => {
-  const [logDetails] = useState<LogDetail[]>(mockLogDetails);
+  // const [logDetails] = useState<LogDetail[]>(mockLogDetails);
   const [currentPage, setCurrentPage] = useState(1);
+  const [logDetails, setLogDetails] = useState<LogDetail[]>([]);
+  const [isLoading, setIsLoading] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+
   const [itemsPerPage, setItemsPerPage] = useState(10);
+
+  useEffect(() => {
+    let alive = true;
+    const fetchDetail = async () => {
+      try {
+        setIsLoading(true);
+        setError(null);
+        const res = await getLogByProcessIdApi(logEntry.PROCESS_ID);
+        const details = res?.data?.DETAILS ?? [];
+        if (alive) {
+          setLogDetails(details);
+          setCurrentPage(1);
+        }
+      } catch (e: any) {
+        if (alive) setError(e?.message ?? "Failed to load details");
+      } finally {
+        if (alive) setIsLoading(false);
+      }
+    };
+    fetchDetail();
+    return () => {
+      alive = false;
+    };
+  }, [logEntry.PROCESS_ID]);
 
   const formatDate = (dateString: string) => {
     const parts = dateString.split(" ")[0].split("-"); // DD-MM-YYYY
@@ -65,13 +95,14 @@ const LoggingMonitoringDetailPage: React.FC<
     return "";
   };
 
-  const formattedStartDate = formatDate(logEntry.startDate);
-  const formattedEndDate = formatDate(logEntry.endDate);
+  const formattedStartDate = formatDate(logEntry.START_DATE);
+  const formattedEndDate = formatDate(logEntry.END_DATE);
 
   const currentDetails = useMemo(() => {
     const startIndex = (currentPage - 1) * itemsPerPage;
     return logDetails.slice(startIndex, startIndex + itemsPerPage);
   }, [logDetails, currentPage, itemsPerPage]);
+  console.log("currentDetails", currentDetails)
 
   const totalItems = logDetails.length;
   const totalPages = Math.ceil(totalItems / itemsPerPage);
@@ -84,14 +115,14 @@ const LoggingMonitoringDetailPage: React.FC<
     const month = String(now.getMonth() + 1).padStart(2, "0");
     const day = String(now.getDate()).padStart(2, "0");
     const dateStamp = `${year}${month}${day}`;
-    const fileName = `SAR_log_detail_${logEntry.processId}_${dateStamp}.xlsx`;
+    const fileName = `SAR_log_detail_${logEntry.PROCESS_ID}_${dateStamp}.xlsx`;
 
     const headers = ["No", "Message Date Time", "Location", "Message Detail"];
     const dataToExport = logDetails.map((detail, index) => [
       startItem + index,
-      detail.messageDateTime,
-      detail.location,
-      detail.messageDetail,
+      detail.MESSAGE_DATE_TIME,
+      detail.LOCATION,
+      detail.MESSAGE_DETAIL,
     ]);
     const worksheetData = [headers, ...dataToExport];
     const worksheet = XLSX.utils.aoa_to_sheet(worksheetData);
@@ -115,19 +146,19 @@ const LoggingMonitoringDetailPage: React.FC<
         </button>
         <span className="mx-2">&gt;</span>
         <span className="text-gray-700">
-          {logEntry.processId} - {logEntry.userId}
+          {logEntry.PROCESS_ID} - {logEntry.USER_ID}
         </span>
       </div>
       <div className="bg-white p-6 rounded-xl border border-gray-200 shadow-sm">
         <div className="flex items-center gap-x-3 mb-6 flex-wrap">
           <FilterDisplay
             label="Process ID"
-            value={logEntry.processId}
+            value={logEntry.PROCESS_ID}
             hasSearchIcon
           />
-          <FilterSelectDisplay label="User ID" value={logEntry.userId} />
-          <FilterSelectDisplay label="Module" value={logEntry.module} />
-          <FilterSelectDisplay label="Function" value={logEntry.functionName} />
+          <FilterSelectDisplay label="User ID" value={logEntry.USER_ID} />
+          <FilterSelectDisplay label="Module" value={logEntry.MODULE} />
+          <FilterSelectDisplay label="Function" value={logEntry.FUNCTION_NAME} />
           <FilterDisplay label="Start Date" value={formattedStartDate} />
           <FilterDisplay label="End Date" value={formattedEndDate} />
           <button
@@ -159,20 +190,20 @@ const LoggingMonitoringDetailPage: React.FC<
               {currentDetails.length > 0 ? (
                 currentDetails.map((detail, index) => (
                   <tr
-                    key={detail.id}
+                    key={detail.ID}
                     className="bg-white border-b border-gray-200 last:border-b-0 hover:bg-gray-50"
                   >
                     <td className="px-4 py-4 whitespace-nowrap text-gray-900 text-sm">
                       {startItem + index}
                     </td>
                     <td className="px-4 py-4 whitespace-nowrap text-sm">
-                      {detail.messageDateTime}
+                      {detail.MESSAGE_DATE_TIME}
                     </td>
                     <td className="px-4 py-4 whitespace-nowrap text-sm">
-                      {detail.location}
+                      {detail.LOCATION}
                     </td>
                     <td className="px-4 py-4 whitespace-nowrap text-sm">
-                      {detail.messageDetail}
+                      {detail.MESSAGE_DETAIL}
                     </td>
                   </tr>
                 ))

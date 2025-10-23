@@ -125,20 +125,20 @@ export const mockLogs: LogEntry[] = [];
 
 export interface LogDetail {
   ID: number;
-  messageDateTime: string;
-  location: string;
-  messageDetail: string;
+  MESSAGE_DATE_TIME: string;
+  LOCATION: string;
+  MESSAGE_DETAIL: string;
 }
 
 export const mockLogDetails: LogDetail[] = Array.from(
   { length: 30 },
   (_, i) => ({
     ID: i + 1,
-    messageDateTime: `21-07-2024 10:${String(i).padStart(2, "0")}:${String(
+    MESSAGE_DATE_TIME: `21-07-20 10:${String(i).padStart(2, "0")}:${String(
       (i * 2) % 60
     ).padStart(2, "0")}`,
-    location: `Module.FunctionName.Step${i + 1}`,
-    messageDetail: `Execution step ${i + 1} completed. ${
+    LOCATION: `Module.FunctionName.Step${i + 1}`,
+    MESSAGE_DETAIL: `Execution step ${i + 1} completed. ${
       i % 4 === 0 ? "Encountered a minor warning." : "Proceeding to next step."
     }`,
   })

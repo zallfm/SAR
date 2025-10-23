@@ -15,8 +15,17 @@ import { useLogging } from "../../../hooks/useLogging";
 import { loggingUtils } from "../../../utils/loggingIntegration";
 import SearchableDropdown from "../../common/SearchableDropdown";
 import { useApplicationStore } from "../../../store/applicationStore";
+// import { postLogMonitoringApi } from "@/src/api/log_monitoring";
+// import { AuditAction } from "@/src/constants/auditActions";
+// import { useAuthStore } from "@/src/store/authStore";
+import { postLogMonitoringApi } from "../../../../src/api/log_monitoring";
+import { AuditAction } from "../../../../src/constants/auditActions";
+import { useAuthStore } from "../../../../src/store/authStore";
+
+
 
 const ApplicationPage: React.FC = () => {
+  const { currentUser } = useAuthStore();
   const {
     applications,
     searchTerm,
@@ -46,7 +55,7 @@ const ApplicationPage: React.FC = () => {
   });
 
   const getNameFromNoreg = (noreg: string): string => {
-    const user = systemUsers.find(u => u.id === noreg);
+    const user = systemUsers.find(u => u.ID === noreg);
     return user ? user.name : noreg;
   };
 
@@ -64,7 +73,7 @@ const ApplicationPage: React.FC = () => {
   const handleOpenEditModal = (app: Application) => {
     openEditModal(app);
     loggingUtils.logCriticalAction('open_edit_application_modal', 'Application', {
-      applicationId: app.id,
+      applicationId: app.ID,
       applicationName: app.name,
       timestamp: new Date().toISOString(),
     });
@@ -74,17 +83,39 @@ const ApplicationPage: React.FC = () => {
     closeModal();
   };
 
-  const handleSaveApplication = (application: Application) => {
+  const handleSaveApplication = async (application: Application) => {
     if (editingApplication) {
       updateApplication(application);
-      loggingUtils.logDataChange('Update', 'Application', application.id, {
+
+      loggingUtils.logDataChange('Update', 'Application', application.ID, {
         applicationName: application.name,
+        timestamp: new Date().toISOString(),
+      });
+
+      await postLogMonitoringApi({
+        userId: currentUser?.username ?? 'anonymous',
+        module: "Application",
+        action: AuditAction.DATA_UPDATE,
+        status: "Success",
+        description: `User update aplikasi ${application.name}`,
+        location: "ApplicationPage.UpdateForm",
         timestamp: new Date().toISOString(),
       });
     } else {
       addApplication(application);
-      loggingUtils.logDataChange('Create', 'Application', application.id, {
+
+      loggingUtils.logDataChange('Create', 'Application', application.ID, {
         applicationName: application.name,
+        timestamp: new Date().toISOString(),
+      });
+
+      await postLogMonitoringApi({
+        userId: currentUser?.username ?? 'anonymous',
+        module: "Application",
+        action: AuditAction.DATA_CREATE,
+        status: "Success",
+        description: `User menambahkan aplikasi ${application.name}`,
+        location: "ApplicationPage.CreateForm",
         timestamp: new Date().toISOString(),
       });
     }
@@ -92,6 +123,8 @@ const ApplicationPage: React.FC = () => {
     setShowSuccessModal(true);
     setTimeout(() => setShowSuccessModal(false), 3000);
   };
+
+
 
   const handleOpenStatusConfirm = (app: Application) => {
     openStatusConfirmation(app);
@@ -243,11 +276,11 @@ const ApplicationPage: React.FC = () => {
             <tbody>
               {paginatedApplications.map((app, index) => (
                 <tr
-                  key={`${app.id}-${index}`}
+                  key={`${app.ID}-${index}`}
                   className="bg-white border-b border-gray-200 hover:bg-gray-50"
                 >
                   <td className="px-4 py-4 whitespace-nowrap text-gray-900 text-sm">
-                    {app.id}
+                    {app.ID}
                   </td>
                   <td className="px-4 py-4 whitespace-nowrap text-sm">
                     {app.name}
