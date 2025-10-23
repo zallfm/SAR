@@ -37,7 +37,7 @@ const UarSystemOwnerPage: React.FC<UarSystemOwnerPageProps> = ({
   // Pagination
   const [currentPage, setCurrentPage] = useState(1);
   const [itemsPerPage, setItemsPerPage] = useState(10);
-  const { currentUser } = useAuthStore()
+  const { currentUser } = useAuthStore();
 
   const progressData = useMemo(() => {
     const progressMap = new Map<string, { reviewed: number; total: number }>();
@@ -71,14 +71,15 @@ const UarSystemOwnerPage: React.FC<UarSystemOwnerPageProps> = ({
       const reviewed = progress?.reviewed ?? 0;
       const total = progress?.total ?? 0;
       const isFinished = total > 0 && reviewed === total;
-      const percentComplete = total > 0
-        ? `${Math.round((reviewed / total) * 100)}% (${reviewed} of ${total})`
-        : "0% (0 of 0)";
+      const percentComplete =
+        total > 0
+          ? `${Math.round((reviewed / total) * 100)}% (${reviewed} of ${total})`
+          : "0% (0 of 0)";
 
       return {
         ...record,
         percentComplete,
-        status: isFinished ? "Finished" as const : "InProgress" as const,
+        status: isFinished ? ("Finished" as const) : ("InProgress" as const),
         periodKey: computePeriod(record.uarId),
         searchableUarId: record.uarId.toLowerCase(),
         searchableOwner: record.divisionOwner.toLowerCase(),
@@ -127,7 +128,8 @@ const UarSystemOwnerPage: React.FC<UarSystemOwnerPageProps> = ({
   }, [enhancedRecords, periodFilter, statusFilter, uarFilter, ownerFilter]);
 
   const totalItems = filteredRecords.length;
-  const totalPages = totalItems === 0 ? 1 : Math.ceil(totalItems / itemsPerPage);
+  const totalPages =
+    totalItems === 0 ? 1 : Math.ceil(totalItems / itemsPerPage);
 
   useEffect(() => {
     if (totalItems === 0) {
@@ -153,7 +155,9 @@ const UarSystemOwnerPage: React.FC<UarSystemOwnerPageProps> = ({
         module: "UAR System Owner",
         action: AuditAction.DATA_REVIEW,
         status: "Success",
-        description: `User ${currentUser?.username ?? "unknown"} reviewed UAR ${record.uarId}`,
+        description: `User ${currentUser?.username ?? "unknown"} reviewed UAR ${
+          record.uarId
+        }`,
         location: "UarSystemOwnerPage.handleReviewClick",
         timestamp: new Date().toISOString(),
       });
@@ -169,7 +173,9 @@ const UarSystemOwnerPage: React.FC<UarSystemOwnerPageProps> = ({
         module: "UAR System Owner",
         action: AuditAction.DATA_DOWNLOAD,
         status: "Success",
-        description: `User ${currentUser?.username ?? "unknown"} downloaded UAR ${record.uarId}`,
+        description: `User ${
+          currentUser?.username ?? "unknown"
+        } downloaded UAR ${record.uarId}`,
         location: "UarSystemOwnerPage.handleDownloadClick",
         timestamp: new Date().toISOString(),
       });
@@ -195,13 +201,37 @@ const UarSystemOwnerPage: React.FC<UarSystemOwnerPageProps> = ({
       startItem: startIndex + 1,
       endItem: endIndex,
     };
-  }, [
-    filteredRecords,
-    totalItems,
-    currentPage,
-    itemsPerPage,
-    enhancedRecords,
-  ]);
+  }, [filteredRecords, totalItems, currentPage, itemsPerPage, enhancedRecords]);
+
+  const logFilterChange = async (key: string, value: string) => {
+    try {
+      await postLogMonitoringApi({
+        userId: currentUser?.username ?? "anonymous",
+        module: "UAR System Owner",
+        action: AuditAction.DATA_FILTER,
+        status: "Success",
+        description: `User ${
+          currentUser?.username ?? "unknown"
+        } filtered by ${key}: ${value}`,
+        location: "UarSystemOwnerPage.filter",
+        timestamp: new Date().toISOString(),
+      });
+    } catch (err) {
+      console.warn("Failed to log filter:", err);
+    }
+  };
+
+  // 🔧 Helper konversi tanggal ke format yyyy-mm-dd
+  const normalizeToYMD = (s: string): string | null => {
+    if (!s) return null;
+    if (/^\d{4}-\d{2}-\d{2}$/.test(s)) return s; // sudah format yyyy-mm-dd
+    const m = s.match(/^(\d{2})-(\d{2})-(\d{4})$/);
+    if (m) {
+      const [_, dd, mm, yyyy] = m;
+      return `${yyyy}-${mm}-${dd}`;
+    }
+    return null;
+  };
 
   return (
     <div>
@@ -219,22 +249,22 @@ const UarSystemOwnerPage: React.FC<UarSystemOwnerPageProps> = ({
                 type={periodFilter ? "month" : "text"}
                 placeholder="Period"
                 value={periodFilter}
-                onChange={(e) => {
-                  setPeriodFilter(e.target.value);
+                onChange={async (e) => {
+                  const v = e.target.value;
+                  setPeriodFilter(v);
                   setCurrentPage(1);
+                  if (v) await logFilterChange("period", v);
                 }}
                 onFocus={(e) => {
                   e.target.type = "month";
                   try {
                     e.currentTarget.showPicker();
-                  } catch (e) {
-                    /* ignore */
-                  }
+                  } catch {}
                 }}
                 onBlur={(e) => {
                   if (!e.target.value) e.target.type = "text";
                 }}
-                className="w-full px-3 py-2 border border-gray-300 rounded-lg appearance-none bg-white focus:outline-none focus:ring-2 focus:ring-blue-500 text-sm"
+                className="w-full px-3 py-2 border border-gray-300 rounded-lg bg-white focus:outline-none focus:ring-2 focus:ring-blue-500 text-sm"
               />
             </div>
 
@@ -258,15 +288,23 @@ const UarSystemOwnerPage: React.FC<UarSystemOwnerPageProps> = ({
             <SearchableDropdown
               label="UAR ID"
               value={uarFilter}
-              onChange={setUarFilter}
-              options={[...new Set(records.map(r => r.uarId))]}
+              onChange={async (v) => {
+                setUarFilter(v);
+                setCurrentPage(1);
+                if (v) await logFilterChange("uarId", v);
+              }}
+              options={[...new Set(records.map((r) => r.uarId))]}
               placeholder="UAR ID"
             />
             <SearchableDropdown
               label="Division Owner"
               value={ownerFilter}
-              onChange={setOwnerFilter}
-              options={[...new Set(records.map(r => r.divisionOwner))]}
+              onChange={async (v) => {
+                setOwnerFilter(v);
+                setCurrentPage(1);
+                if (v) await logFilterChange("divisionOwner", v);
+              }}
+              options={[...new Set(records.map((r) => r.divisionOwner))]}
               placeholder="Division Owner"
             />
             <div className="relative">
@@ -274,14 +312,19 @@ const UarSystemOwnerPage: React.FC<UarSystemOwnerPageProps> = ({
                 type={createDateFilter ? "date" : "text"}
                 placeholder="Create Date"
                 value={createDateFilter}
-                onChange={(e) => setCreateDateFilter(e.target.value)}
+                onChange={async (e) => {
+                  const v = e.target.value;
+                  setCreateDateFilter(v);
+                  setCurrentPage(1);
+                  if (v) await logFilterChange("createdDate", v);
+                }}
                 onFocus={(e) => {
                   e.target.type = "date";
                 }}
                 onBlur={(e) => {
                   if (!e.target.value) e.target.type = "text";
                 }}
-                className="w-full sm:w-40 px-3 py-2 border border-gray-300 rounded-lg appearance-none bg-white focus:outline-none focus:ring-2 focus:ring-blue-500 text-sm"
+                className="w-full sm:w-40 px-3 py-2 border border-gray-300 rounded-lg bg-white focus:outline-none focus:ring-2 focus:ring-blue-500 text-sm"
               />
             </div>
             <div className="relative">
@@ -289,7 +332,12 @@ const UarSystemOwnerPage: React.FC<UarSystemOwnerPageProps> = ({
                 type={completedDateFilter ? "date" : "text"}
                 placeholder="Completed Date"
                 value={completedDateFilter}
-                onChange={(e) => setCompletedDateFilter(e.target.value)}
+                onChange={async (e) => {
+                  const v = e.target.value;
+                  setCompletedDateFilter(v);
+                  setCurrentPage(1);
+                  if (v) await logFilterChange("completedDate", v);
+                }}
                 onFocus={(e) => {
                   e.target.type = "date";
                 }}
@@ -302,8 +350,12 @@ const UarSystemOwnerPage: React.FC<UarSystemOwnerPageProps> = ({
             <SearchableDropdown
               label="Status"
               value={statusFilter}
-              onChange={setStatusFilter}
-              options={['Finished', 'InProgress']}
+              onChange={async (v) => {
+                setStatusFilter(v);
+                setCurrentPage(1);
+                if (v) await logFilterChange("status", v);
+              }}
+              options={["Finished", "InProgress"]}
               searchable={false}
               placeholder="Status"
             />
@@ -359,11 +411,15 @@ const UarSystemOwnerPage: React.FC<UarSystemOwnerPageProps> = ({
                       <div className="flex items-center gap-3">
                         <div className="group relative">
                           {/* Button Review */}
-                          <ActionReview onClick={() => handleReviewClick(record)} />
+                          <ActionReview
+                            onClick={() => handleReviewClick(record)}
+                          />
                         </div>
                         <div className="group relative">
                           {/* Button download */}
-                          <ActionDownload onClick={() => handleDownloadClick(record)} />
+                          <ActionDownload
+                            onClick={() => handleDownloadClick(record)}
+                          />
                         </div>
                       </div>
                     </td>
@@ -398,7 +454,8 @@ const UarSystemOwnerPage: React.FC<UarSystemOwnerPageProps> = ({
           </div>
           <div className="flex items-center gap-4">
             <span>
-              Showing {totalItems === 0 ? 0 : `${startItem}-${endItem}`} of {totalItems}
+              Showing {totalItems === 0 ? 0 : `${startItem}-${endItem}`} of{" "}
+              {totalItems}
             </span>
             <div className="flex gap-2">
               <button
@@ -410,7 +467,9 @@ const UarSystemOwnerPage: React.FC<UarSystemOwnerPageProps> = ({
                 &lt;
               </button>
               <button
-                onClick={() => setCurrentPage((p) => Math.min(totalPages, p + 1))}
+                onClick={() =>
+                  setCurrentPage((p) => Math.min(totalPages, p + 1))
+                }
                 disabled={currentPage >= totalPages}
                 className="px-2 py-1 border bg-white border-gray-300 rounded-md hover:bg-gray-50 disabled:opacity-50"
                 aria-label="Next Page"

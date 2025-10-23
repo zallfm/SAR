@@ -22,8 +22,6 @@ import { postLogMonitoringApi } from "../../../../src/api/log_monitoring";
 import { AuditAction } from "../../../../src/constants/auditActions";
 import { useAuthStore } from "../../../../src/store/authStore";
 
-
-
 const ApplicationPage: React.FC = () => {
   const { currentUser } = useAuthStore();
   const {
@@ -48,35 +46,68 @@ const ApplicationPage: React.FC = () => {
   } = useApplicationStore();
 
   const [showSuccessModal, setShowSuccessModal] = useState(false);
+  const [pendingSearch, setPendingSearch] = useState("");
 
   const { logUserAction, logError } = useLogging({
-    componentName: 'ApplicationPage',
+    componentName: "ApplicationPage",
     enablePerformanceLogging: true,
   });
 
   const getNameFromNoreg = (noreg: string): string => {
-    const user = systemUsers.find(u => u.ID === noreg);
+    const user = systemUsers.find((u) => u.ID === noreg);
     return user ? user.name : noreg;
   };
 
   const handleSearchChange = (event: React.ChangeEvent<HTMLInputElement>) => {
     setSearchTerm(event.target.value);
   };
+  // const handleSearchChange = (event: React.ChangeEvent<HTMLInputElement>) => {
+  //   setPendingSearch(event.target.value);
+  // };
+
+  // useEffect(() => {
+  //   const timeout = setTimeout(() => {
+  //     setSearchTerm(pendingSearch);
+  //     if (pendingSearch.trim() !== "") {
+  //       postLogMonitoringApi({
+  //         userId: currentUser?.username ?? "anonymous",
+  //         module: "Application",
+  //         action: AuditAction.DATA_SEARCH,
+  //         status: "Success",
+  //         description: `User ${
+  //           currentUser?.username ?? "unknown"
+  //         } searched Application with keyword "${pendingSearch}"`,
+  //         location: "ApplicationPage.handleSearchChange",
+  //         timestamp: new Date().toISOString(),
+  //       }).catch((err) => console.warn("Failed to log search:", err));
+  //     }
+  //   }, 300);
+
+  //   return () => clearTimeout(timeout);
+  // }, [pendingSearch]);
 
   const handleOpenAddModal = () => {
     openAddModal();
-    loggingUtils.logCriticalAction('open_add_application_modal', 'Application', {
-      timestamp: new Date().toISOString(),
-    });
+    loggingUtils.logCriticalAction(
+      "open_add_application_modal",
+      "Application",
+      {
+        timestamp: new Date().toISOString(),
+      }
+    );
   };
 
   const handleOpenEditModal = (app: Application) => {
     openEditModal(app);
-    loggingUtils.logCriticalAction('open_edit_application_modal', 'Application', {
-      applicationId: app.ID,
-      applicationName: app.name,
-      timestamp: new Date().toISOString(),
-    });
+    loggingUtils.logCriticalAction(
+      "open_edit_application_modal",
+      "Application",
+      {
+        applicationId: app.ID,
+        applicationName: app.name,
+        timestamp: new Date().toISOString(),
+      }
+    );
   };
 
   const handleCloseModal = () => {
@@ -87,13 +118,13 @@ const ApplicationPage: React.FC = () => {
     if (editingApplication) {
       updateApplication(application);
 
-      loggingUtils.logDataChange('Update', 'Application', application.ID, {
+      loggingUtils.logDataChange("Update", "Application", application.ID, {
         applicationName: application.name,
         timestamp: new Date().toISOString(),
       });
 
       await postLogMonitoringApi({
-        userId: currentUser?.username ?? 'anonymous',
+        userId: currentUser?.username ?? "anonymous",
         module: "Application",
         action: AuditAction.DATA_UPDATE,
         status: "Success",
@@ -104,13 +135,13 @@ const ApplicationPage: React.FC = () => {
     } else {
       addApplication(application);
 
-      loggingUtils.logDataChange('Create', 'Application', application.ID, {
+      loggingUtils.logDataChange("Create", "Application", application.ID, {
         applicationName: application.name,
         timestamp: new Date().toISOString(),
       });
 
       await postLogMonitoringApi({
-        userId: currentUser?.username ?? 'anonymous',
+        userId: currentUser?.username ?? "anonymous",
         module: "Application",
         action: AuditAction.DATA_CREATE,
         status: "Success",
@@ -123,8 +154,6 @@ const ApplicationPage: React.FC = () => {
     setShowSuccessModal(true);
     setTimeout(() => setShowSuccessModal(false), 3000);
   };
-
-
 
   const handleOpenStatusConfirm = (app: Application) => {
     openStatusConfirmation(app);
@@ -148,7 +177,8 @@ const ApplicationPage: React.FC = () => {
 
     const updatedApplication: Application = {
       ...pendingStatusApplication,
-      status: pendingStatusApplication.status === "Active" ? "Inactive" : "Active",
+      status:
+        pendingStatusApplication.status === "Active" ? "Inactive" : "Active",
       updated: newUpdateTime,
     };
 
@@ -183,7 +213,8 @@ const ApplicationPage: React.FC = () => {
   }, [enhancedApplications, searchTerm]);
 
   const totalItems = filteredApplications.length;
-  const totalPages = totalItems === 0 ? 1 : Math.ceil(totalItems / itemsPerPage);
+  const totalPages =
+    totalItems === 0 ? 1 : Math.ceil(totalItems / itemsPerPage);
 
   useEffect(() => {
     if (totalItems === 0) {
@@ -215,7 +246,13 @@ const ApplicationPage: React.FC = () => {
       startItem: startIndex + 1,
       endItem: endIndex,
     };
-  }, [filteredApplications, totalItems, currentPage, itemsPerPage, enhancedApplications]);
+  }, [
+    filteredApplications,
+    totalItems,
+    currentPage,
+    itemsPerPage,
+    enhancedApplications,
+  ]);
 
   return (
     <div>
@@ -357,7 +394,8 @@ const ApplicationPage: React.FC = () => {
           </div>
           <div className="flex items-center gap-4">
             <span>
-              Showing {totalItems === 0 ? 0 : `${startItem}-${endItem}`} of {totalItems}
+              Showing {totalItems === 0 ? 0 : `${startItem}-${endItem}`} of{" "}
+              {totalItems}
             </span>
             <div className="flex gap-2">
               <button
@@ -369,7 +407,9 @@ const ApplicationPage: React.FC = () => {
                 &lt;
               </button>
               <button
-                onClick={() => setCurrentPage(Math.min(totalPages, currentPage + 1))}
+                onClick={() =>
+                  setCurrentPage(Math.min(totalPages, currentPage + 1))
+                }
                 disabled={currentPage >= totalPages}
                 className="px-2 py-1 border border-gray-300 rounded-md hover:bg-gray-50 disabled:bg-gray-100 disabled:text-gray-400 disabled:cursor-not-allowed"
                 aria-label="Next Page"
