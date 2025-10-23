@@ -21,7 +21,8 @@ interface LoginPageProps {
 }
 
 const LoginPage: React.FC<LoginPageProps> = ({ onLoginSuccess }) => {
-  const [username, setUsername] = useState("");  const [password, setPassword] = useState("");
+  const [username, setUsername] = useState("");
+  const [password, setPassword] = useState("");
   const [isLoading, setIsLoading] = useState(false);
   // error dari server / validasi UI
   const [error, setError] = useState("");
@@ -53,15 +54,149 @@ const LoginPage: React.FC<LoginPageProps> = ({ onLoginSuccess }) => {
 
   const unameKey = username.trim().toLowerCase();
 
+  const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
+    e.preventDefault();
+    setError("");
+    setValidationErrors({});
+    setIsLoading(true);
+
+    try {
+      // Check if account is locked
+      if (isLocked[username]) {
+        setError(
+          "Account is temporarily locked due to multiple failed attempts. Please try again later."
+        );
+        AuditLogger.logWarning(AuditAction.ACCOUNT_LOCKED, {
+          userName: username,
+          description: "Login attempt on locked account",
+        });
+        return;
+      }
+
+      // Validate input (using development mode for relaxed password validation)
+      const usernameValidation = SecurityValidator.validateUsername(username);
+      const passwordValidation = SecurityValidator.validatePassword(
+        password,
+        true
+      ); // true = development mode
+
+      if (!usernameValidation.isValid || !passwordValidation.isValid) {
+        setValidationErrors({
+          username: usernameValidation.errors,
+          password: passwordValidation.errors,
+        });
+        setError("Please correct the validation errors below.");
+        return;
+      }
+
+      // Attempt login with secure service
+      const authResponse = await authService.login({
+        username: usernameValidation.sanitizedValue,
+        password: passwordValidation.sanitizedValue,
+      });
+
+      // Reset failed attempts on successful login
+      setFailedAttempts((prev) => ({ ...prev, [username]: 0 }));
+      setIsLocked((prev) => ({ ...prev, [username]: false }));
+
+      // Create session
+      sessionManager.createSession({
+        userId: authResponse.user.username,
+        username: authResponse.user.username,
+        role: authResponse.user.role,
+        name: authResponse.user.name,
+        ip: "127.0.0.1",
+        userAgent: navigator.userAgent,
+      });
+
+      // Log successful login
+      logAuthentication("login_success", {
+        username: authResponse.user.username,
+        role: authResponse.user.role,
+        name: authResponse.user.name,
+        ip: "127.0.0.1",
+        userAgent: navigator.userAgent,
+        timestamp: new Date().toISOString(),
+      });
+
+      onLoginSuccess(authResponse.user);
+    } catch (error) {
+      const errorMessage =
+        error instanceof Error ? error.message : "Login failed";
+      setError(errorMessage);
+
+      // Track failed attempts
+      const currentAttempts = (failedAttempts[username] || 0) + 1;
+      setFailedAttempts((prev) => ({ ...prev, [username]: currentAttempts }));
+
+      // Log failed login attempt
+      logAuthentication("login_failed", {
+        username: username,
+        reason: "invalid_credentials",
+        attemptNumber: currentAttempts,
+        ip: "127.0.0.1",
+        userAgent: navigator.userAgent,
+        timestamp: new Date().toISOString(),
+      });
+
+      // Lock account after max attempts
+      if (currentAttempts >= SECURITY_CONFIG.MAX_LOGIN_ATTEMPTS) {
+        setIsLocked((prev) => ({ ...prev, [username]: true }));
+
+        // Set auto-unlock timer
+        setTimeout(() => {
+          setIsLocked((prev) => ({ ...prev, [username]: false }));
+          setFailedAttempts((prev) => ({ ...prev, [username]: 0 }));
+        }, SECURITY_CONFIG.LOCKOUT_DURATION_MS);
+
+        AuditLogger.logWarning(AuditAction.ACCOUNT_LOCKED, {
+          userName: username,
+          description: `Account locked after ${currentAttempts} failed attempts`,
+        });
+      }
+
+      // Log suspicious activity for multiple failed attempts
+      if (currentAttempts >= 3) {
+        logSecurity(
+          "multiple_failed_login_attempts",
+          {
+            username: username,
+            attemptCount: currentAttempts,
+            ip: "127.0.0.1",
+            userAgent: navigator.userAgent,
+            timestamp: new Date().toISOString(),
+          },
+          "Warning"
+        );
+      }
+
+      // Log potential brute force attack
+      if (currentAttempts >= 5) {
+        logSecurity(
+          "potential_brute_force_attack",
+          {
+            username: username,
+            attemptCount: currentAttempts,
+            ip: "127.0.0.1",
+            userAgent: navigator.userAgent,
+            timestamp: new Date().toISOString(),
+          },
+          "Error"
+        );
+      }
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
   // const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
   //   e.preventDefault();
   //   setError("");
   //   setValidationErrors({});
-  //   setIsLoading(true);
 
   //   try {
-  //     // Check if account is locked
-  //     if (isLocked[username]) {
+  //     // Check lock
+  //     if (isLocked[unameKey]) {
   //       setError(
   //         "Account is temporarily locked due to multiple failed attempts. Please try again later."
   //       );
@@ -72,12 +207,12 @@ const LoginPage: React.FC<LoginPageProps> = ({ onLoginSuccess }) => {
   //       return;
   //     }
 
-  //     // Validate input (using development mode for relaxed password validation)
+  //     // Validate input (development mode untuk password rule)
   //     const usernameValidation = SecurityValidator.validateUsername(username);
   //     const passwordValidation = SecurityValidator.validatePassword(
   //       password,
   //       true
-  //     ); // true = development mode
+  //     );
 
   //     if (!usernameValidation.isValid || !passwordValidation.isValid) {
   //       setValidationErrors({
@@ -88,49 +223,60 @@ const LoginPage: React.FC<LoginPageProps> = ({ onLoginSuccess }) => {
   //       return;
   //     }
 
-  //     // Attempt login with secure service
-  //     const authResponse = await authService.login({
+  //     // ⬇️ PANGGIL API lewat React Query
+  //     const res = await doLogin({
   //       username: usernameValidation.sanitizedValue,
   //       password: passwordValidation.sanitizedValue,
   //     });
 
-  //     // Reset failed attempts on successful login
-  //     setFailedAttempts((prev) => ({ ...prev, [username]: 0 }));
-  //     setIsLocked((prev) => ({ ...prev, [username]: false }));
+  //     // React Query hook sudah mengisi Zustand: token, user, expiry
+  //     const user = res.data.user;
 
-  //     // Create session
+  //     // Reset counters
+  //     setFailedAttempts((prev) => ({ ...prev, [unameKey]: 0 }));
+  //     setIsLocked((prev) => ({ ...prev, [unameKey]: false }));
+
+  //     // Buat session (opsional)
   //     sessionManager.createSession({
-  //       userId: authResponse.user.username,
-  //       username: authResponse.user.username,
-  //       role: authResponse.user.role,
-  //       name: authResponse.user.name,
+  //       userId: user.username,
+  //       username: user.username,
+  //       role: user.role,
+  //       name: user.name,
   //       ip: "127.0.0.1",
   //       userAgent: navigator.userAgent,
   //     });
 
-  //     // Log successful login
+  //     // Audit log
   //     logAuthentication("login_success", {
-  //       username: authResponse.user.username,
-  //       role: authResponse.user.role,
-  //       name: authResponse.user.name,
+  //       username: user.username,
+  //       role: user.role,
+  //       name: user.name,
   //       ip: "127.0.0.1",
   //       userAgent: navigator.userAgent,
   //       timestamp: new Date().toISOString(),
   //     });
 
-  //     onLoginSuccess(authResponse.user);
-  //   } catch (error) {
-  //     const errorMessage =
-  //       error instanceof Error ? error.message : "Login failed";
-  //     setError(errorMessage);
+  //     // Beri tahu parent
+  //     onLoginSuccess(user);
+  //   } catch (err: any) {
+  //     setError(err?.message || "Login failed");
 
-  //     // Track failed attempts
-  //     const currentAttempts = (failedAttempts[username] || 0) + 1;
-  //     setFailedAttempts((prev) => ({ ...prev, [username]: currentAttempts }));
+  //     if (err?.status === 423 || err?.details?.locked) {
+  //       const ms = Number(err?.details?.remainingMs ?? 0);
+  //       setIsLocked((prev) => ({ ...prev, [unameKey]: true }));
+  //       setTimeout(() => {
+  //         setIsLocked((prev) => ({ ...prev, [unameKey]: false }));
+  //         setFailedAttempts((prev) => ({ ...prev, [unameKey]: 0 }));
+  //       }, Math.max(ms, 0));
+  //     }
 
-  //     // Log failed login attempt
+  //     // Track attempts
+  //     const currentAttempts = (failedAttempts[unameKey] || 0) + 1;
+  //     setFailedAttempts((prev) => ({ ...prev, [unameKey]: currentAttempts }));
+
+  //     // Audit log gagal
   //     logAuthentication("login_failed", {
-  //       username: username,
+  //       username,
   //       reason: "invalid_credentials",
   //       attemptNumber: currentAttempts,
   //       ip: "127.0.0.1",
@@ -138,14 +284,13 @@ const LoginPage: React.FC<LoginPageProps> = ({ onLoginSuccess }) => {
   //       timestamp: new Date().toISOString(),
   //     });
 
-  //     // Lock account after max attempts
+  //     // Lock setelah mencapai batas
   //     if (currentAttempts >= SECURITY_CONFIG.MAX_LOGIN_ATTEMPTS) {
-  //       setIsLocked((prev) => ({ ...prev, [username]: true }));
+  //       setIsLocked((prev) => ({ ...prev, [unameKey]: true }));
 
-  //       // Set auto-unlock timer
   //       setTimeout(() => {
-  //         setIsLocked((prev) => ({ ...prev, [username]: false }));
-  //         setFailedAttempts((prev) => ({ ...prev, [username]: 0 }));
+  //         setIsLocked((prev) => ({ ...prev, [unameKey]: false }));
+  //         setFailedAttempts((prev) => ({ ...prev, [unameKey]: 0 }));
   //       }, SECURITY_CONFIG.LOCKOUT_DURATION_MS);
 
   //       AuditLogger.logWarning(AuditAction.ACCOUNT_LOCKED, {
@@ -154,12 +299,12 @@ const LoginPage: React.FC<LoginPageProps> = ({ onLoginSuccess }) => {
   //       });
   //     }
 
-  //     // Log suspicious activity for multiple failed attempts
+  //     // Warning & brute force signals
   //     if (currentAttempts >= 3) {
   //       logSecurity(
   //         "multiple_failed_login_attempts",
   //         {
-  //           username: username,
+  //           username,
   //           attemptCount: currentAttempts,
   //           ip: "127.0.0.1",
   //           userAgent: navigator.userAgent,
@@ -168,13 +313,11 @@ const LoginPage: React.FC<LoginPageProps> = ({ onLoginSuccess }) => {
   //         "Warning"
   //       );
   //     }
-
-  //     // Log potential brute force attack
   //     if (currentAttempts >= 5) {
   //       logSecurity(
   //         "potential_brute_force_attack",
   //         {
-  //           username: username,
+  //           username,
   //           attemptCount: currentAttempts,
   //           ip: "127.0.0.1",
   //           userAgent: navigator.userAgent,
@@ -183,136 +326,8 @@ const LoginPage: React.FC<LoginPageProps> = ({ onLoginSuccess }) => {
   //         "Error"
   //       );
   //     }
-  //   } finally {
-  //     setIsLoading(false);
   //   }
   // };
-
-
-  const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
-    e.preventDefault();
-    setError('');
-    setValidationErrors({});
-
-    try {
-      // Check lock
-      if (isLocked[unameKey]) {
-        setError('Account is temporarily locked due to multiple failed attempts. Please try again later.');
-        AuditLogger.logWarning(AuditAction.ACCOUNT_LOCKED, {
-          userName: username,
-          description: 'Login attempt on locked account'
-        });
-        return;
-      }
-
-      // Validate input (development mode untuk password rule)
-      const usernameValidation = SecurityValidator.validateUsername(username);
-      const passwordValidation = SecurityValidator.validatePassword(password, true);
-
-      if (!usernameValidation.isValid || !passwordValidation.isValid) {
-        setValidationErrors({
-          username: usernameValidation.errors,
-          password: passwordValidation.errors
-        });
-        setError('Please correct the validation errors below.');
-        return;
-      }
-
-      // ⬇️ PANGGIL API lewat React Query
-      const res = await doLogin({
-        username: usernameValidation.sanitizedValue,
-        password: passwordValidation.sanitizedValue
-      });
-
-      // React Query hook sudah mengisi Zustand: token, user, expiry
-      const user = res.data.user;
-
-      // Reset counters
-      setFailedAttempts(prev => ({ ...prev, [unameKey]: 0 }));
-      setIsLocked(prev => ({ ...prev, [unameKey]: false }));
-
-      // Buat session (opsional)
-      sessionManager.createSession({
-        userId: user.username,
-        username: user.username,
-        role: user.role,
-        name: user.name,
-        ip: '127.0.0.1',
-        userAgent: navigator.userAgent,
-      });
-
-      // Audit log
-      logAuthentication('login_success', {
-        username: user.username,
-        role: user.role,
-        name: user.name,
-        ip: '127.0.0.1',
-        userAgent: navigator.userAgent,
-        timestamp: new Date().toISOString()
-      });
-
-      // Beri tahu parent
-      onLoginSuccess(user);
-
-    } catch (err: any) {
-      setError(err?.message || 'Login failed');
-
-      if (err?.status === 423 || err?.details?.locked) {
-        const ms = Number(err?.details?.remainingMs ?? 0);
-        setIsLocked(prev => ({ ...prev, [unameKey]: true }));
-        setTimeout(() => {
-          setIsLocked(prev => ({ ...prev, [unameKey]: false }));
-          setFailedAttempts(prev => ({ ...prev, [unameKey]: 0 }));
-        }, Math.max(ms, 0));
-      }
-
-
-      // Track attempts
-      const currentAttempts = (failedAttempts[unameKey] || 0) + 1;
-      setFailedAttempts(prev => ({ ...prev, [unameKey]: currentAttempts }));
-
-      // Audit log gagal
-      logAuthentication('login_failed', {
-        username,
-        reason: 'invalid_credentials',
-        attemptNumber: currentAttempts,
-        ip: '127.0.0.1',
-        userAgent: navigator.userAgent,
-        timestamp: new Date().toISOString()
-      });
-
-      // Lock setelah mencapai batas
-      if (currentAttempts >= SECURITY_CONFIG.MAX_LOGIN_ATTEMPTS) {
-        setIsLocked(prev => ({ ...prev, [unameKey]: true }));
-
-        setTimeout(() => {
-          setIsLocked(prev => ({ ...prev, [unameKey]: false }));
-          setFailedAttempts(prev => ({ ...prev, [unameKey]: 0 }));
-        }, SECURITY_CONFIG.LOCKOUT_DURATION_MS);
-
-        AuditLogger.logWarning(AuditAction.ACCOUNT_LOCKED, {
-          userName: username,
-          description: `Account locked after ${currentAttempts} failed attempts`
-        });
-      }
-
-      // Warning & brute force signals
-      if (currentAttempts >= 3) {
-        logSecurity('multiple_failed_login_attempts', {
-          username, attemptCount: currentAttempts,
-          ip: '127.0.0.1', userAgent: navigator.userAgent,
-          timestamp: new Date().toISOString()
-        }, 'Warning');
-      }
-      if (currentAttempts >= 5) {
-        logSecurity('potential_brute_force_attack', {
-          username, attemptCount: currentAttempts,
-          ip: '127.0.0.1', userAgent: navigator.userAgent,
-          timestamp: new Date().toISOString()
-        }, 'Error');
-      }
-    }
-  };
 
   return (
     <div className="flex items-center justify-center min-h-screen p-4">

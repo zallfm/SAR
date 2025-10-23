@@ -81,10 +81,20 @@ const UarPicModal: React.FC<UarPicModalProps> = ({
     return null;
   }, [email]);
 
+  const nameError = useMemo(() => {
+    if (/\d/.test(name)) {
+      return "Name cannot contain numbers.";
+    }
+    return null;
+  }, [name]);
+
   const isFormValid = useMemo(() => {
     // Check if email is valid (either with or without domain)
     const isEmailValid = email.trim() && !emailError;
-    return name.trim() && division && isEmailValid;
+
+    const isNameValid = name.trim() && !nameError;
+
+    return isNameValid && division && isEmailValid;
   }, [name, division, email, emailError]);
 
   const handleSave = () => {
@@ -144,8 +154,15 @@ const UarPicModal: React.FC<UarPicModalProps> = ({
               placeholder="Enter Name"
               value={name}
               onChange={(e) => setName(e.target.value)}
-              className="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-1 focus:ring-blue-500 focus:border-blue-500"
+              className={`w-full px-3 py-2 border rounded-md shadow-sm focus:outline-none focus:ring-1 ${
+                nameError
+                  ? "border-red-500 focus:ring-red-500 focus:border-red-500"
+                  : "border-gray-300 focus:ring-blue-500 focus:border-blue-500"
+              }`}
             />
+            {nameError && (
+              <p className="mt-1 text-xs text-red-600">{nameError}</p>
+            )}
           </div>
           <div ref={divisionDropdownRef}>
             <label

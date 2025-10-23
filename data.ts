@@ -1,5 +1,5 @@
 export interface Application {
-  ID: string;
+  id: string;
   name: string;
   division: string;
   owner: string;
@@ -12,7 +12,7 @@ export interface Application {
 
 export const initialApplications: Application[] = [
   {
-    ID: "IPPCS",
+    id: "IPPCS",
     name: "Integrated Production Planning Control System",
     division: "Production Planning Control",
     owner: "00123456", // Okubo
@@ -23,7 +23,7 @@ export const initialApplications: Application[] = [
     status: "Active",
   },
   {
-    ID: "PAS",
+    id: "PAS",
     name: "Production Achievement System",
     division: "Production Engineering",
     owner: "00234567", // Tanaka
@@ -34,7 +34,7 @@ export const initialApplications: Application[] = [
     status: "Active",
   },
   {
-    ID: "TMS",
+    id: "TMS",
     name: "Toyota Management System",
     division: "Corporate Planning",
     owner: "00345678", // Suzuki
@@ -47,7 +47,7 @@ export const initialApplications: Application[] = [
 ];
 
 export interface SystemUser {
-  ID: string;
+  id: string;
   name: string;
   division: string;
   email: string;
@@ -56,42 +56,42 @@ export interface SystemUser {
 
 export const systemUsers: SystemUser[] = [
   {
-    ID: "00123456",
+    id: "00123456",
     name: "Okubo",
     division: "Production Planning Control",
     email: "okubo@toyota.co.id",
     department: "PPC Dept",
   },
   {
-    ID: "00123457",
+    id: "00123457",
     name: "Yoshida",
     division: "Production Planning Control",
     email: "yoshida@toyota.co.id",
     department: "PPC Dept",
   },
   {
-    ID: "00234567",
+    id: "00234567",
     name: "Tanaka",
     division: "Production Engineering",
     email: "tanaka@toyota.co.id",
     department: "PE Dept",
   },
   {
-    ID: "00234568",
+    id: "00234568",
     name: "Sato",
     division: "Production Engineering",
     email: "sato@toyota.co.id",
     department: "PE Dept",
   },
   {
-    ID: "00345678",
+    id: "00345678",
     name: "Suzuki",
     division: "Corporate Planning",
     email: "suzuki@toyota.co.id",
     department: "CP Dept",
   },
   {
-    ID: "00345679",
+    id: "00345679",
     name: "Takahashi",
     division: "Corporate Planning",
     email: "takahashi@toyota.co.id",
@@ -107,7 +107,7 @@ export const securityCenters: string[] = [
 ];
 
 export interface LogEntry {
-  ID: number;
+  id: number;
   processId: string;
   userId: string;
   module: string;
@@ -124,7 +124,7 @@ export interface LogEntry {
 export const mockLogs: LogEntry[] = [
   // Security Events - Authentication & Security (Latest)
   {
-    ID: 17,
+    id: 17,
     processId: "2025011600017",
     userId: "admin",
     module: "Security",
@@ -135,7 +135,7 @@ export const mockLogs: LogEntry[] = [
     details: "User admin successfully logged in from IP: 192.168.1.100",
   },
   {
-    ID: 16,
+    id: 16,
     processId: "2025011600016",
     userId: "unkidwn",
     module: "Security",
@@ -149,7 +149,7 @@ export const mockLogs: LogEntry[] = [
 
   // In Progress - Current Operations
   {
-    ID: 15,
+    id: 15,
     processId: "2025011600015",
     userId: "systemowner",
     module: "UAR",
@@ -162,7 +162,7 @@ export const mockLogs: LogEntry[] = [
 
   // Error Cases - Important to Track
   {
-    ID: 14,
+    id: 14,
     processId: "2025011600014",
     userId: "dph",
     module: "Application",
@@ -173,7 +173,7 @@ export const mockLogs: LogEntry[] = [
     details: "Failed to update application: Database connection timeout",
   },
   {
-    ID: 13,
+    id: 13,
     processId: "2025011600013",
     userId: "admin",
     module: "UAR",
@@ -187,7 +187,7 @@ export const mockLogs: LogEntry[] = [
 
   // Schedule Management - Critical Actions
   {
-    ID: 12,
+    id: 12,
     processId: "2025011600012",
     userId: "systemowner",
     module: "Schedule",
@@ -198,7 +198,7 @@ export const mockLogs: LogEntry[] = [
     details: "Updated schedule: UAR Review Schedule for Q2 2025",
   },
   {
-    ID: 11,
+    id: 11,
     processId: "2025011600011",
     userId: "admin",
     module: "Schedule",
@@ -211,7 +211,7 @@ export const mockLogs: LogEntry[] = [
 
   // User Management - Critical Actions
   {
-    ID: 10,
+    id: 10,
     processId: "2025011600010",
     userId: "dph",
     module: "User",
@@ -223,7 +223,7 @@ export const mockLogs: LogEntry[] = [
       "Updated user permissions: UAR PIC for Division: Production Engineering",
   },
   {
-    ID: 9,
+    id: 9,
     processId: "2025011600009",
     userId: "admin",
     module: "User",
@@ -237,7 +237,7 @@ export const mockLogs: LogEntry[] = [
 
   // System Master Module - Critical Data Changes
   {
-    ID: 8,
+    id: 8,
     processId: "2025011600008",
     userId: "admin",
     module: "System Master",
@@ -248,7 +248,7 @@ export const mockLogs: LogEntry[] = [
     details: "Updated system master: Security Center Configuration",
   },
   {
-    ID: 7,
+    id: 7,
     processId: "2025011600007",
     userId: "systemowner",
     module: "System Master",
@@ -261,7 +261,7 @@ export const mockLogs: LogEntry[] = [
 
   // Application Module - Critical Data Changes
   {
-    ID: 6,
+    id: 6,
     processId: "2025011600006",
     userId: "admin",
     module: "Application",
@@ -272,7 +272,7 @@ export const mockLogs: LogEntry[] = [
     details: "Updated application status: Toyota Management System to Inactive",
   },
   {
-    ID: 5,
+    id: 5,
     processId: "2025011600005",
     userId: "dph",
     module: "Application",
@@ -283,7 +283,7 @@ export const mockLogs: LogEntry[] = [
     details: "Updated application: Production Achievement System",
   },
   {
-    ID: 4,
+    id: 4,
     processId: "2025011600004",
     userId: "admin",
     module: "Application",
@@ -297,7 +297,7 @@ export const mockLogs: LogEntry[] = [
 
   // UAR Module - Critical Data Changes (Oldest)
   {
-    ID: 3,
+    id: 3,
     processId: "2025011600003",
     userId: "systemowner",
     module: "UAR",
@@ -308,7 +308,7 @@ export const mockLogs: LogEntry[] = [
     details: "Deleted UAR record for Division: Corporate Planning",
   },
   {
-    ID: 2,
+    id: 2,
     processId: "2025011600002",
     userId: "dph",
     module: "UAR",
@@ -319,7 +319,7 @@ export const mockLogs: LogEntry[] = [
     details: "Updated UAR progress for Division: Production Engineering",
   },
   {
-    ID: 1,
+    id: 1,
     processId: "2025011600001",
     userId: "admin",
     module: "UAR",
@@ -332,7 +332,7 @@ export const mockLogs: LogEntry[] = [
 ];
 
 export interface LogDetail {
-  ID: number;
+  id: number;
   messageDateTime: string;
   location: string;
   messageDetail: string;
@@ -341,7 +341,7 @@ export interface LogDetail {
 export const mockLogDetails: LogDetail[] = Array.from(
   { length: 30 },
   (_, i) => ({
-    ID: i + 1,
+    id: i + 1,
     messageDateTime: `21-07-2024 10:${String(i).padStart(2, "0")}:${String(
       (i * 2) % 60
     ).padStart(2, "0")}`,
@@ -390,7 +390,7 @@ export const initialPicUsers: PicUser[] = [
 ];
 
 export interface SystemMasterRecord {
-  ID: number;
+  id: number;
   systemType: string;
   systemCode: string;
   validFrom: string; // DD-MM-YYYY
@@ -406,7 +406,7 @@ export interface SystemMasterRecord {
 
 export const initialSystemMasterData: SystemMasterRecord[] = [
   {
-    ID: 1,
+    id: 1,
     systemType: "UAR_SCHEDULE",
     systemCode: "UAR_START_DATE",
     validFrom: "01-01-2024",
@@ -420,7 +420,7 @@ export const initialSystemMasterData: SystemMasterRecord[] = [
     changedDate: "01-01-2024\n08:00:00",
   },
   {
-    ID: 2,
+    id: 2,
     systemType: "UAR_SCHEDULE",
     systemCode: "UAR_END_DATE",
     validFrom: "01-01-2024",
@@ -436,7 +436,7 @@ export const initialSystemMasterData: SystemMasterRecord[] = [
 ];
 
 export interface UarLatestRole {
-  ID: number;
+  id: number;
   applicationId: string;
   username: string;
   noreg: string;
@@ -450,7 +450,7 @@ export interface UarLatestRole {
 
 export const initialUarLatestRoles: UarLatestRole[] = [
   {
-    ID: 1,
+    id: 1,
     applicationId: "IPPCS",
     username: "putri.imelda",
     noreg: "00223456",
@@ -462,7 +462,7 @@ export const initialUarLatestRoles: UarLatestRole[] = [
     position: "Section Head",
   },
   {
-    ID: 2,
+    id: 2,
     applicationId: "IPPCS",
     username: "putri.simanjutak",
     noreg: "02233453",
@@ -474,7 +474,7 @@ export const initialUarLatestRoles: UarLatestRole[] = [
     position: "Section Head",
   },
   {
-    ID: 3,
+    id: 3,
     applicationId: "IPPCS",
     username: "budi.sukma",
     noreg: "02234567",
@@ -486,7 +486,7 @@ export const initialUarLatestRoles: UarLatestRole[] = [
     position: "Manager",
   },
   {
-    ID: 4,
+    id: 4,
     applicationId: "IPPCS",
     username: "sari.ningsih",
     noreg: "02234568",
@@ -498,7 +498,7 @@ export const initialUarLatestRoles: UarLatestRole[] = [
     position: "Manager",
   },
   {
-    ID: 5,
+    id: 5,
     applicationId: "IPPCS",
     username: "adi.wijaya",
     noreg: "02234569",
@@ -510,7 +510,7 @@ export const initialUarLatestRoles: UarLatestRole[] = [
     position: "Team Lead",
   },
   {
-    ID: 6,
+    id: 6,
     applicationId: "IPPCS",
     username: "ani.martini",
     noreg: "02234570",
@@ -522,7 +522,7 @@ export const initialUarLatestRoles: UarLatestRole[] = [
     position: "Team Lead",
   },
   {
-    ID: 7,
+    id: 7,
     applicationId: "IPPCS",
     username: "rio.hartono",
     noreg: "02234571",
@@ -534,7 +534,7 @@ export const initialUarLatestRoles: UarLatestRole[] = [
     position: "Manager",
   },
   {
-    ID: 8,
+    id: 8,
     applicationId: "IPPCS",
     username: "lina.purnama",
     noreg: "02234572",
@@ -546,7 +546,7 @@ export const initialUarLatestRoles: UarLatestRole[] = [
     position: "Manager",
   },
   {
-    ID: 9,
+    id: 9,
     applicationId: "IPPCS",
     username: "fahmi.rahman",
     noreg: "02234573",
@@ -558,7 +558,7 @@ export const initialUarLatestRoles: UarLatestRole[] = [
     position: "Section Head",
   },
   {
-    ID: 10,
+    id: 10,
     applicationId: "IPPCS",
     username: "nina.sari",
     noreg: "02234574",
@@ -570,7 +570,7 @@ export const initialUarLatestRoles: UarLatestRole[] = [
     position: "Manager",
   },
   {
-    ID: 11,
+    id: 11,
     applicationId: "PAS",
     username: "dedi.irawan",
     noreg: "02234575",
@@ -582,7 +582,7 @@ export const initialUarLatestRoles: UarLatestRole[] = [
     position: "Supervisor",
   },
   {
-    ID: 12,
+    id: 12,
     applicationId: "PAS",
     username: "siti.nurhaliza",
     noreg: "02234576",
@@ -618,7 +618,7 @@ export const roleInformationData: Record<string, string[]> = {
 };
 
 export interface Schedule {
-  ID: number;
+  id: number;
   applicationId: string;
   applicationName: string;
   scheduleSync: string;
@@ -628,7 +628,7 @@ export interface Schedule {
 
 export const initialSchedules: Schedule[] = [
   {
-    ID: 1,
+    id: 1,
     applicationId: "IPPCS",
     applicationName: "IPPCS",
     scheduleSync: "07 June - 12 December",
@@ -636,7 +636,7 @@ export const initialSchedules: Schedule[] = [
     status: "Active",
   },
   {
-    ID: 2,
+    id: 2,
     applicationId: "IPPCS",
     applicationName: "IPPCS",
     scheduleSync: "07 December - 12 December",
@@ -644,7 +644,7 @@ export const initialSchedules: Schedule[] = [
     status: "Active",
   },
   {
-    ID: 3,
+    id: 3,
     applicationId: "TVEST",
     applicationName: "TVEST",
     scheduleSync: "06 June - 09 June",
@@ -652,7 +652,7 @@ export const initialSchedules: Schedule[] = [
     status: "Active",
   },
   {
-    ID: 4,
+    id: 4,
     applicationId: "IFAST",
     applicationName: "IFAST",
     scheduleSync: "07 June - 12 June",
@@ -660,7 +660,7 @@ export const initialSchedules: Schedule[] = [
     status: "Active",
   },
   {
-    ID: 5,
+    id: 5,
     applicationId: "RCS",
     applicationName: "RCS",
     scheduleSync: "07 June - 12 June",
@@ -668,7 +668,7 @@ export const initialSchedules: Schedule[] = [
     status: "Active",
   },
   {
-    ID: 6,
+    id: 6,
     applicationId: "CUSTOM_REPORT",
     applicationName: "CUSTOM REPORT",
     scheduleSync: "07 June - 12 June",
@@ -676,7 +676,7 @@ export const initialSchedules: Schedule[] = [
     status: "Inactive",
   },
   {
-    ID: 7,
+    id: 7,
     applicationId: "CUSTOM_REPORT",
     applicationName: "CUSTOM REPORT",
     scheduleSync: "07 June - 12 June",
@@ -684,7 +684,7 @@ export const initialSchedules: Schedule[] = [
     status: "Active",
   },
   {
-    ID: 8,
+    id: 8,
     applicationId: "CUSTOM_REPORT",
     applicationName: "CUSTOM REPORT",
     scheduleSync: "07 June - 12 June",
@@ -692,7 +692,7 @@ export const initialSchedules: Schedule[] = [
     status: "Active",
   },
   {
-    ID: 9,
+    id: 9,
     applicationId: "TVEST",
     applicationName: "TVEST",
     scheduleSync: "01 June - 05 June",
@@ -700,7 +700,7 @@ export const initialSchedules: Schedule[] = [
     status: "Active",
   },
   {
-    ID: 10,
+    id: 10,
     applicationId: "IFAST",
     applicationName: "IFAST",
     scheduleSync: "02 June - 08 June",
@@ -708,7 +708,7 @@ export const initialSchedules: Schedule[] = [
     status: "Inactive",
   },
   {
-    ID: 11,
+    id: 11,
     applicationId: "RCS",
     applicationName: "RCS",
     scheduleSync: "03 June - 10 June",
@@ -716,7 +716,7 @@ export const initialSchedules: Schedule[] = [
     status: "Active",
   },
   {
-    ID: 12,
+    id: 12,
     applicationId: "IPPCS",
     applicationName: "IPPCS",
     scheduleSync: "04 June - 11 June",
@@ -726,7 +726,7 @@ export const initialSchedules: Schedule[] = [
 ];
 
 export interface UarSystemOwnerRecord {
-  ID: number;
+  id: number;
   uarId: string;
   divisionOwner: string;
   percentComplete: string;
@@ -737,7 +737,7 @@ export interface UarSystemOwnerRecord {
 
 export const initialUarSystemOwnerData: UarSystemOwnerRecord[] = [
   {
-    ID: 1,
+    id: 1,
     uarId: "UAR_072025_IPPCS",
     divisionOwner: "PCD",
     percentComplete: "100% (47 of 47)",
@@ -746,7 +746,7 @@ export const initialUarSystemOwnerData: UarSystemOwnerRecord[] = [
     status: "Finished",
   },
   {
-    ID: 2,
+    id: 2,
     uarId: "UAR_072025_PAS",
     divisionOwner: "Administrator",
     percentComplete: "100% (47 of 47)",
@@ -755,7 +755,7 @@ export const initialUarSystemOwnerData: UarSystemOwnerRecord[] = [
     status: "InProgress",
   },
   {
-    ID: 3,
+    id: 3,
     uarId: "UAR_072025_APPCS",
     divisionOwner: "Administrator",
     percentComplete: "100% (47 of 47)",
@@ -764,7 +764,7 @@ export const initialUarSystemOwnerData: UarSystemOwnerRecord[] = [
     status: "Finished",
   },
   {
-    ID: 4,
+    id: 4,
     uarId: "UAR_072025_LKI",
     divisionOwner: "Administrator",
     percentComplete: "100% (47 of 47)",
@@ -773,7 +773,7 @@ export const initialUarSystemOwnerData: UarSystemOwnerRecord[] = [
     status: "Finished",
   },
   {
-    ID: 5,
+    id: 5,
     uarId: "UAR_072025_ICS",
     divisionOwner: "Administrator",
     percentComplete: "100% (47 of 47)",
@@ -782,7 +782,7 @@ export const initialUarSystemOwnerData: UarSystemOwnerRecord[] = [
     status: "Finished",
   },
   {
-    ID: 6,
+    id: 6,
     uarId: "UAR_072025_KCI",
     divisionOwner: "Administrator",
     percentComplete: "100% (47 of 47)",
@@ -791,7 +791,7 @@ export const initialUarSystemOwnerData: UarSystemOwnerRecord[] = [
     status: "InProgress",
   },
   {
-    ID: 7,
+    id: 7,
     uarId: "UAR_072025_SPO",
     divisionOwner: "Administrator",
     percentComplete: "100% (47 of 47)",
@@ -800,7 +800,7 @@ export const initialUarSystemOwnerData: UarSystemOwnerRecord[] = [
     status: "Finished",
   },
   {
-    ID: 8,
+    id: 8,
     uarId: "UAR_072025_SPOT",
     divisionOwner: "Administrator",
     percentComplete: "100% (47 of 47)",
@@ -809,7 +809,7 @@ export const initialUarSystemOwnerData: UarSystemOwnerRecord[] = [
     status: "Finished",
   },
   {
-    ID: 9,
+    id: 9,
     uarId: "UAR_072025_AVS",
     divisionOwner: "Administrator",
     percentComplete: "100% (47 of 47)",
@@ -818,7 +818,7 @@ export const initialUarSystemOwnerData: UarSystemOwnerRecord[] = [
     status: "Finished",
   },
   {
-    ID: 10,
+    id: 10,
     uarId: "UAR_072025_IPO",
     divisionOwner: "Administrator",
     percentComplete: "100% (47 of 47)",
@@ -827,7 +827,7 @@ export const initialUarSystemOwnerData: UarSystemOwnerRecord[] = [
     status: "Finished",
   },
   {
-    ID: 11,
+    id: 11,
     uarId: "UAR_072025_XYZ",
     divisionOwner: "PCD",
     percentComplete: "100% (47 of 47)",
@@ -836,7 +836,7 @@ export const initialUarSystemOwnerData: UarSystemOwnerRecord[] = [
     status: "InProgress",
   },
   {
-    ID: 12,
+    id: 12,
     uarId: "UAR_072025_ABC",
     divisionOwner: "Administrator",
     percentComplete: "100% (47 of 47)",
@@ -847,7 +847,7 @@ export const initialUarSystemOwnerData: UarSystemOwnerRecord[] = [
 ];
 
 export interface UarSystemOwnerDetail {
-  ID: number;
+  id: number;
   uarId: string;
   username: string;
   noreg: string;
@@ -874,7 +874,7 @@ const generateSystemOwnerDetailData = (): UarSystemOwnerDetail[] => {
 
     for (let i = 0; i < totalItems; i++) {
       details.push({
-        ID: detailId++,
+        id: detailId++,
         uarId: record.uarId,
         username: `user.${record.divisionOwner
           .toLowerCase()
@@ -898,7 +898,7 @@ export const initialUarSystemOwnerDetailData: UarSystemOwnerDetail[] =
   generateSystemOwnerDetailData();
 
 export interface UarDivisionUserRecord {
-  ID: number;
+  id: number;
   uarId: string;
   divisionOwner: string;
   percentComplete: string;
@@ -909,7 +909,7 @@ export interface UarDivisionUserRecord {
 
 export const initialUarDivisionUserData: UarDivisionUserRecord[] = [
   {
-    ID: 1,
+    id: 1,
     uarId: "UAR_072025_IPPCS",
     divisionOwner: "PCD",
     percentComplete: "100% (47 of 47)",
@@ -918,7 +918,7 @@ export const initialUarDivisionUserData: UarDivisionUserRecord[] = [
     status: "Finished",
   },
   {
-    ID: 2,
+    id: 2,
     uarId: "UAR_072025_PAS",
     divisionOwner: "ISTD",
     percentComplete: "100% (47 of 47)",
@@ -927,7 +927,7 @@ export const initialUarDivisionUserData: UarDivisionUserRecord[] = [
     status: "InProgress",
   },
   {
-    ID: 3,
+    id: 3,
     uarId: "UAR_072025_APPCS",
     divisionOwner: "FIN",
     percentComplete: "100% (47 of 47)",
@@ -936,7 +936,7 @@ export const initialUarDivisionUserData: UarDivisionUserRecord[] = [
     status: "Finished",
   },
   {
-    ID: 4,
+    id: 4,
     uarId: "UAR_072025_LKI",
     divisionOwner: "HRD",
     percentComplete: "100% (47 of 47)",
@@ -945,7 +945,7 @@ export const initialUarDivisionUserData: UarDivisionUserRecord[] = [
     status: "Finished",
   },
   {
-    ID: 5,
+    id: 5,
     uarId: "UAR_072025_ICS",
     divisionOwner: "ISTD",
     percentComplete: "100% (47 of 47)",
@@ -954,7 +954,7 @@ export const initialUarDivisionUserData: UarDivisionUserRecord[] = [
     status: "Finished",
   },
   {
-    ID: 6,
+    id: 6,
     uarId: "UAR_072025_KCI",
     divisionOwner: "ISTD",
     percentComplete: "100% (47 of 47)",
@@ -963,7 +963,7 @@ export const initialUarDivisionUserData: UarDivisionUserRecord[] = [
     status: "InProgress",
   },
   {
-    ID: 7,
+    id: 7,
     uarId: "UAR_072025_SPO",
     divisionOwner: "ISTD",
     percentComplete: "100% (47 of 47)",
@@ -972,7 +972,7 @@ export const initialUarDivisionUserData: UarDivisionUserRecord[] = [
     status: "Finished",
   },
   {
-    ID: 8,
+    id: 8,
     uarId: "UAR_072025_SPOT",
     divisionOwner: "ISTD",
     percentComplete: "100% (47 of 47)",
@@ -981,7 +981,7 @@ export const initialUarDivisionUserData: UarDivisionUserRecord[] = [
     status: "Finished",
   },
   {
-    ID: 9,
+    id: 9,
     uarId: "UAR_072025_AVS",
     divisionOwner: "ISTD",
     percentComplete: "100% (47 of 47)",
@@ -990,7 +990,7 @@ export const initialUarDivisionUserData: UarDivisionUserRecord[] = [
     status: "Finished",
   },
   {
-    ID: 10,
+    id: 10,
     uarId: "UAR_072025_IPO",
     divisionOwner: "ISTD",
     percentComplete: "100% (47 of 47)",
@@ -999,7 +999,7 @@ export const initialUarDivisionUserData: UarDivisionUserRecord[] = [
     status: "Finished",
   },
   {
-    ID: 11,
+    id: 11,
     uarId: "UAR_072025_XYZ",
     divisionOwner: "PCD",
     percentComplete: "100% (47 of 47)",
@@ -1008,7 +1008,7 @@ export const initialUarDivisionUserData: UarDivisionUserRecord[] = [
     status: "InProgress",
   },
   {
-    ID: 12,
+    id: 12,
     uarId: "UAR_072025_ABC",
     divisionOwner: "FIN",
     percentComplete: "100% (47 of 47)",
@@ -1025,7 +1025,7 @@ export interface Comment {
 }
 
 export interface UarDivisionUserReviewDetail {
-  ID: number;
+  id: number;
   uarId: string;
   username: string;
   noreg: string;
@@ -1056,7 +1056,7 @@ const generateDivisionUserDetailData = (): UarDivisionUserReviewDetail[] => {
 
     for (let i = 0; i < totalItems; i++) {
       details.push({
-        ID: detailId++,
+        id: detailId++,
         uarId: record.uarId,
         username: `user.${record.divisionOwner.toLowerCase()}.${i}`,
         noreg: String(330000 + i + detailId).padStart(8, "0"),
