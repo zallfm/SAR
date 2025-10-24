@@ -19,6 +19,7 @@ import {
   useUarPicActions,
 } from "../../../hooks/useStoreSelectors";
 import { useUarPicStore } from "@/src/store/uarPicStore";
+import { error } from "console";
 
 const UarPicPage: React.FC = () => {
   // Zustand store hooks
@@ -104,7 +105,7 @@ const UarPicPage: React.FC = () => {
     setEditingPic(null);
   };
 
-  const handleSavePic = (pic: PicUser) => {
+  const handleSavePic = async (pic: PicUser) => {
     handleCloseModal();
     if (editingPic) {
       // If editing, open confirmation modal
@@ -112,17 +113,30 @@ const UarPicPage: React.FC = () => {
       setIsEditConfirmOpen(true);
     } else {
       // If adding, save directly
-      addPic(pic);
-      setInfoMessage("Save Successfully");
+      const status = await addPic(pic);
+      if (status.error === undefined) {
+        setInfoMessage("Save Successfully");
+      } else {
+        setInfoMessage(
+          `Error: ${status.error.message} Code: ${status.error.code ?? ""}`
+        );
+      }
       setIsInfoOpen(true);
     }
   };
 
-  const handleConfirmEdit = () => {
+  const handleConfirmEdit = async () => {
     if (picToEdit) {
-      updatePic(picToEdit.ID, picToEdit);
-      setInfoMessage("Save Successfully");
-      setIsInfoOpen(true);
+      const status = await updatePic(picToEdit.ID, picToEdit);
+      if (status.error === undefined) {
+        setInfoMessage("Save Successfully");
+        setIsInfoOpen(true);
+      } else {
+        setInfoMessage(
+          `Error: ${status.error.message} Code: ${status.error.code ?? ""}`
+        );
+        setIsInfoOpen(true);
+      }
     }
     setIsEditConfirmOpen(false);
     setPicToEdit(null);

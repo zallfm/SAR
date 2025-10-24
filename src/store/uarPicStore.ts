@@ -20,6 +20,10 @@ export interface UarPicFilters {
   name: string;
   division: string;
 }
+interface PicResponse {
+  data: UarPic[] | undefined;
+  error: { message: string; code?: number } | undefined;
+}
 
 export interface UarPicState {
   // Data
@@ -50,8 +54,8 @@ export interface UarPicState {
   setError: (error: string | null) => void;
 
   // CRUD Operations
-  addPic: (pic: Omit<PicUser, "id">) => void;
-  updatePic: (id: string, updates: Partial<PicUser>) => void;
+  addPic: (pic: Omit<PicUser, "id">) => Promise<PicResponse>;
+  updatePic: (id: string, updates: Partial<PicUser>) => Promise<PicResponse>;
   deletePic: (id: string) => void;
   getPics: () => Promise<void>;
 
@@ -121,44 +125,71 @@ export const useUarPicStore = create<UarPicState>()(
 
         // CRUD Operations
         addPic: async (newPic) => {
-          const { pics } = get();
-          const payload: CreateUarPayload = {
-            PIC_NAME: newPic.PIC_NAME,
-            DIVISION_ID: newPic.DIVISION_ID,
-            MAIL: newPic.MAIL,
-          };
+          try {
+            const payload: CreateUarPayload = {
+              PIC_NAME: newPic.PIC_NAME,
+              DIVISION_ID: newPic.DIVISION_ID,
+              MAIL: newPic.MAIL,
+            };
 
-          const data: BackendCreateUarResponse = await createUarApi(payload);
-          const pic: PicUser = {
-            ID: data.data.ID,
-            PIC_NAME: data.data.PIC_NAME,
-            DIVISION_ID: data.data.DIVISION_ID,
-            MAIL: data.data.MAIL,
-          };
+            const data: BackendCreateUarResponse = await createUarApi(payload);
+            const pic: PicUser = {
+              ID: data.data.ID,
+              PIC_NAME: data.data.PIC_NAME,
+              DIVISION_ID: data.data.DIVISION_ID,
+              MAIL: data.data.MAIL,
+            };
 
-          set((state) => ({
-            pics: [pic, ...state.pics],
-            filteredPics: [pic, ...state.filteredPics],
-          }));
+            set((state) => ({
+              pics: [pic, ...state.pics],
+              filteredPics: [pic, ...state.filteredPics],
+            }));
+            return { data: [pic], error: undefined };
+          } catch (error) {
+            console.error("Error creating PIC:", error);
+            return {
+              data: undefined,
+              error: {
+                message: (error as Error).message,
+                code: (error as any).code,
+              },
+            };
+          }
         },
 
         updatePic: async (id, updates) => {
-          const payload: EditUarPayload = {
-            PIC_NAME: updates.PIC_NAME,
-            DIVISION_ID: updates.DIVISION_ID,
-            MAIL: updates.MAIL,
-          };
+          try {
+            const payload: EditUarPayload = {
+              PIC_NAME: updates.PIC_NAME,
+              DIVISION_ID: updates.DIVISION_ID,
+              MAIL: updates.MAIL,
+            };
 
-          const data = await editUarApi(id, payload);
+            const data: BackendCreateUarResponse = await editUarApi(
+              id,
+              payload
+            );
 
-          set((state) => ({
-            pics: state.pics.map((pic) =>
-              pic.ID === id ? { ...pic, ...data.data } : pic
-            ),
-            filteredPics: state.filteredPics.map((pic) =>
-              pic.ID === id ? { ...pic, ...data.data } : pic
-            ),
-          }));
+            set((state) => ({
+              pics: state.pics.map((pic) =>
+                pic.ID === id ? { ...pic, ...data.data } : pic
+              ),
+              filteredPics: state.filteredPics.map((pic) =>
+                pic.ID === id ? { ...pic, ...data.data } : pic
+              ),
+            }));
+
+            return { data: [data.data], error: undefined };
+          } catch (error) {
+            console.error("Error updating PIC:", error);
+            return {
+              data: undefined,
+              error: {
+                message: (error as Error).message,
+                code: (error as any).code,
+              },
+            };
+          }
         },
 
         deletePic: async (id) => {
