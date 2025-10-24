@@ -64,13 +64,13 @@ const SchedulePage: React.FC = () => {
     return schedules.filter((schedule) => {
       const appIdMatch = filters.applicationId
         ? schedule.applicationId
-            .toLowerCase()
-            .includes(filters.applicationId.toLowerCase())
+          .toLowerCase()
+          .includes(filters.applicationId.toLowerCase())
         : true;
       const appNameMatch = filters.applicationName
         ? schedule.applicationName
-            .toLowerCase()
-            .includes(filters.applicationName.toLowerCase())
+          .toLowerCase()
+          .includes(filters.applicationName.toLowerCase())
         : true;
       const statusMatch = filters.status
         ? schedule.status === filters.status
@@ -159,10 +159,20 @@ const SchedulePage: React.FC = () => {
     setIsSaveConfirmOpen(true);
   };
 
-  const handleConfirmEditSave = () => {
+  const handleConfirmEditSave = async () => {
     if (pendingUpdate) {
       pendingUpdate.forEach((updatedSchedule) => {
         updateSchedule(updatedSchedule.ID, updatedSchedule);
+      });
+      await postLogMonitoringApi({
+        userId: currentUser?.username ?? "anonymous",
+        module: "Schedule",
+        action: AuditAction.DATA_EDIT,
+        status: "Success",
+        description: `User ${currentUser?.username ?? "unknown"
+          } update Schedule ${updateSchedule.name}`,
+        location: "SchedulePage.CreateForm",
+        timestamp: new Date().toISOString(),
       });
 
       setSelectedRows([]);
@@ -172,7 +182,7 @@ const SchedulePage: React.FC = () => {
     setPendingUpdate(null);
   };
 
-  const handleAddNewSchedules = (newSchedules: Omit<Schedule, "id">[]) => {
+  const handleAddNewSchedules = async (newSchedules: Omit<Schedule, "id">[]) => {
     const highestId = schedules.reduce(
       (maxId, schedule) => Math.max(schedule.ID, maxId),
       0
@@ -199,6 +209,16 @@ const SchedulePage: React.FC = () => {
 
     schedulesToAdd.forEach((schedule) => {
       addSchedule(schedule);
+    });
+    await postLogMonitoringApi({
+      userId: currentUser?.username ?? "anonymous",
+      module: "Schedule",
+      action: AuditAction.DATA_CREATE,
+      status: "Success",
+      description: `User ${currentUser?.username ?? "unknown"
+        } create Schedule`,
+      location: "SchedulePage.CreateForm",
+      timestamp: new Date().toISOString(),
     });
     setIsSetScheduleModalOpen(false);
     setShowSuccessModal(true);
@@ -228,9 +248,8 @@ const SchedulePage: React.FC = () => {
           module: "Schedule",
           action: AuditAction.DATA_FILTER,
           status: "Success",
-          description: `User ${
-            currentUser?.username ?? "unknown"
-          } filtered Schedule by ${key}: ${value}`,
+          description: `User ${currentUser?.username ?? "unknown"
+            } filtered Schedule by ${key}: ${value}`,
           location: "SchedulePage.handleFilterChange",
           timestamp: new Date().toISOString(),
         });

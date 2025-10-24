@@ -128,7 +128,7 @@ const ApplicationPage: React.FC = () => {
         module: "Application",
         action: AuditAction.DATA_UPDATE,
         status: "Success",
-        description: `User update aplikasi ${application.name}`,
+        description: `User update aplikasi name ${application.name}`,
         location: "ApplicationPage.UpdateForm",
         timestamp: new Date().toISOString(),
       });
@@ -145,7 +145,7 @@ const ApplicationPage: React.FC = () => {
         module: "Application",
         action: AuditAction.DATA_CREATE,
         status: "Success",
-        description: `User menambahkan aplikasi ${application.name}`,
+        description: `User menambahkan aplikasi name${application.name}`,
         location: "ApplicationPage.CreateForm",
         timestamp: new Date().toISOString(),
       });
