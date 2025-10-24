@@ -1,70 +1,73 @@
-import { LogEntry } from '../../data'
-import { create } from 'zustand'
-import { persist } from 'zustand/middleware'
-import { devtools } from 'zustand/middleware'
-import { getLogByProcessIdApi, getLogMonitoringApi } from '../api/log_monitoring'
-import { LogMonitoring } from '../types/log_montoring'
+import { LogEntry } from "../../data";
+import { create } from "zustand";
+import { persist } from "zustand/middleware";
+import { devtools } from "zustand/middleware";
+import {
+  getLogByProcessIdApi,
+  getLogMonitoringApi,
+} from "../api/log_monitoring";
+import { LogMonitoring } from "../types/log_montoring";
 
 export interface LoggingFilters {
-  process: string
-  user: string
-  module: string
-  function: string
-  status: string
-  startDate: string
-  endDate: string
+  process: string;
+  user: string;
+  module: string;
+  function: string;
+  status: string;
+  startDate: string;
+  endDate: string;
 }
 
 export type LogMonitoringQuery = {
-  page?: number
-  limit?: number
-  status?: LogEntry['STATUS']
-  module?: string
-  userId?: string
-  q?: string
-  startDate?: string // format: dd-MM-yyyy HH:mm:ss
-  endDate?: string   // format: dd-MM-yyyy HH:mm:ss
-  sortBy?: 'NO' | 'START_DATE' | 'END_DATE'
-  order?: 'asc' | 'desc'
-}
+  page?: number;
+  limit?: number;
+  status?: LogEntry["STATUS"];
+  module?: string;
+  userId?: string;
+  q?: string;
+  startDate?: string; // format: dd-MM-yyyy HH:mm:ss
+  endDate?: string; // format: dd-MM-yyyy HH:mm:ss
+  sortBy?: "NO" | "START_DATE" | "END_DATE";
+  order?: "asc" | "desc";
+};
 
 type ApiMeta = {
-  page: number
-  limit: number
-  total: number
-  totalPages: number
-}
+  page: number;
+  limit: number;
+  total: number;
+  totalPages: number;
+};
 
 export interface LoggingState {
   // Data
-  logs: LogEntry[]
-  filteredLogs: LogEntry[]          // diset = logs untuk kompatibilitas komponen lama
-  selectedLog: LogEntry | null
+  logs: LogEntry[];
+  filteredLogs: LogEntry[]; // diset = logs untuk kompatibilitas komponen lama
+  selectedLog: LogEntry | null;
 
   // Meta dari server
-  meta: ApiMeta | null
+  meta: ApiMeta | null;
 
   // Filters
-  filters: LoggingFilters
+  filters: LoggingFilters;
 
   // Pagination (kendali FE yang dikirim ke API)
-  currentPage: number
-  itemsPerPage: number
+  currentPage: number;
+  itemsPerPage: number;
 
   // UI State
-  isLoading: boolean
-  error: string | null
+  isLoading: boolean;
+  error: string | null;
 
   // Actions
-  setLogs: (logs: LogEntry[]) => void
-  setFilteredLogs: (logs: LogEntry[]) => void
-  setSelectedLog: (log: LogEntry | null) => void
-  setFilters: (filters: Partial<LoggingFilters>) => void
-  resetFilters: () => void
-  setCurrentPage: (page: number) => void
-  setItemsPerPage: (size: number) => void
-  setLoading: (loading: boolean) => void
-  setError: (error: string | null) => void
+  setLogs: (logs: LogEntry[]) => void;
+  setFilteredLogs: (logs: LogEntry[]) => void;
+  setSelectedLog: (log: LogEntry | null) => void;
+  setFilters: (filters: Partial<LoggingFilters>) => void;
+  resetFilters: () => void;
+  setCurrentPage: (page: number) => void;
+  setItemsPerPage: (size: number) => void;
+  setLoading: (loading: boolean) => void;
+  setError: (error: string | null) => void;
 
   // CRUD (server-side)
   // getLogMonitoring: (params?: {
@@ -77,24 +80,23 @@ export interface LoggingState {
   //   startDate?: string
   //   endDate?: string
   // }) => Promise<void>
-  getLogMonitoring: (params?: LogMonitoringQuery) => Promise<void>
-  getLogByProcessId: (processId: string) => Promise<void>
-
+  getLogMonitoring: (params?: LogMonitoringQuery) => Promise<void>;
+  getLogByProcessId: (processId: string) => Promise<void>;
 
   // Computed
-  getTotalPages: () => number
-  getCurrentPageLogs: () => LogEntry[]
+  getTotalPages: () => number;
+  getCurrentPageLogs: () => LogEntry[];
 }
 
 const initialFilters: LoggingFilters = {
-  process: '',
-  user: '',
-  module: '',
-  function: '',
-  status: '',
-  startDate: '',
-  endDate: '',
-}
+  process: "",
+  user: "",
+  module: "",
+  function: "",
+  status: "",
+  startDate: "",
+  endDate: "",
+};
 
 export const useLoggingStore = create<LoggingState>()(
   devtools(
@@ -126,7 +128,10 @@ export const useLoggingStore = create<LoggingState>()(
           set({ isLoading: true, error: null });
           try {
             const res = await getLogMonitoringApi(query);
-            const { data: raw, meta: metaFromApi } = res as { data: LogMonitoring[]; meta?: ApiMeta };
+            const { data: raw, meta: metaFromApi } = res as {
+              data: LogMonitoring[];
+              meta?: ApiMeta;
+            };
 
             const logs: LogEntry[] = (raw ?? []).map((item) => ({
               NO: item.NO,
@@ -143,7 +148,12 @@ export const useLoggingStore = create<LoggingState>()(
             set({
               logs,
               filteredLogs: logs,
-              meta: metaFromApi ?? { page, limit, total: logs.length, totalPages: 1 },
+              meta: metaFromApi ?? {
+                page,
+                limit,
+                total: logs.length,
+                totalPages: 1,
+              },
               isLoading: false,
               currentPage: metaFromApi?.page ?? page,
               itemsPerPage: metaFromApi?.limit ?? limit,
@@ -156,7 +166,7 @@ export const useLoggingStore = create<LoggingState>()(
         getLogByProcessId: async (processId) => {
           set({ isLoading: true, error: null });
           try {
-            console.log("processId", processId)
+            console.log("processId", processId);
             const res = await getLogByProcessIdApi(processId);
             // res.data: LogMonitoring (header + DETAILS[])
             const item = res.data;
@@ -182,8 +192,6 @@ export const useLoggingStore = create<LoggingState>()(
           }
         },
 
-
-
         // Actions
         setLogs: (logs) => set({ logs, filteredLogs: logs }),
         setFilteredLogs: (filteredLogs) => set({ filteredLogs }),
@@ -198,25 +206,26 @@ export const useLoggingStore = create<LoggingState>()(
         resetFilters: () => set({ filters: initialFilters, currentPage: 1 }),
 
         setCurrentPage: (currentPage) => set({ currentPage }),
-        setItemsPerPage: (itemsPerPage) => set({ itemsPerPage, currentPage: 1 }),
+        setItemsPerPage: (itemsPerPage) =>
+          set({ itemsPerPage, currentPage: 1 }),
 
         setLoading: (isLoading) => set({ isLoading }),
         setError: (error) => set({ error }),
 
         // Computed ikut meta dari server
         getTotalPages: () => {
-          const { meta } = get()
-          return meta?.totalPages ?? 1
+          const { meta } = get();
+          return meta?.totalPages ?? 1;
         },
 
         // Server-side paging → tidak slice
         getCurrentPageLogs: () => {
-          const { logs } = get()
-          return logs
+          const { logs } = get();
+          return logs;
         },
       }),
       {
-        name: 'logging-store',
+        name: "logging-store",
         // Persist hanya filter & pagination (jangan logs)
         partialize: (state) => ({
           filters: state.filters,
@@ -225,6 +234,6 @@ export const useLoggingStore = create<LoggingState>()(
         }),
       }
     ),
-    { name: 'LoggingStore' }
+    { name: "LoggingStore" }
   )
-)
+);

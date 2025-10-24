@@ -9,26 +9,26 @@ import type {
 
 export const getUarApi = () =>
   http<BackendGetUarResponse>({
-    path: "/uarpic",
+    path: "/sar/uarpic",
     method: "GET",
   });
 
 export const createUarApi = (data: CreateUarPayload) =>
   http<BackendCreateUarResponse>({
-    path: "/uarpic",
+    path: "/sar/uarpic",
     method: "POST",
     body: data,
   });
 
 export const editUarApi = (id: string, data: EditUarPayload) =>
   http<BackendEditUarResponse>({
-    path: `/uarpic/${id}`,
+    path: `/sar/uarpic/${id}`,
     method: "PUT",
     body: data,
   });
 
 export const deleteUarApi = (id: string) =>
   http<void>({
-    path: `/uarpic/${id}`,
+    path: `/sar/uarpic/${id}`,
     method: "DELETE",
   });
