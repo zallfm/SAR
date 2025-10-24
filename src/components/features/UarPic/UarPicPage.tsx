@@ -20,6 +20,9 @@ import {
 } from "../../../hooks/useStoreSelectors";
 import { useUarPicStore } from "@/src/store/uarPicStore";
 import { error } from "console";
+import { postLogMonitoringApi } from "@/src/api/log_monitoring";
+import { AuditAction } from "@/src/constants/auditActions";
+import { useAuthStore } from "@/src/store/authStore";
 
 const UarPicPage: React.FC = () => {
   // Zustand store hooks
@@ -42,6 +45,8 @@ const UarPicPage: React.FC = () => {
     updatePic,
     deletePic,
   } = useUarPicActions();
+
+  const { currentUser } = useAuthStore();
 
   const getPics = useUarPicStore((state) => state.getPics);
   // Local state for UI interactions
@@ -111,15 +116,43 @@ const UarPicPage: React.FC = () => {
       // If editing, open confirmation modal
       setPicToEdit(pic);
       setIsEditConfirmOpen(true);
+
+      // await postLogMonitoringApi({
+      //   userId: currentUser?.username ?? "anonymous",
+      //   module: "Uar Pic",
+      //   action: AuditAction.DATA_UPDATE,
+      //   status: "Success",
+      //   description: `User update UAR PIC ${pic.PIC_NAME}`,
+      //   location: "UarPicPage.UpdateForm",
+      //   timestamp: new Date().toISOString(),
+      // });
     } else {
       // If adding, save directly
       const status = await addPic(pic);
       if (status.error === undefined) {
         setInfoMessage("Save Successfully");
+        await postLogMonitoringApi({
+          userId: currentUser?.username ?? "anonymous",
+          module: "Uar Pic",
+          action: AuditAction.DATA_UPDATE,
+          status: "Success",
+          description: `User update UAR PIC ${pic.PIC_NAME}`,
+          location: "UarPicPage.UpdateForm",
+          timestamp: new Date().toISOString(),
+        });
       } else {
         setInfoMessage(
           `Error: ${status.error.message} Code: ${status.error.code ?? ""}`
         );
+        await postLogMonitoringApi({
+          userId: currentUser?.username ?? "anonymous",
+          module: "Uar Pic",
+          action: AuditAction.DATA_UPDATE,
+          status: "Failed",
+          description: `User Failed update UAR PIC ${pic.PIC_NAME}`,
+          location: "UarPicPage.UpdateForm",
+          timestamp: new Date().toISOString(),
+        });
       }
       setIsInfoOpen(true);
     }
@@ -127,7 +160,9 @@ const UarPicPage: React.FC = () => {
 
   const handleConfirmEdit = async () => {
     if (picToEdit) {
-      const status = await updatePic(picToEdit.ID, picToEdit);
+      // const status = await updatePic(picToEdit.ID, picToEdit);
+      const target = { id: picToEdit.ID, name: picToEdit.PIC_NAME };
+      const status = await updatePic(target.id, picToEdit);
       if (status.error === undefined) {
         setInfoMessage("Save Successfully");
         setIsInfoOpen(true);
@@ -136,6 +171,16 @@ const UarPicPage: React.FC = () => {
           `Error: ${status.error.message} Code: ${status.error.code ?? ""}`
         );
         setIsInfoOpen(true);
+        await postLogMonitoringApi({
+          userId: currentUser?.username ?? "anonymous",
+          module: "UAR.PIC",
+          action: AuditAction.DATA_UPDATE,
+          status: "Error",
+          description: `Update PIC failed for ${target.name} (ID=${target.id}): ${status.error.message}`,
+          location: "UarPicPage.handleConfirmEdit",
+          timestamp: new Date().toISOString(),
+        });
+
       }
     }
     setIsEditConfirmOpen(false);
@@ -152,10 +197,67 @@ const UarPicPage: React.FC = () => {
     setIsDeleteConfirmOpen(false);
   };
 
-  const handleDeletePic = () => {
-    if (picToDelete) {
-      deletePic(picToDelete.ID);
+  const handleDeletePic = async () => {
+    if (!picToDelete) return;
+
+    const username = currentUser?.username ?? "anonymous";
+    const target = { id: picToDelete.ID, name: picToDelete.PIC_NAME };
+
+    try {
+      // Hapus data
+      await deletePic(target.id);
+
+      // Tutup dialog konfirmasi hanya jika delete sukses
       handleCloseDeleteConfirm();
+
+      // Log sukses
+      await postLogMonitoringApi({
+        userId: username,
+        module: "UAR.PIC",
+        action: AuditAction.DATA_DELETE,
+        status: "Success",
+        description: `User ${username} deleted PIC ${target.name} (ID=${target.id})`,
+        location: "UarPicPage.handleDeletePic",
+        timestamp: new Date().toISOString(),
+      });
+    } catch (err: any) {
+      console.warn("Failed to delete:", err);
+
+      // Log error
+      await postLogMonitoringApi({
+        userId: username,
+        module: "UAR.PIC",
+        action: AuditAction.DATA_DELETE,
+        status: "Error",
+        description: `Delete PIC failed for ${target.name} (ID=${target.id}): ${err?.message ?? "Unknown error"}`,
+        location: "UarPicPage.handleDeletePic",
+        timestamp: new Date().toISOString(),
+      }).catch(() => { });
+    }
+  };
+
+  const handleFilterChange = async (
+    key: keyof typeof filters,
+    value: string
+  ) => {
+    setFilters({ [key]: value });
+
+    const username = currentUser?.username ?? "anonymous";
+
+    if (value.trim() !== "") {
+      try {
+        await postLogMonitoringApi({
+          userId: username,
+          module: "UAR PIC",
+          action: AuditAction.DATA_FILTER,
+          status: "Success",
+          description: `User ${username} filtered UAR PIC by ${key}: ${value}`,
+          location: "UarPicPage.handleFilterChange",
+          timestamp: new Date().toISOString(),
+        });
+      } catch (err) {
+        console.warn("Failed to log filter action:", err);
+      }
     }
   };
 
@@ -168,7 +270,7 @@ const UarPicPage: React.FC = () => {
             <SearchableDropdown
               label="Name"
               value={filters.name}
-              onChange={(value) => setFilters({ name: value })}
+              onChange={(value) => handleFilterChange('name', value)}
               options={[...new Set(pics.map((pic) => pic.PIC_NAME))]}
               placeholder="Name"
               className="w-full sm:w-40"
@@ -176,7 +278,7 @@ const UarPicPage: React.FC = () => {
             <SearchableDropdown
               label="Division"
               value={filters.division}
-              onChange={(value) => setFilters({ division: value })}
+              onChange={(value) => handleFilterChange('division', value)}
               options={[...new Set(divisions)].sort()}
               searchable={false}
               placeholder="Division"

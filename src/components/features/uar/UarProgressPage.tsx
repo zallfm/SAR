@@ -13,16 +13,19 @@ import SkeletonLoader from '../../common/LoadingStates/SkeletonLoader';
 import ErrorBoundary from '../../common/ErrorBoundary/ErrorBoundary';
 import { debounce, performanceMonitor } from '../../../utils/performanceUtils';
 import SearchableDropdown from '../../common/SearchableDropdown';
-import { 
-  useUarProgressData as useUarProgressStoreData,
-  useUarProgressFilters,
-  useUarProgressUIState,
-  useUarProgressActions,
-  useUarProgressComputed,
-  useUarProgressLoading
+import {
+    useUarProgressData as useUarProgressStoreData,
+    useUarProgressFilters,
+    useUarProgressUIState,
+    useUarProgressActions,
+    useUarProgressComputed,
+    useUarProgressLoading
 } from '../../../hooks/useStoreSelectors';
 
 import Chart from 'chart.js/auto';
+import { useAuthStore } from '@/src/store/authStore';
+import { postLogMonitoringApi } from '@/src/api/log_monitoring';
+import { AuditAction } from '@/src/constants/auditActions';
 
 interface StatCardProps {
     icon: React.ReactNode;
@@ -39,11 +42,11 @@ const StatCard: React.FC<StatCardProps> = React.memo(({ icon, value, label }) =>
         </div>
     </div>
 ), (prevProps, nextProps) => {
-    return prevProps.value === nextProps.value && 
-           prevProps.label === nextProps.label;
+    return prevProps.value === nextProps.value &&
+        prevProps.label === nextProps.label;
 });
 
-const UarProgressChart: React.FC<{ data: UarProgressData[]; selectedItem: string; yAxisRange?: {min: number, max: number}, onBarClick?: (label: string) => void; }> = React.memo(({ data, selectedItem, yAxisRange, onBarClick }) => {
+const UarProgressChart: React.FC<{ data: UarProgressData[]; selectedItem: string; yAxisRange?: { min: number, max: number }, onBarClick?: (label: string) => void; }> = React.memo(({ data, selectedItem, yAxisRange, onBarClick }) => {
     const chartRef = useRef<HTMLCanvasElement>(null);
     const [hiddenDatasets, setHiddenDatasets] = useState<Set<number>>(new Set());
 
@@ -84,7 +87,7 @@ const UarProgressChart: React.FC<{ data: UarProgressData[]; selectedItem: string
                         {
                             label: 'Review Progress',
                             data: data.map(d => d.review),
-                            backgroundColor: data.map(d => 
+                            backgroundColor: data.map(d =>
                                 (selectedItem && d.label !== selectedItem) ? grayColor : originalColors.review
                             ),
                             borderRadius: 4,
@@ -93,29 +96,29 @@ const UarProgressChart: React.FC<{ data: UarProgressData[]; selectedItem: string
                         {
                             label: 'Division Approved',
                             data: data.map(d => d.approved),
-                            backgroundColor: data.map(d => 
+                            backgroundColor: data.map(d =>
                                 (selectedItem && d.label !== selectedItem) ? grayColor : originalColors.approved
                             ),
-                             borderRadius: 4,
-                             hidden: hiddenDatasets.has(1),
+                            borderRadius: 4,
+                            hidden: hiddenDatasets.has(1),
                         },
                         {
                             label: 'SO Approved',
                             data: data.map(d => d.soApproved),
-                            backgroundColor: data.map(d => 
+                            backgroundColor: data.map(d =>
                                 (selectedItem && d.label !== selectedItem) ? grayColor : originalColors.soApproved
                             ),
-                             borderRadius: 4,
-                             hidden: hiddenDatasets.has(2),
+                            borderRadius: 4,
+                            hidden: hiddenDatasets.has(2),
                         },
                         {
                             label: 'Total Progress',
                             data: data.map(d => d.total),
-                            backgroundColor: data.map(d => 
+                            backgroundColor: data.map(d =>
                                 (selectedItem && d.label !== selectedItem) ? grayColor : originalColors.total
                             ),
-                             borderRadius: 4,
-                             hidden: hiddenDatasets.has(3),
+                            borderRadius: 4,
+                            hidden: hiddenDatasets.has(3),
                         },
                     ],
                 },
@@ -134,7 +137,7 @@ const UarProgressChart: React.FC<{ data: UarProgressData[]; selectedItem: string
                     onHover: (event: any, chartElement: any[]) => {
                         const canvas = event.native.target;
                         if (canvas) {
-                           canvas.style.cursor = onBarClick && chartElement[0] ? 'pointer' : 'default';
+                            canvas.style.cursor = onBarClick && chartElement[0] ? 'pointer' : 'default';
                         }
                     },
                     plugins: {
@@ -144,7 +147,7 @@ const UarProgressChart: React.FC<{ data: UarProgressData[]; selectedItem: string
                         tooltip: {
                             enabled: true,
                             callbacks: {
-                                label: function(context: any) {
+                                label: function (context: any) {
                                     return `${context.dataset.label} ${context.parsed.y}%`;
                                 }
                             }
@@ -166,7 +169,7 @@ const UarProgressChart: React.FC<{ data: UarProgressData[]; selectedItem: string
                                 },
                                 color: '#6B7280',
                                 stepSize: 20, // Only show even numbers: 0, 20, 40, 60, 80, 100
-                                callback: function(value: any) {
+                                callback: function (value: any) {
                                     return value % 20 === 0 ? value : '';
                                 }
                             }
@@ -195,9 +198,9 @@ const UarProgressChart: React.FC<{ data: UarProgressData[]; selectedItem: string
     return (
         <div className="relative">
             {/* Custom Fixed Legend - fixed for horizontal scroll, scrollable for vertical */}
-            <div 
+            <div
                 className="absolute top-0 left-0 z-20 bg-white p-3 rounded-lg"
-                style={{ 
+                style={{
                     position: 'sticky',
                     top: '0',
                     left: '0',
@@ -210,14 +213,13 @@ const UarProgressChart: React.FC<{ data: UarProgressData[]; selectedItem: string
                         <button
                             key={item.index}
                             onClick={() => toggleDataset(item.index)}
-                            className={`flex items-center gap-2 px-2 py-1 rounded transition-colors text-sm ${
-                                hiddenDatasets.has(item.index) 
-                                    ? 'opacity-50 hover:opacity-75' 
-                                    : 'hover:bg-gray-100'
-                            }`}
+                            className={`flex items-center gap-2 px-2 py-1 rounded transition-colors text-sm ${hiddenDatasets.has(item.index)
+                                ? 'opacity-50 hover:opacity-75'
+                                : 'hover:bg-gray-100'
+                                }`}
                         >
-                            <div 
-                                className="w-3 h-3 rounded-sm" 
+                            <div
+                                className="w-3 h-3 rounded-sm"
                                 style={{ backgroundColor: item.color }}
                             ></div>
                             <span>{item.label}</span>
@@ -236,19 +238,19 @@ const UarProgressChart: React.FC<{ data: UarProgressData[]; selectedItem: string
     );
 }, (prevProps, nextProps) => {
     return JSON.stringify(prevProps.data) === JSON.stringify(nextProps.data) &&
-           prevProps.selectedItem === nextProps.selectedItem &&
-           JSON.stringify(prevProps.yAxisRange) === JSON.stringify(nextProps.yAxisRange) &&
-           prevProps.onBarClick === nextProps.onBarClick;
+        prevProps.selectedItem === nextProps.selectedItem &&
+        JSON.stringify(prevProps.yAxisRange) === JSON.stringify(nextProps.yAxisRange) &&
+        prevProps.onBarClick === nextProps.onBarClick;
 });
 
 const UarProgressPage: React.FC = React.memo(() => {
     // Zustand store hooks
     const { filters } = useUarProgressFilters();
-    const { 
-        selectedPeriod, 
-        selectedDivisionFilter, 
-        selectedDepartmentFilter, 
-        selectedSystemFilter, 
+    const {
+        selectedPeriod,
+        selectedDivisionFilter,
+        selectedDepartmentFilter,
+        selectedSystemFilter,
         drilldownDivision,
         setSelectedPeriod,
         setSelectedDivisionFilter,
@@ -256,17 +258,39 @@ const UarProgressPage: React.FC = React.memo(() => {
         setSelectedSystemFilter,
         setDrilldownDivision
     } = useUarProgressUIState();
+    // ==== logging setup ====
+    const { currentUser } = useAuthStore();
+    const username = currentUser?.username ?? "anonymous";
+    const MODULE = "UAR.PROGRESS";
+    const logStep = (p: {
+        action: string;
+        status?: "Success" | "Error" | "InProgress" | "Warning";
+        description: string;
+        location: string;
+        extra?: Record<string, unknown>;
+    }) => {
+        postLogMonitoringApi({
+            userId: username,
+            module: MODULE,
+            action: p.action,
+            status: p.status ?? "Success",
+            description: p.description,
+            location: p.location,
+            timestamp: new Date().toISOString(),
+            ...(p.extra ? { extra: p.extra } : {}),
+        }).catch(() => { });
+    };
     const { setProgressData, setFilteredData } = useUarProgressActions();
-    const { 
-        getDivisionOptions, 
+    const {
+        getDivisionOptions,
         getDivisionChartData,
-        getDepartmentOptions, 
-        getSystemOptions, 
-        getDepartmentChartData, 
-        getSystemChartData, 
-        getGrandTotal 
+        getDepartmentOptions,
+        getSystemOptions,
+        getDepartmentChartData,
+        getSystemChartData,
+        getGrandTotal
     } = useUarProgressComputed();
-    
+
     // Get computed values from store with memoization
     const divisionOptions = useMemo(() => getDivisionOptions(), []);
     const divisionChartData = useMemo(() => getDivisionChartData(), []);
@@ -278,7 +302,7 @@ const UarProgressPage: React.FC = React.memo(() => {
 
     const systemAppsChartData = useMemo(() => {
         let filteredData = systemChartData;
-        
+
         if (selectedSystemFilter) {
             filteredData = filteredData.filter(app => app.label === selectedSystemFilter);
         }
@@ -289,12 +313,27 @@ const UarProgressPage: React.FC = React.memo(() => {
     const handleDivisionBarClick = (divisionLabel: string) => {
         setDrilldownDivision(divisionLabel);
         setSelectedDivisionFilter(divisionLabel);
-        setSelectedDepartmentFilter(''); 
+        setSelectedDepartmentFilter('');
         setSelectedSystemFilter('');
+        logStep({
+            action: AuditAction.DATA_FILTER,
+            description: `Drilldown to Division "${divisionLabel}" via bar click`,
+            location: "UarProgressPage.handleDivisionBarClick",
+            extra: { division: divisionLabel },
+        });
     };
 
     const handleDepartmentBarClick = (departmentLabel: string) => {
         setSelectedDepartmentFilter(selectedDepartmentFilter === departmentLabel ? '' : departmentLabel);
+        const next = selectedDepartmentFilter === departmentLabel ? '' : departmentLabel;
+        setSelectedDepartmentFilter(next);
+        logStep({
+            action: AuditAction.DATA_FILTER,
+            description: `Toggle Department selection to "${next || '(cleared)'}" via bar click`,
+            location: "UarProgressPage.handleDepartmentBarClick",
+            extra: { department: next || null },
+        });
+
     };
 
     const handleBackToDivisionView = () => {
@@ -302,6 +341,12 @@ const UarProgressPage: React.FC = React.memo(() => {
         setSelectedDivisionFilter('');
         setSelectedDepartmentFilter('');
         setSelectedSystemFilter('');
+        logStep({
+            action: AuditAction.DATA_FILTER,
+            description: "Back to Division view (clear drilldown + filters)",
+            location: "UarProgressPage.handleBackToDivisionView",
+        });
+
     };
 
     const handleDivisionFilterChange = (value: string) => {
@@ -313,18 +358,53 @@ const UarProgressPage: React.FC = React.memo(() => {
             setDrilldownDivision(null);
         }
         setSelectedDepartmentFilter('');
-        setSelectedSystemFilter('');
+        setSelectedSystemFilter(''); logStep({
+            action: AuditAction.DATA_FILTER,
+            description: `Filter Division set to "${value || '(cleared)'}"`,
+            location: "UarProgressPage.handleDivisionFilterChange",
+            extra: { division: value || null },
+        });
+
     };
 
     const handleDepartmentFilterChange = (value: string) => {
         setSelectedDepartmentFilter(value);
         setSelectedSystemFilter(''); // Reset system filter when department changes
+        logStep({
+            action: AuditAction.DATA_FILTER,
+            description: `Filter Department set to "${value || '(cleared)'}"`,
+            location: "UarProgressPage.handleDepartmentFilterChange",
+            extra: { department: value || null },
+        });
     };
 
-    const mainChartTitle = drilldownDivision 
+    const handlePeriodFilterChange = (value: string) => {
+        setSelectedPeriod(value);
+        logStep({
+            action: AuditAction.DATA_FILTER,
+            description: `Filter Period set to "${value || '(cleared)'}"`,
+            location: "UarProgressPage.handlePeriodFilterChange",
+            extra: { period: value || null },
+        });
+    };
+
+    const handleSystemFilterChange = (value: string) => {
+        setSelectedSystemFilter(value);
+        logStep({
+            action: AuditAction.DATA_FILTER,
+            description: `Filter System set to "${value || '(cleared)'}"`,
+            location: "UarProgressPage.handleSystemFilterChange",
+            extra: { system: value || null },
+        });
+    };
+
+
+
+
+    const mainChartTitle = drilldownDivision
         ? `UAR Progress by Department (Division: ${drilldownDivision})`
         : 'UAR Progress by Division';
-    
+
     const systemChartTitle = useMemo(() => {
         let title = 'UAR Progress by System Apps';
         if (selectedDepartmentFilter) {
@@ -340,7 +420,7 @@ const UarProgressPage: React.FC = React.memo(() => {
         }
         return `${title} (All)`;
     }, [selectedDivisionFilter, drilldownDivision, selectedDepartmentFilter]);
-    
+
     const isDrilledDown = !!drilldownDivision;
 
     // Use grand total from store
@@ -353,29 +433,29 @@ const UarProgressPage: React.FC = React.memo(() => {
                     <h2 className="text-2xl font-bold text-gray-800">UAR Progress</h2>
                 </div>
                 <div className="flex gap-4 flex-wrap">
-                    <SearchableDropdown 
-                        label="Period" 
-                        value={selectedPeriod} 
-                        onChange={setSelectedPeriod} 
-                        options={['07-2025']} 
+                    <SearchableDropdown
+                        label="Period"
+                        value={selectedPeriod}
+                        onChange={handlePeriodFilterChange}
+                        options={['07-2025']}
                     />
-                    <SearchableDropdown 
-                        label="Division" 
-                        value={selectedDivisionFilter} 
-                        onChange={handleDivisionFilterChange} 
+                    <SearchableDropdown
+                        label="Division"
+                        value={selectedDivisionFilter}
+                        onChange={handleDivisionFilterChange}
                         options={divisionOptions}
                     />
-                    <SearchableDropdown 
-                        label="Department" 
-                        value={selectedDepartmentFilter} 
-                        onChange={handleDepartmentFilterChange} 
-                        options={departmentOptions} 
+                    <SearchableDropdown
+                        label="Department"
+                        value={selectedDepartmentFilter}
+                        onChange={handleDepartmentFilterChange}
+                        options={departmentOptions}
                     />
-                    <SearchableDropdown 
-                        label="System" 
-                        value={selectedSystemFilter} 
-                        onChange={setSelectedSystemFilter} 
-                        options={systemOptions} 
+                    <SearchableDropdown
+                        label="System"
+                        value={selectedSystemFilter}
+                        onChange={handleSystemFilterChange}
+                        options={systemOptions}
                     />
                 </div>
             </div>
@@ -391,10 +471,10 @@ const UarProgressPage: React.FC = React.memo(() => {
                 {/* Fixed Header */}
                 <div className="p-6 border-b border-gray-100">
                     <h3
-                      className={`text-2xl font-bold text-gray-800 ${isDrilledDown ? 'cursor-pointer hover:text-blue-600 transition-colors' : ''}`}
-                      onClick={isDrilledDown ? handleBackToDivisionView : undefined}
-                      aria-label={isDrilledDown ? "Back to Division View" : mainChartTitle}
-                      role="button"
+                        className={`text-2xl font-bold text-gray-800 ${isDrilledDown ? 'cursor-pointer hover:text-blue-600 transition-colors' : ''}`}
+                        onClick={isDrilledDown ? handleBackToDivisionView : undefined}
+                        aria-label={isDrilledDown ? "Back to Division View" : mainChartTitle}
+                        role="button"
                     >
                         {mainChartTitle}
                     </h3>
@@ -411,10 +491,10 @@ const UarProgressPage: React.FC = React.memo(() => {
                                     onBarClick={handleDepartmentBarClick}
                                 />
                             ) : (
-                                <UarProgressChart 
-                                    data={divisionChartData} 
-                                    selectedItem={selectedDivisionFilter} 
-                                    onBarClick={handleDivisionBarClick} 
+                                <UarProgressChart
+                                    data={divisionChartData}
+                                    selectedItem={selectedDivisionFilter}
+                                    onBarClick={handleDivisionBarClick}
                                 />
                             )}
                         </div>
@@ -450,12 +530,12 @@ const UarProgressPageWithAPI: React.FC = React.memo(() => {
     const { setProgressData, setLoading, setError, setIsRefreshing } = useUarProgressActions();
     const { loading, error, isRefreshing } = useUarProgressLoading();
 
-    const { 
-        data: apiData, 
-        loading: apiLoading, 
-        error: apiError, 
-        refresh, 
-        isRefreshing: apiIsRefreshing 
+    const {
+        data: apiData,
+        loading: apiLoading,
+        error: apiError,
+        refresh,
+        isRefreshing: apiIsRefreshing
     } = useUarProgressData(filters, {
         autoRefresh: true,
         refreshInterval: 30000, // 30 seconds
