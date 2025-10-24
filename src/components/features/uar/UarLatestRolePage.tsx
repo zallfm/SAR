@@ -7,6 +7,9 @@ import { DownloadButton } from "../../common/Button/DownloadButton";
 import SearchableDropdown from "../../common/SearchableDropdown";
 
 import * as XLSX from "xlsx";
+import { postLogMonitoringApi } from "@/src/api/log_monitoring";
+import { useAuthStore } from "@/src/store/authStore";
+import { AuditAction } from "@/src/constants/auditActions";
 
 const UarLatestRolePage: React.FC = () => {
   const [roles] = useState<UarLatestRole[]>(initialUarLatestRoles);
@@ -17,6 +20,8 @@ const UarLatestRolePage: React.FC = () => {
   const [isRoleInfoModalOpen, setIsRoleInfoModalOpen] = useState(false);
   const [selectedRoleInfo, setSelectedRoleInfo] =
     useState<UarLatestRole | null>(null);
+
+  const { currentUser } = useAuthStore();
 
   const applicationIds = useMemo(
     () => [...new Set(roles.map((r) => r.applicationId))],
@@ -54,7 +59,7 @@ const UarLatestRolePage: React.FC = () => {
     setIsRoleInfoModalOpen(true);
   };
 
-  const handleDownload = () => {
+  const handleDownload =async () => {
     if (!filteredRoles.length) {
       alert("No data available to download.");
       return;
@@ -94,6 +99,42 @@ const UarLatestRolePage: React.FC = () => {
     const workbook = XLSX.utils.book_new();
     XLSX.utils.book_append_sheet(workbook, worksheet, "Latest Roles");
     XLSX.writeFile(workbook, fileName);
+
+    try {
+      await postLogMonitoringApi({
+        userId: currentUser?.username ?? "anonymous",
+        module: "UAR Latest Role",
+        action: AuditAction.DATA_DOWNLOAD,
+        status: "Success",
+        description: `User ${
+          currentUser?.username ?? "unknown"
+        } downloaded Excel (${fileName}) for filters: Application=${
+          appIdFilter || "-"
+        }, System=${systemIdFilter || "-"}`,
+        location: "UarLatestRolePage.handleDownload",
+        timestamp: new Date().toISOString(),
+      });
+    } catch (err) {
+      console.warn("Failed to log download:", err);
+    }
+  };
+
+  const logFilterChange = async (key: string, value: string) => {
+    try {
+      await postLogMonitoringApi({
+        userId: currentUser?.username ?? "anonymous",
+        module: "UAR Latest Role",
+        action: AuditAction.DATA_FILTER,
+        status: "Success",
+        description: `User ${
+          currentUser?.username ?? "unknown"
+        } filtered by ${key}: ${value}`,
+        location: "UarLatestRolePage.filter",
+        timestamp: new Date().toISOString(),
+      });
+    } catch (err) {
+      console.warn("Failed to log filter:", err);
+    }
   };
 
   return (
@@ -105,16 +146,25 @@ const UarLatestRolePage: React.FC = () => {
             <SearchableDropdown
               label="Application ID"
               value={appIdFilter}
-              onChange={setAppIdFilter}
+              onChange={async (v) => {
+                setAppIdFilter(v);
+                setCurrentPage(1);
+                if (v) await logFilterChange("applicationId", v);
+              }}
               options={applicationIds}
               searchable={false}
               placeholder="Application ID"
               className="w-full sm:w-40"
             />
+
             <SearchableDropdown
               label="System ID"
               value={systemIdFilter}
-              onChange={setSystemIdFilter}
+              onChange={async (v) => {
+                setSystemIdFilter(v);
+                setCurrentPage(1);
+                if (v) await logFilterChange("systemId", v);
+              }}
               options={systemIds}
               searchable={false}
               placeholder="System ID"
@@ -156,7 +206,7 @@ const UarLatestRolePage: React.FC = () => {
             <tbody>
               {currentRoles.map((role) => (
                 <tr
-                  key={role.id}
+                  key={role.ID}
                   className="bg-white border-b hover:bg-gray-50"
                 >
                   <td className="px-4 py-3 whitespace-nowrap text-sm">

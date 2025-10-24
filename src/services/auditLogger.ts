@@ -9,31 +9,31 @@ export interface AuditLogEntry {
   userId: string;
   userName: string;
   userRole: string;
-  
+
   // WHAT
   action: AuditAction;
   module: string;
   description: string;
-  
+
   // WHEN
   timestamp: string;
-  
+
   // WHERE
   ipAddress?: string;
   userAgent?: string;
   location?: string;
-  
+
   // DETAILS
   targetId?: string;
   targetType?: string;
   oldValue?: unknown;
   newValue?: unknown;
-  
+
   // RESULT
   status: 'success' | 'failure' | 'warning';
   errorCode?: string;
   errorMessage?: string;
-  
+
   // CONTEXT
   requestId: string;
   sessionId: string;
@@ -85,8 +85,8 @@ export class AuditLogger {
    * Create standardized log entry
    */
   private static createLogEntry(
-    action: AuditAction, 
-    details: Partial<AuditLogEntry>, 
+    action: AuditAction,
+    details: Partial<AuditLogEntry>,
     status: 'success' | 'failure' | 'warning'
   ): AuditLogEntry {
     const timestamp = new Date().toISOString();
@@ -98,31 +98,31 @@ export class AuditLogger {
       userId: details.userId || this.getCurrentUserId() || 'anonymous',
       userName: details.userName || this.getCurrentUserName() || 'Unknown',
       userRole: details.userRole || this.getCurrentUserRole() || 'Unknown',
-      
+
       // WHAT
       action,
       module: details.module || this.getCurrentModule(),
       description: details.description || `${action} action performed`,
-      
+
       // WHEN
       timestamp,
-      
+
       // WHERE
       ipAddress: details.ipAddress || this.getClientIP(),
       userAgent: details.userAgent || navigator.userAgent,
       location: details.location || window.location.href,
-      
+
       // DETAILS
       targetId: details.targetId,
       targetType: details.targetType,
       oldValue: details.oldValue,
       newValue: details.newValue,
-      
+
       // RESULT
       status,
       errorCode: details.errorCode,
       errorMessage: details.errorMessage,
-      
+
       // CONTEXT
       requestId,
       sessionId
@@ -152,29 +152,31 @@ export class AuditLogger {
   private static async flushBuffer(): Promise<void> {
     if (this.LOG_BUFFER.length === 0) return;
 
+    // kirim satu-satu supaya BE yang sekarang gampang
     const logsToSend = [...this.LOG_BUFFER];
-    this.LOG_BUFFER.length = 0; // Clear buffer
+    this.LOG_BUFFER.length = 0;
 
     try {
       const token = this.getAuthToken();
-      
-      await fetch(`${this.API_BASE_URL}/audit/logs`, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          'Authorization': token ? `Bearer ${token}` : '',
-          'X-Requested-With': 'XMLHttpRequest'
-        },
-        body: JSON.stringify({ logs: logsToSend }),
-        credentials: 'include'
-      });
-
+      for (const log of logsToSend) {
+        await fetch(`${this.API_BASE_URL}/sar/log_monitoring`, {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            'Authorization': token ? `Bearer ${token}` : '',
+            'X-Requested-With': 'XMLHttpRequest'
+          },
+          body: JSON.stringify(log),
+          credentials: 'include'
+        });
+      }
     } catch (error) {
       console.error('Failed to send audit logs:', error);
-      // Re-add logs to buffer for retry
+      // kalau gagal, balikin ke buffer biar dicoba lagi nanti
       this.LOG_BUFFER.unshift(...logsToSend);
     }
   }
+
 
   /**
    * Get current user ID
@@ -298,13 +300,13 @@ export class AuditLogger {
    * Get audit logs for current user
    */
   static async getUserLogs(
-    userId?: string, 
+    userId?: string,
     dateRange?: { start: Date; end: Date }
   ): Promise<AuditLogEntry[]> {
     try {
       const token = this.getAuthToken();
       const params = new URLSearchParams();
-      
+
       if (userId) params.append('userId', userId);
       if (dateRange) {
         params.append('startDate', dateRange.start.toISOString());
@@ -342,7 +344,7 @@ export class AuditLogger {
     try {
       const token = this.getAuthToken();
       const params = new URLSearchParams();
-      
+
       params.append('format', format);
       if (dateRange) {
         params.append('startDate', dateRange.start.toISOString());

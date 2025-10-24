@@ -11,11 +11,13 @@ export type HttpError = {
   details?: Record<string, any>;
 };
 
+// ✅ tambahkan properti params di sini
 type HttpOptions = {
   path: string; // contoh: '/auth/login'
   method?: 'GET' | 'POST' | 'PUT' | 'PATCH' | 'DELETE';
   token?: string | null;
   body?: any;
+  params?: Record<string, any>; // <-- query string (baru)
   headers?: Record<string, string>;
 };
 
@@ -31,8 +33,29 @@ function buildUrl(path: string) {
   }
 }
 
+// ✅ helper untuk serialize query params jadi ?key=value
+function buildQuery(params?: Record<string, any>): string {
+  if (!params) return '';
+  const query = new URLSearchParams();
+
+  Object.entries(params).forEach(([key, value]) => {
+    if (value === undefined || value === null || value === '') return; // skip kosong
+    if (Array.isArray(value)) {
+      value.forEach((v) => query.append(key, String(v)));
+    } else if (value instanceof Date) {
+      query.append(key, value.toISOString());
+    } else {
+      query.append(key, String(value));
+    }
+  });
+
+  const q = query.toString();
+  return q ? `?${q}` : '';
+}
+
 export async function http<T>(opts: HttpOptions): Promise<T> {
-  const url = buildUrl(opts.path);
+  // ✅ tambahkan dukungan untuk params/query
+  const url = buildUrl(opts.path) + buildQuery(opts.params);
 
   // buat headers dinamis
   const headers: Record<string, string> = {

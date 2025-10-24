@@ -21,6 +21,9 @@ import {
   useSchedulePagination,
   useScheduleActions,
 } from "../../../hooks/useStoreSelectors";
+import { postLogMonitoringApi } from "@/src/api/log_monitoring";
+import { useAuthStore } from "@/src/store/authStore";
+import { AuditAction } from "@/src/constants/auditActions";
 
 const SchedulePage: React.FC = () => {
   // Zustand store hooks
@@ -54,6 +57,8 @@ const SchedulePage: React.FC = () => {
   const [isStatusConfirmOpen, setIsStatusConfirmOpen] = useState(false);
   const [scheduleToChangeStatus, setScheduleToChangeStatus] =
     useState<Schedule | null>(null);
+  // 🧩 Current user from Auth store
+  const { currentUser } = useAuthStore();
 
   const filteredSchedules = useMemo(() => {
     return schedules.filter((schedule) => {
@@ -81,7 +86,7 @@ const SchedulePage: React.FC = () => {
     const haveSameIds =
       haveSameLength &&
       storeFilteredSchedules.every(
-        (schedule, index) => schedule.id === filteredSchedules[index]?.id
+        (schedule, index) => schedule.ID === filteredSchedules[index]?.ID
       );
 
     if (!haveSameIds) {
@@ -101,7 +106,7 @@ const SchedulePage: React.FC = () => {
 
   const handleSelectAll = (e: React.ChangeEvent<HTMLInputElement>) => {
     if (e.target.checked) {
-      setSelectedRows(currentSchedules.map((s) => s.id));
+      setSelectedRows(currentSchedules.map((s) => s.ID));
     } else {
       setSelectedRows([]);
     }
@@ -116,11 +121,35 @@ const SchedulePage: React.FC = () => {
   const isAllSelectedOnPage =
     currentSchedules.length > 0 &&
     selectedRows.length > 0 &&
-    currentSchedules.every((s) => selectedRows.includes(s.id));
+    currentSchedules.every((s) => selectedRows.includes(s.ID));
 
-  const handleOpenEditModal = () => {
+  const handleOpenSetSchedule = async () => {
+    setIsSetScheduleModalOpen(true);
+    await postLogMonitoringApi({
+      userId: currentUser?.username ?? "anonymous",
+      module: "Schedule",
+      action: AuditAction.DATA_CREATE,
+      status: "Success",
+      description: `User opened Set Schedule modal`,
+      location: "SchedulePage.handleOpenSetSchedule",
+      timestamp: new Date().toISOString(),
+    });
+  };
+
+  const handleOpenEditModal = async () => {
     if (selectedRows.length > 0) {
       setIsEditModalOpen(true);
+      await postLogMonitoringApi({
+        userId: currentUser?.username ?? "anonymous",
+        module: "Schedule",
+        action: AuditAction.DATA_EDIT,
+        status: "Success",
+        description: `User opened Edit Schedule for IDs: [${selectedRows.join(
+          ", "
+        )}]`,
+        location: "SchedulePage.handleOpenEditModal",
+        timestamp: new Date().toISOString(),
+      });
     }
   };
 
@@ -133,7 +162,7 @@ const SchedulePage: React.FC = () => {
   const handleConfirmEditSave = () => {
     if (pendingUpdate) {
       pendingUpdate.forEach((updatedSchedule) => {
-        updateSchedule(updatedSchedule.id, updatedSchedule);
+        updateSchedule(updatedSchedule.ID, updatedSchedule);
       });
 
       setSelectedRows([]);
@@ -143,11 +172,9 @@ const SchedulePage: React.FC = () => {
     setPendingUpdate(null);
   };
 
-  console.log(currentSchedules);
-
   const handleAddNewSchedules = (newSchedules: Omit<Schedule, "id">[]) => {
     const highestId = schedules.reduce(
-      (maxId, schedule) => Math.max(schedule.id, maxId),
+      (maxId, schedule) => Math.max(schedule.ID, maxId),
       0
     );
 
@@ -187,6 +214,32 @@ const SchedulePage: React.FC = () => {
     setIsStatusConfirmOpen(false);
   };
 
+  const handleFilterChange = async (
+    key: keyof typeof filters,
+    value: string
+  ) => {
+    setFilters({ [key]: value });
+
+    // kirim log
+    if (value.trim() !== "") {
+      try {
+        await postLogMonitoringApi({
+          userId: currentUser?.username ?? "anonymous",
+          module: "Schedule",
+          action: AuditAction.DATA_FILTER,
+          status: "Success",
+          description: `User ${
+            currentUser?.username ?? "unknown"
+          } filtered Schedule by ${key}: ${value}`,
+          location: "SchedulePage.handleFilterChange",
+          timestamp: new Date().toISOString(),
+        });
+      } catch (err) {
+        console.warn("Failed to log filter action:", err);
+      }
+    }
+  };
+
   const handleConfirmStatusChange = () => {
     if (!scheduleToChangeStatus) return;
 
@@ -194,7 +247,7 @@ const SchedulePage: React.FC = () => {
       scheduleToChangeStatus.status === "Active"
         ? "Inactive"
         : ("Active" as "Active" | "Inactive");
-    updateSchedule(scheduleToChangeStatus.id, { status: newStatus });
+    updateSchedule(scheduleToChangeStatus.ID, { status: newStatus });
 
     handleCloseStatusConfirm();
     setShowSuccessModal(true);
@@ -209,7 +262,7 @@ const SchedulePage: React.FC = () => {
             <SearchableDropdown
               label="Application ID"
               value={filters.applicationId}
-              onChange={(value) => setFilters({ applicationId: value })}
+              onChange={(value) => handleFilterChange("applicationId", value)}
               options={[...new Set(schedules.map((s) => s.applicationId))]}
               placeholder="Application ID"
               className="w-full sm:w-48"
@@ -217,7 +270,7 @@ const SchedulePage: React.FC = () => {
             <SearchableDropdown
               label="Application Name"
               value={filters.applicationName}
-              onChange={(value) => setFilters({ applicationName: value })}
+              onChange={(value) => handleFilterChange("applicationName", value)}
               options={[...new Set(schedules.map((s) => s.applicationName))]}
               placeholder="Application Name"
               className="w-full sm:w-48"
@@ -225,7 +278,7 @@ const SchedulePage: React.FC = () => {
             <SearchableDropdown
               label="Status"
               value={filters.status}
-              onChange={(value) => setFilters({ status: value })}
+              onChange={(value) => handleFilterChange("status", value)}
               options={["Active", "Inactive"]}
               searchable={false}
               placeholder="Status"
@@ -244,7 +297,7 @@ const SchedulePage: React.FC = () => {
             />
             {/* button set schedule */}
             <AddButton
-              onClick={() => setIsSetScheduleModalOpen(true)}
+              onClick={handleOpenSetSchedule}
               label="Set Schedule"
             >
               <CalendarIcon className="w-4 h-4" />
@@ -285,16 +338,16 @@ const SchedulePage: React.FC = () => {
             <tbody>
               {currentSchedules.map((schedule) => (
                 <tr
-                  key={schedule.id}
+                  key={schedule.ID}
                   className="bg-white border-b border-gray-200 last:border-b-0 hover:bg-gray-50"
                 >
                   <td className="px-4 py-3 whitespace-nowrap text-sm">
                     <input
                       type="checkbox"
                       className="h-4 w-4 rounded border-gray-300 text-blue-600 focus:ring-blue-500"
-                      checked={selectedRows.includes(schedule.id)}
-                      onChange={() => handleSelectRow(schedule.id)}
-                      aria-label={`Select row ${schedule.id}`}
+                      checked={selectedRows.includes(schedule.ID)}
+                      onChange={() => handleSelectRow(schedule.ID)}
+                      aria-label={`Select row ${schedule.ID}`}
                     />
                   </td>
                   <td className="px-4 py-3 whitespace-nowrap text-gray-900 text-sm">
@@ -376,7 +429,7 @@ const SchedulePage: React.FC = () => {
         <ScheduleEditModal
           onClose={() => setIsEditModalOpen(false)}
           onSave={handleEditSave}
-          schedulesToEdit={schedules.filter((s) => selectedRows.includes(s.id))}
+          schedulesToEdit={schedules.filter((s) => selectedRows.includes(s.ID))}
         />
       )}
       {isSetScheduleModalOpen && (

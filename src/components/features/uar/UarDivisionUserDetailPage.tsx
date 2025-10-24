@@ -7,6 +7,9 @@ import { CommentIcon } from '../../icons/CommentIcon';
 // import RoleInfoModal from './RoleInfoModal';
 import CommentModal from '../../common/Modal/CommentModal';
 import RoleInfoModal from '../../common/Modal/RoleInfoModal';
+import { useAuthStore } from '@/src/store/authStore';
+import { postLogMonitoringApi } from '@/src/api/log_monitoring';
+import { AuditAction } from '@/src/constants/auditActions';
 
 type ApprovalStatus = 'Approved' | 'Revoked';
 type TableData = UarDivisionUserReviewDetail & { approvalStatus: ApprovalStatus };
@@ -18,10 +21,10 @@ interface UarDivisionUserDetailPageProps {
 }
 
 const UarDivisionUserDetailPage: React.FC<UarDivisionUserDetailPageProps> = ({ record, onBack, user }) => {
-    
+    const { currentUser } = useAuthStore();
     const [tableData, setTableData] = useState<TableData[]>([]);
     const [selectedRows, setSelectedRows] = useState<number[]>([]);
-    
+
     const [isRoleInfoModalOpen, setIsRoleInfoModalOpen] = useState(false);
     const [selectedRoleInfo, setSelectedRoleInfo] = useState<UarDivisionUserReviewDetail | null>(null);
 
@@ -40,18 +43,39 @@ const UarDivisionUserDetailPage: React.FC<UarDivisionUserDetailPageProps> = ({ r
         setTableData(relevantDetails);
     }, [record.uarId]);
 
-    const handleRowApprovalChange = (id: number, status: ApprovalStatus) => {
-        setTableData(prev => prev.map(row => row.id === id ? { ...row, approvalStatus: status } : row));
+    const handleRowApprovalChange = async (id: number, status: ApprovalStatus) => {
+        setTableData(prev => prev.map(row => row.ID === id ? { ...row, approvalStatus: status } : row));
+
+        // ✅ Tambahkan log
+        const action = status === 'Approved' ? AuditAction.DATA_KEEP : AuditAction.DATA_REVOKE;
+        await createLog(action, `User ${currentUser?.username ?? "unknown"} set ${status} for ID ${id} in ${record.uarId}`, "UarDivisionUserDetailPage.handleRowApprovalChange");
     };
 
-    const handleBulkAction = (status: ApprovalStatus) => {
+
+    const handleBulkAction = async (status: ApprovalStatus) => {
         if (selectedRows.length === 0) return;
-        setTableData(prev => prev.map(row => selectedRows.includes(row.id) ? { ...row, approvalStatus: status } : row));
+
+        // update UI
+        setTableData(prev =>
+            prev.map(row =>
+                selectedRows.includes(row.ID) ? { ...row, approvalStatus: status } : row
+            )
+        );
+
+        // ✅ kirim log
+        const action = status === 'Approved' ? AuditAction.DATA_KEEP_ALL : AuditAction.DATA_REVOKE_ALL;
+        await createLog(
+            action,
+            `User ${currentUser?.username ?? "unknown"} performed bulk ${status} on ${selectedRows.length} item(s) in ${record.uarId}`,
+            "UarDivisionUserDetailPage.handleBulkAction"
+        );
     };
+
+
 
     const handleSelectAll = (e: React.ChangeEvent<HTMLInputElement>) => {
         if (e.target.checked) {
-            setSelectedRows(currentData.map(d => d.id));
+            setSelectedRows(currentData.map(d => d.ID));
         } else {
             setSelectedRows([]);
         }
@@ -66,17 +90,29 @@ const UarDivisionUserDetailPage: React.FC<UarDivisionUserDetailPageProps> = ({ r
         setIsRoleInfoModalOpen(true);
     };
 
-    const handleOpenCommentModal = (row: TableData) => {
+    const handleOpenCommentModal = async (row: TableData) => {
         setCommentTarget(row);
         setIsCommentModalOpen(true);
+
+        // ✅ kirim log monitoring
+        try {
+            await createLog(
+                AuditAction.DATA_COMMENT_OPEN,
+                `User ${currentUser?.username ?? "unknown"} opened comment modal for role ${row.roleId} in ${record.uarId}`,
+                "UarDivisionUserDetailPage.handleOpenCommentModal"
+            );
+        } catch (err) {
+            console.warn("Gagal mencatat log buka comment:", err);
+        }
     };
+
 
     const handleCloseCommentModal = () => {
         setCommentTarget(null);
         setIsCommentModalOpen(false);
     };
 
-    const handleSubmitComment = (newCommentText: string) => {
+    const handleSubmitComment = async (newCommentText: string) => {
         if (commentTarget) {
             const newComment: Comment = {
                 user: `${user.name} (${user.role})`,
@@ -84,15 +120,44 @@ const UarDivisionUserDetailPage: React.FC<UarDivisionUserDetailPageProps> = ({ r
                 timestamp: new Date(),
             };
 
-            setTableData(prev => 
-                prev.map(row => 
-                    row.id === commentTarget.id 
-                        ? { ...row, comments: [...(row.comments || []), newComment] } 
+            setTableData(prev =>
+                prev.map(row =>
+                    row.ID === commentTarget.ID
+                        ? { ...row, comments: [...(row.comments || []), newComment] }
                         : row
                 )
             );
+
+            // ✅ kirim log monitoring
+            try {
+                await createLog(
+                    AuditAction.DATA_COMMENT_SUBMIT,
+                    `User ${currentUser?.username ?? "unknown"} added a comment on role ${commentTarget.roleId} in ${record.uarId}`,
+                    "UarDivisionUserDetailPage.handleSubmitComment"
+                );
+            } catch (err) {
+                console.warn("Gagal mencatat log submit comment:", err);
+            }
         }
+
         handleCloseCommentModal();
+    };
+
+
+    const createLog = async (action: string, description: string, location: string) => {
+        try {
+            await postLogMonitoringApi({
+                userId: currentUser?.username ?? "anonymous",
+                module: "UAR Division User Detail",
+                action,
+                status: "Success",
+                description,
+                location,
+                timestamp: new Date().toISOString(),
+            });
+        } catch (err) {
+            console.warn("Gagal mencatat log:", err);
+        }
     };
 
 
@@ -102,15 +167,15 @@ const UarDivisionUserDetailPage: React.FC<UarDivisionUserDetailPageProps> = ({ r
     const currentData = tableData.slice(startIndex, startIndex + itemsPerPage);
     const startItem = totalItems > 0 ? startIndex + 1 : 0;
     const endItem = Math.min(startIndex + itemsPerPage, totalItems);
-    const isAllSelectedOnPage = currentData.length > 0 && selectedRows.length > 0 && currentData.every(d => selectedRows.includes(d.id));
+    const isAllSelectedOnPage = currentData.length > 0 && selectedRows.length > 0 && currentData.every(d => selectedRows.includes(d.ID));
 
     return (
         <div className="space-y-6">
             <div>
-                 <h2 className="text-2xl font-bold text-gray-800">UAR Division User</h2>
-                 <div className="text-sm text-gray-500 mt-1 flex items-center flex-wrap">
-                    <button 
-                        onClick={onBack} 
+                <h2 className="text-2xl font-bold text-gray-800">UAR Division User</h2>
+                <div className="text-sm text-gray-500 mt-1 flex items-center flex-wrap">
+                    <button
+                        onClick={onBack}
                         className="text-blue-600 hover:underline hover:text-blue-800 transition-colors"
                         aria-label="Back to UAR Division User list"
                     >
@@ -118,13 +183,13 @@ const UarDivisionUserDetailPage: React.FC<UarDivisionUserDetailPageProps> = ({ r
                     </button>
                     <span className="mx-2">&gt;</span>
                     <span className="text-gray-700 font-medium">{record.uarId}</span>
-                 </div>
+                </div>
             </div>
-            
+
             <div className="bg-white p-6 rounded-xl border border-gray-200 shadow-sm">
-                 <div className="flex justify-between items-center mb-6 flex-wrap gap-4">
+                <div className="flex justify-between items-center mb-6 flex-wrap gap-4">
                     <div className="flex items-center gap-3">
-                        <button 
+                        <button
                             onClick={() => handleBulkAction('Approved')}
                             disabled={selectedRows.length === 0}
                             className="px-6 py-2 text-sm font-semibold text-green-700 bg-green-100 rounded-lg hover:bg-green-200 transition-colors disabled:bg-gray-200 disabled:text-gray-500 disabled:cursor-not-allowed"
@@ -132,16 +197,26 @@ const UarDivisionUserDetailPage: React.FC<UarDivisionUserDetailPageProps> = ({ r
                             Keep
                         </button>
                         <button
-                             onClick={() => handleBulkAction('Revoked')}
-                             disabled={selectedRows.length === 0}
-                             className="px-6 py-2 text-sm font-semibold text-red-700 bg-red-100 rounded-lg hover:bg-red-200 transition-colors disabled:bg-gray-200 disabled:text-gray-500 disabled:cursor-not-allowed"
+                            onClick={() => handleBulkAction('Revoked')}
+                            disabled={selectedRows.length === 0}
+                            className="px-6 py-2 text-sm font-semibold text-red-700 bg-red-100 rounded-lg hover:bg-red-200 transition-colors disabled:bg-gray-200 disabled:text-gray-500 disabled:cursor-not-allowed"
                         >
                             Revoke
                         </button>
                     </div>
-                     <button className="px-8 py-2 text-sm font-semibold text-white bg-blue-400 rounded-lg hover:bg-blue-500 transition-colors">
+                    <button
+                        onClick={async () => {
+                            await createLog(
+                                AuditAction.DATA_SUBMIT,
+                                `User ${currentUser?.username ?? "unknown"} submitted review for ${record.uarId}`,
+                                "UarDivisionUserDetailPage.SubmitButton"
+                            );
+                        }}
+                        className="px-8 py-2 text-sm font-semibold text-white bg-blue-400 rounded-lg hover:bg-blue-500 transition-colors"
+                    >
                         Submit
-                     </button>
+                    </button>
+
                 </div>
 
                 <div className="overflow-x-auto">
@@ -149,8 +224,8 @@ const UarDivisionUserDetailPage: React.FC<UarDivisionUserDetailPageProps> = ({ r
                         <thead className="text-sm text-black font-semibold">
                             <tr className="border-b-2 border-gray-200">
                                 <th scope="col" className="px-4 py-3 w-12 text-sm">
-                                    <input 
-                                        type="checkbox" 
+                                    <input
+                                        type="checkbox"
                                         className="h-4 w-4 rounded border-gray-300 text-blue-600 focus:ring-blue-500"
                                         checked={isAllSelectedOnPage}
                                         onChange={handleSelectAll}
@@ -169,21 +244,21 @@ const UarDivisionUserDetailPage: React.FC<UarDivisionUserDetailPageProps> = ({ r
                         </thead>
                         <tbody>
                             {currentData.map(row => (
-                                <tr key={row.id} className="bg-white border-b border-gray-100 last:border-b-0 hover:bg-gray-50">
+                                <tr key={row.ID} className="bg-white border-b border-gray-100 last:border-b-0 hover:bg-gray-50">
                                     <td className="px-4 py-2 text-sm">
-                                         <input 
-                                            type="checkbox" 
-                                            className="h-4 w-4 rounded border-gray-300 text-blue-600 focus:ring-blue-500" 
-                                            checked={selectedRows.includes(row.id)}
-                                            onChange={() => handleSelectRow(row.id)}
-                                            aria-label={`Select row ${row.id}`}
+                                        <input
+                                            type="checkbox"
+                                            className="h-4 w-4 rounded border-gray-300 text-blue-600 focus:ring-blue-500"
+                                            checked={selectedRows.includes(row.ID)}
+                                            onChange={() => handleSelectRow(row.ID)}
+                                            aria-label={`Select row ${row.ID}`}
                                         />
                                     </td>
                                     <td className="px-4 py-2 text-sm">{row.username}</td>
                                     <td className="px-4 py-2 text-sm">{row.noreg}</td>
                                     <td className="px-4 py-2 text-sm">{row.name}</td>
                                     <td className="px-4 py-2 text-sm">
-                                        <button 
+                                        <button
                                             onClick={() => handleRoleInfoClick(row)}
                                             className="text-blue-600 hover:underline cursor-pointer"
                                         >
@@ -194,14 +269,14 @@ const UarDivisionUserDetailPage: React.FC<UarDivisionUserDetailPageProps> = ({ r
                                     <td className="px-4 py-2 text-sm">{row.status}</td>
                                     <td className="px-4 py-2 text-sm">
                                         <div className="flex items-center justify-center gap-2">
-                                            <button 
-                                                onClick={() => handleRowApprovalChange(row.id, 'Approved')}
+                                            <button
+                                                onClick={() => handleRowApprovalChange(row.ID, 'Approved')}
                                                 className={`px-3 py-1 text-xs font-semibold rounded-md min-w-[70px] transition-colors ${row.approvalStatus === 'Approved' ? 'bg-green-100 text-green-700' : 'bg-white text-gray-500 border border-gray-300 hover:bg-gray-100'}`}
                                             >
                                                 Keep
                                             </button>
-                                            <button 
-                                                onClick={() => handleRowApprovalChange(row.id, 'Revoked')}
+                                            <button
+                                                onClick={() => handleRowApprovalChange(row.ID, 'Revoked')}
                                                 className={`px-3 py-1 text-xs font-semibold rounded-md min-w-[70px] transition-colors ${row.approvalStatus === 'Revoked' ? 'bg-red-100 text-red-700' : 'bg-white text-gray-500 border border-gray-300 hover:bg-gray-100'}`}
                                             >
                                                 Revoke
@@ -209,8 +284,8 @@ const UarDivisionUserDetailPage: React.FC<UarDivisionUserDetailPageProps> = ({ r
                                         </div>
                                     </td>
                                     <td className="px-4 py-2 text-sm">
-                                         <div className="group relative flex justify-center">
-                                            <button 
+                                        <div className="group relative flex justify-center">
+                                            <button
                                                 onClick={() => handleOpenCommentModal(row)}
                                                 className={row.comments && row.comments.length > 0 ? "text-blue-600 hover:text-blue-800" : "text-gray-400 hover:text-blue-600"}
                                             >
@@ -272,12 +347,12 @@ const UarDivisionUserDetailPage: React.FC<UarDivisionUserDetailPageProps> = ({ r
 
             {isRoleInfoModalOpen && selectedRoleInfo && (
                 <RoleInfoModal
-                    onClose={() => setIsRoleInfoModalOpen(false)} 
+                    onClose={() => setIsRoleInfoModalOpen(false)}
                     roleInfo={selectedRoleInfo}
                 />
             )}
             {isCommentModalOpen && commentTarget && (
-                <CommentModal 
+                <CommentModal
                     onClose={handleCloseCommentModal}
                     onSubmit={handleSubmitComment}
                     targetUser={commentTarget.name}

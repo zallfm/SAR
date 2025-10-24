@@ -1,14 +1,14 @@
 // Comprehensive Logging Service for Application Monitoring
 export interface LogEntry {
-  id: number;
-  processId: string; // Format: yyyymmdd[nomerurut5 sequential]
-  userId: string;
-  module: string;
-  functionName: string;
-  startDate: string; // Format: DD-MM-YYYY HH:MM:SS
-  endDate: string; // Format: DD-MM-YYYY HH:MM:SS
-  status: 'Success' | 'Error' | 'Warning' | 'InProgress';
-  details?: string;
+  NO: number;
+  PROCESS_ID: string; // Format: yyyymmdd[nomerurut5 sequential]
+  USER_ID: string;
+  MODULE: string;
+  FUNCTION_NAME: string;
+  START_DATE: string; // Format: DD-MM-YYYY HH:MM:SS
+  END_DATE: string; // Format: DD-MM-YYYY HH:MM:SS
+  STATUS: 'Success' | 'Error' | 'Warning' | 'InProgress';
+  DETAILS?: string;
   level: 'info' | 'warn' | 'error' | 'debug';
   category: 'user_action' | 'api_call' | 'navigation' | 'error' | 'performance' | 'system' | 'security';
   action: string;
@@ -129,7 +129,7 @@ class LoggingService {
     userId: string = 'system',
     module: string = 'System',
     functionName: string = action,
-    status: LogEntry['status'] = 'Success'
+    status: LogEntry['STATUS'] = 'Success'
   ): void {
     if (!this.isEnabled) return;
 
@@ -139,15 +139,15 @@ class LoggingService {
     const endDate = this.formatDateTime(now);
 
     const logEntry: LogEntry = {
-      id: this.generateLogId(),
-      processId,
-      userId,
-      module,
-      functionName,
-      startDate,
-      endDate,
-      status,
-      details: JSON.stringify(details),
+      NO: this.generateLogId(),
+      PROCESS_ID:processId,
+      USER_ID: userId,
+      MODULE:module,
+      FUNCTION_NAME:functionName,
+      START_DATE:startDate,
+      END_DATE:endDate,
+      STATUS:status,
+      DETAILS: JSON.stringify(details),
       level,
       category,
       action,
@@ -290,7 +290,7 @@ class LoggingService {
     }
 
     if (filter.userId) {
-      filteredLogs = filteredLogs.filter(log => log.userId === filter.userId);
+      filteredLogs = filteredLogs.filter(log => log.USER_ID === filter.userId);
     }
 
     if (filter.dateFrom) {
@@ -305,7 +305,7 @@ class LoggingService {
       const searchTerm = filter.search.toLowerCase();
       filteredLogs = filteredLogs.filter(log => 
         log.action.toLowerCase().includes(searchTerm) ||
-        JSON.stringify(log.details).toLowerCase().includes(searchTerm)
+        JSON.stringify(log.DETAILS).toLowerCase().includes(searchTerm)
       );
     }
 
