@@ -258,7 +258,7 @@ const LoginPage: React.FC<LoginPageProps> = ({ onLoginSuccess }) => {
         module: "Login",
         action: AuditAction.LOGIN_SUCCESS,
         status: "Success",
-        description: `User ${user.username} berhasil login`,
+        description: `User ${user.username} success login`,
         location: "LoginPage",
         timestamp: new Date().toISOString(),
       });

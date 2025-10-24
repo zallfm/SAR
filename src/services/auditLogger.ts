@@ -290,10 +290,10 @@ export class AuditLogger {
     });
 
     // Log page load
-    this.logSuccess(AuditAction.LOGIN_SUCCESS, {
-      description: 'User accessed application',
-      module: 'authentication'
-    });
+    // this.logSuccess(AuditAction.LOGIN_SUCCESS, {
+    //   description: 'User accessed applications',
+    //   module: 'authenticationss'
+    // });
   }
 
   /**
