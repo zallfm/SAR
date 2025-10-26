@@ -21,6 +21,7 @@ import { useApplicationStore } from "../../../store/applicationStore";
 import { postLogMonitoringApi } from "../../../../src/api/log_monitoring";
 import { AuditAction } from "../../../../src/constants/auditActions";
 import { useAuthStore } from "../../../../src/store/authStore";
+import { parseApiError } from "@/src/utils/apiError";
 
 const ApplicationPage: React.FC = () => {
   const { currentUser } = useAuthStore();
@@ -43,10 +44,33 @@ const ApplicationPage: React.FC = () => {
     closeModal,
     openStatusConfirmation,
     closeStatusConfirmation,
+    getApplications,
+    createApplication,
+    editApplication,
+    isLoading,
+    error,
   } = useApplicationStore();
 
   const [showSuccessModal, setShowSuccessModal] = useState(false);
   const [pendingSearch, setPendingSearch] = useState("");
+
+  const [modalErrors, setModalErrors] = useState<{
+    appId?: string;
+    appName?: string;
+    divisionOwner?: string;
+    owner?: string;
+    custodian?: string;
+    securityCenter?: string;
+    form?: string;
+  }>({});
+
+  const toEnglishStatus = (
+    status: "Aktif" | "Inactive"
+  ): "Active" | "Inactive" => (status === "Aktif" ? "Active" : "Inactive");
+
+  const toIndonesianStatus = (
+    status: "Active" | "Inactive"
+  ): "Aktif" | "Inactive" => (status === "Active" ? "Aktif" : "Inactive");
 
   const { logUserAction, logError } = useLogging({
     componentName: "ApplicationPage",
@@ -54,37 +78,13 @@ const ApplicationPage: React.FC = () => {
   });
 
   const getNameFromNoreg = (noreg: string): string => {
-    const user = systemUsers.find((u) => u.ID === noreg);
-    return user ? user.name : noreg;
+    const user = systemUsers.find((u) => u.NOREG === noreg);
+    return user ? user.PERSONAL_NAME : noreg;
   };
 
   const handleSearchChange = (event: React.ChangeEvent<HTMLInputElement>) => {
     setSearchTerm(event.target.value);
   };
-  // const handleSearchChange = (event: React.ChangeEvent<HTMLInputElement>) => {
-  //   setPendingSearch(event.target.value);
-  // };
-
-  // useEffect(() => {
-  //   const timeout = setTimeout(() => {
-  //     setSearchTerm(pendingSearch);
-  //     if (pendingSearch.trim() !== "") {
-  //       postLogMonitoringApi({
-  //         userId: currentUser?.username ?? "anonymous",
-  //         module: "Application",
-  //         action: AuditAction.DATA_SEARCH,
-  //         status: "Success",
-  //         description: `User ${
-  //           currentUser?.username ?? "unknown"
-  //         } searched Application with keyword "${pendingSearch}"`,
-  //         location: "ApplicationPage.handleSearchChange",
-  //         timestamp: new Date().toISOString(),
-  //       }).catch((err) => console.warn("Failed to log search:", err));
-  //     }
-  //   }, 300);
-
-  //   return () => clearTimeout(timeout);
-  // }, [pendingSearch]);
 
   const handleOpenAddModal = () => {
     openAddModal();
@@ -103,8 +103,8 @@ const ApplicationPage: React.FC = () => {
       "open_edit_application_modal",
       "Application",
       {
-        applicationId: app.ID,
-        applicationName: app.name,
+        applicationId: app.APPLICATION_ID,
+        applicationName: app.APPLICATION_NAME,
         timestamp: new Date().toISOString(),
       }
     );
@@ -114,45 +114,159 @@ const ApplicationPage: React.FC = () => {
     closeModal();
   };
 
-  const handleSaveApplication = async (application: Application) => {
-    if (editingApplication) {
-      updateApplication(application);
+  const handleSaveApplication = async (application: Partial<Application>) => {
+    try {
+      // Validasi minimal untuk create
+      const required = [
+        "APPLICATION_ID",
+        "APPLICATION_NAME",
+        "DIVISION_ID_OWNER",
+        "NOREG_SYSTEM_OWNER",
+        "NOREG_SYSTEM_CUST",
+        "SECURITY_CENTER",
+        "APPLICATION_STATUS",
+      ] as const;
 
-      loggingUtils.logDataChange("Update", "Application", application.ID, {
-        applicationName: application.name,
-        timestamp: new Date().toISOString(),
-      });
+      for (const k of required) {
+        if (!application[k]) {
+          setModalErrors((prev) => ({
+            ...prev,
+            // map key payload -> key error di modal
+            ...(k === "APPLICATION_ID"
+              ? { appId: "The Application ID field is required." }
+              : {}),
+            ...(k === "APPLICATION_NAME"
+              ? { appName: "The Application Name field is required." }
+              : {}),
+            ...(k === "DIVISION_ID_OWNER"
+              ? { divisionOwner: "Division Owner field is required." }
+              : {}),
+            ...(k === "NOREG_SYSTEM_OWNER"
+              ? { owner: "The System Owner field is mandatory." }
+              : {}),
+            ...(k === "NOREG_SYSTEM_CUST"
+              ? { custodian: "The System Custodian field is required." }
+              : {}),
+            ...(k === "SECURITY_CENTER"
+              ? { securityCenter: "Field Security Center is required." }
+              : {}),
+          }));
+          return;
+        }
+      }
 
-      await postLogMonitoringApi({
-        userId: currentUser?.username ?? "anonymous",
-        module: "Application",
-        action: AuditAction.DATA_UPDATE,
-        status: "Success",
-        description: `User update aplikasi name ${application.name}`,
-        location: "ApplicationPage.UpdateForm",
-        timestamp: new Date().toISOString(),
-      });
-    } else {
-      addApplication(application);
+      if (editingApplication) {
+        // EDIT: gabungkan data lama + perubahan
+        const id = editingApplication.APPLICATION_ID;
 
-      loggingUtils.logDataChange("Create", "Application", application.ID, {
-        applicationName: application.name,
-        timestamp: new Date().toISOString(),
-      });
+        const payload: Partial<Application> = {
+          APPLICATION_NAME:
+            application.APPLICATION_NAME ?? editingApplication.APPLICATION_NAME,
+          DIVISION_ID_OWNER:
+            application.DIVISION_ID_OWNER ??
+            editingApplication.DIVISION_ID_OWNER,
+          NOREG_SYSTEM_OWNER:
+            application.NOREG_SYSTEM_OWNER ??
+            editingApplication.NOREG_SYSTEM_OWNER,
+          NOREG_SYSTEM_CUST:
+            application.NOREG_SYSTEM_CUST ??
+            editingApplication.NOREG_SYSTEM_CUST,
+          SECURITY_CENTER:
+            application.SECURITY_CENTER ?? editingApplication.SECURITY_CENTER,
+          APPLICATION_STATUS:
+            application.APPLICATION_STATUS ??
+            editingApplication.APPLICATION_STATUS,
+        };
 
-      await postLogMonitoringApi({
-        userId: currentUser?.username ?? "anonymous",
-        module: "Application",
-        action: AuditAction.DATA_CREATE,
-        status: "Success",
-        description: `User menambahkan aplikasi name${application.name}`,
-        location: "ApplicationPage.CreateForm",
-        timestamp: new Date().toISOString(),
-      });
+        await editApplication(id, payload);
+
+        await postLogMonitoringApi({
+          userId: currentUser?.username ?? "anonymous",
+          module: "Application",
+          action: AuditAction.DATA_UPDATE,
+          status: "Success",
+          description: `User update aplikasi name ${payload.APPLICATION_NAME}`,
+          location: "ApplicationPage.UpdateForm",
+          timestamp: new Date().toISOString(),
+        });
+      } else {
+        // CREATE: kirim hanya field yang diperlukan API create
+        await createApplication({
+          APPLICATION_ID: application.APPLICATION_ID!,
+          APPLICATION_NAME: application.APPLICATION_NAME!,
+          APPLICATION_STATUS: application.APPLICATION_STATUS!,
+          DIVISION_ID_OWNER: application.DIVISION_ID_OWNER!,
+          NOREG_SYSTEM_OWNER: application.NOREG_SYSTEM_OWNER!, // <-- perbaiki mapping
+          NOREG_SYSTEM_CUST: application.NOREG_SYSTEM_CUST!,
+          SECURITY_CENTER: application.SECURITY_CENTER!,
+        });
+
+        await postLogMonitoringApi({
+          userId: currentUser?.username ?? "anonymous",
+          module: "Application",
+          action: AuditAction.DATA_CREATE,
+          status: "Success",
+          description: `User create aplikasi name ${application.APPLICATION_NAME}`,
+          location: "ApplicationPage.CreateForm",
+          timestamp: new Date().toISOString(),
+        });
+      }
+
+      setShowSuccessModal(true);
+      setTimeout(() => setShowSuccessModal(false), 3000);
+      setModalErrors({});
+      closeModal();
+    } catch (err) {
+      const { code, message } = parseApiError(err);
+      if (code === "VAL-ERR-304" || /already exists/i.test(message)) {
+        setModalErrors({
+          appId: "Application ID is already in use, please use another ID.",
+        });
+        return;
+      }
+      if (/owner.*not eligible/i.test(message)) {
+        setModalErrors({
+          owner: "Selected Owner is not eligible as Owner",
+        });
+        return;
+      }
+      if (/custodian.*not eligible/i.test(message)) {
+        setModalErrors({
+          custodian: "Selected Custodian is not eligible as Custodian.",
+        });
+        return;
+      }
+
+      // owner dan custodian sama
+      if (
+        /owner.*custodian.*different/i.test(message) ||
+        /must be different/i.test(message)
+      ) {
+        setModalErrors({
+          owner: "Owner and Custodian must be different.",
+          custodian: "Owner and Custodian must be different.",
+        });
+        return;
+      }
+
+      // invalid NOREG
+      if (/owner noREG not found/i.test(message)) {
+        setModalErrors({ owner: "NOREG Owner not found." });
+        return;
+      }
+      if (/custodian noREG not found/i.test(message)) {
+        setModalErrors({ custodian: "NOREG Custodian not found." });
+        return;
+      }
+
+      // invalid security center (opsional)
+      if (/invalid security center/i.test(message)) {
+        setModalErrors({ form: "Security Center is invalid." });
+        return;
+      }
+
+      setModalErrors({ form: message || "Failed to save application." });
     }
-
-    setShowSuccessModal(true);
-    setTimeout(() => setShowSuccessModal(false), 3000);
   };
 
   const handleOpenStatusConfirm = (app: Application) => {
@@ -166,20 +280,15 @@ const ApplicationPage: React.FC = () => {
   const handleConfirmStatusChange = () => {
     if (!pendingStatusApplication) return;
 
-    const now = new Date();
-    const formattedDate = `${String(now.getDate()).padStart(2, "0")}-${String(
-      now.getMonth() + 1
-    ).padStart(2, "0")}-${now.getFullYear()}`;
-    const formattedTime = `${String(now.getHours()).padStart(2, "0")}:${String(
-      now.getMinutes()
-    ).padStart(2, "0")}:${String(now.getSeconds()).padStart(2, "0")}`;
-    const newUpdateTime = `${formattedDate}\n${formattedTime}`;
+    const newStatus =
+      pendingStatusApplication.APPLICATION_STATUS === "Aktif"
+        ? "Inactive"
+        : "Aktif";
 
     const updatedApplication: Application = {
       ...pendingStatusApplication,
-      status:
-        pendingStatusApplication.status === "Active" ? "Inactive" : "Active",
-      updated: newUpdateTime,
+      APPLICATION_STATUS: newStatus,
+      CHANGED_DT: new Date().toISOString(),
     };
 
     updateApplication(updatedApplication);
@@ -189,15 +298,13 @@ const ApplicationPage: React.FC = () => {
   };
 
   const enhancedApplications = useMemo(() => {
-    const enhanceString = (value: string) => value.replace("\\n", " ");
-
     return applications.map((app) => ({
       ...app,
       searchableFields: Object.values(app)
         .map((value) => String(value).toLowerCase())
         .join("|"),
-      createdDisplay: enhanceString(app.created),
-      updatedDisplay: enhanceString(app.updated),
+      createdDisplay: app.CREATED_DT?.replace("T", " ").split(".")[0] ?? "",
+      updatedDisplay: app.CHANGED_DT?.replace("T", " ").split(".")[0] ?? "",
     }));
   }, [applications]);
 
@@ -253,6 +360,10 @@ const ApplicationPage: React.FC = () => {
     itemsPerPage,
     enhancedApplications,
   ]);
+
+  useEffect(() => {
+    getApplications();
+  }, [getApplications]);
 
   return (
     <div>
@@ -313,26 +424,26 @@ const ApplicationPage: React.FC = () => {
             <tbody>
               {paginatedApplications.map((app, index) => (
                 <tr
-                  key={`${app.ID}-${index}`}
+                  key={`${app.APPLICATION_ID}-${index}`}
                   className="bg-white border-b border-gray-200 hover:bg-gray-50"
                 >
                   <td className="px-4 py-4 whitespace-nowrap text-gray-900 text-sm">
-                    {app.ID}
+                    {app.APPLICATION_ID}
                   </td>
                   <td className="px-4 py-4 whitespace-nowrap text-sm">
-                    {app.name}
+                    {app.APPLICATION_NAME}
                   </td>
                   <td className="px-4 py-4 whitespace-nowrap text-sm">
-                    {app.division}
+                    {app.DIVISION_ID_OWNER}
                   </td>
                   <td className="px-4 py-4 whitespace-nowrap text-sm">
-                    {getNameFromNoreg(app.owner)}
+                    {getNameFromNoreg(app.NOREG_SYSTEM_OWNER)}
                   </td>
                   <td className="px-4 py-4 whitespace-nowrap text-sm">
-                    {getNameFromNoreg(app.custodian)}
+                    {getNameFromNoreg(app.NOREG_SYSTEM_CUST)}
                   </td>
                   <td className="px-4 py-4 whitespace-nowrap text-sm">
-                    {app.securityCenter}
+                    {app.SECURITY_CENTER}
                   </td>
                   <td className="px-4 py-4 whitespace-nowrap text-sm">
                     {app.createdDisplay}
@@ -345,9 +456,11 @@ const ApplicationPage: React.FC = () => {
                       type="button"
                       onClick={() => handleOpenStatusConfirm(app)}
                       className="focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 rounded-full"
-                      aria-label={`Change status for ${app.name}`}
+                      aria-label={`Change status for ${app.APPLICATION_NAME}`}
                     >
-                      <StatusPill status={app.status} />
+                      <StatusPill
+                        status={toEnglishStatus(app.APPLICATION_STATUS)}
+                      />
                     </button>
                   </td>
                   <td className="px-4 py-4 whitespace-nowrap text-sm">
@@ -355,7 +468,7 @@ const ApplicationPage: React.FC = () => {
                       <IconButton
                         onClick={() => handleOpenEditModal(app)}
                         tooltip="Edit"
-                        aria-label={`Edit ${app.name}`}
+                        aria-label={`Edit ${app.APPLICATION_NAME}`}
                         hoverColor="blue"
                       >
                         <EditIcon />
@@ -421,10 +534,19 @@ const ApplicationPage: React.FC = () => {
         </div>
       </div>
       {isModalOpen && (
+        // <AddApplicationModal
+        //   onClose={handleCloseModal}
+        //   onSave={handleSaveApplication}
+        //   applicationToEdit={editingApplication}
+        // />
         <AddApplicationModal
-          onClose={handleCloseModal}
+          onClose={() => {
+            setModalErrors({});
+            handleCloseModal();
+          }}
           onSave={handleSaveApplication}
           applicationToEdit={editingApplication}
+          externalErrors={modalErrors}
         />
       )}
       {showSuccessModal && (
@@ -434,7 +556,9 @@ const ApplicationPage: React.FC = () => {
         <StatusConfirmationModal
           onClose={handleCloseStatusConfirm}
           onConfirm={handleConfirmStatusChange}
-          currentStatus={pendingStatusApplication.status}
+          currentStatus={toEnglishStatus(
+            pendingStatusApplication.APPLICATION_STATUS
+          )}
         />
       )}
     </div>

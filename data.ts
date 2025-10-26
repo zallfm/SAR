@@ -1,102 +1,71 @@
 export interface Application {
-  ID: string;
-  name: string;
-  division: string;
-  owner: string;
-  custodian: string;
-  securityCenter: string;
-  created: string;
-  updated: string;
-  status: "Active" | "Inactive";
+  APPLICATION_ID: string;
+  APPLICATION_NAME: string;
+  DIVISION_ID_OWNER: string;
+  NOREG_SYSTEM_OWNER: string;
+  NOREG_SYSTEM_CUST: string;
+  SECURITY_CENTER: string;
+  APPLICATION_STATUS: "Aktif" | "Inactive";
+  CREATED_BY: string
+  CREATED_DT: string; // ISO
+  CHANGED_BY: string;
+  CHANGED_DT: string; // ISO
 }
 
 export const initialApplications: Application[] = [
-  {
-    ID: "IPPCS",
-    name: "Integrated Production Planning Control System",
-    division: "Production Planning Control",
-    owner: "00123456", // Okubo
-    custodian: "00123457", // Yoshida
-    securityCenter: "SC",
-    created: "20-07-2024\n10:30:00",
-    updated: "20-07-2024\n11:00:00",
-    status: "Active",
-  },
-  {
-    ID: "PAS",
-    name: "Production Achievement System",
-    division: "Production Engineering",
-    owner: "00234567", // Tanaka
-    custodian: "00234568", // Sato
-    securityCenter: "Global SC",
-    created: "19-07-2024\n09:00:00",
-    updated: "19-07-2024\n09:45:00",
-    status: "Active",
-  },
-  {
-    ID: "TMS",
-    name: "Toyota Management System",
-    division: "Corporate Planning",
-    owner: "00345678", // Suzuki
-    custodian: "00345679", // Takahashi
-    securityCenter: "TMMINRole",
-    created: "18-07-2024\n14:00:00",
-    updated: "18-07-2024\n15:10:00",
-    status: "Inactive",
-  },
+  // {
+  //   ID: "IPPCS",
+  //   name: "Integrated Production Planning Control System",
+  //   division: "Production Planning Control",
+  //   owner: "00123456", // Okubo
+  //   custodian: "00123457", // Yoshida
+  //   securityCenter: "SC",
+  //   created: "20-07-2024\n10:30:00",
+  //   updated: "20-07-2024\n11:00:00",
+  //   status: "Active",
+  // },
+  // {
+  //   ID: "PAS",
+  //   name: "Production Achievement System",
+  //   division: "Production Engineering",
+  //   owner: "00234567", // Tanaka
+  //   custodian: "00234568", // Sato
+  //   securityCenter: "Global SC",
+  //   created: "19-07-2024\n09:00:00",
+  //   updated: "19-07-2024\n09:45:00",
+  //   status: "Active",
+  // },
+  // {
+  //   ID: "TMS",
+  //   name: "Toyota Management System",
+  //   division: "Corporate Planning",
+  //   owner: "00345678", // Suzuki
+  //   custodian: "00345679", // Takahashi
+  //   securityCenter: "TMMINRole",
+  //   created: "18-07-2024\n14:00:00",
+  //   updated: "18-07-2024\n15:10:00",
+  //   status: "Inactive",
+  // },
 ];
 
 export interface SystemUser {
-  ID: string;
-  name: string;
-  division: string;
-  email: string;
-  department: string;
+  NOREG: string;
+  PERSONAL_NAME: string;
+  DIVISION_NAME: string;
+  MAIL: string;
+  DEPARTEMENT_NAME: string;
+  canBeOwner: boolean;      // eligible as System Owner
+  canBeCustodian: boolean;
 }
 
 export const systemUsers: SystemUser[] = [
-  {
-    ID: "00123456",
-    name: "Okubo",
-    division: "Production Planning Control",
-    email: "okubo@toyota.co.id",
-    department: "PPC Dept",
-  },
-  {
-    ID: "00123457",
-    name: "Yoshida",
-    division: "Production Planning Control",
-    email: "yoshida@toyota.co.id",
-    department: "PPC Dept",
-  },
-  {
-    ID: "00234567",
-    name: "Tanaka",
-    division: "Production Engineering",
-    email: "tanaka@toyota.co.id",
-    department: "PE Dept",
-  },
-  {
-    ID: "00234568",
-    name: "Sato",
-    division: "Production Engineering",
-    email: "sato@toyota.co.id",
-    department: "PE Dept",
-  },
-  {
-    ID: "00345678",
-    name: "Suzuki",
-    division: "Corporate Planning",
-    email: "suzuki@toyota.co.id",
-    department: "CP Dept",
-  },
-  {
-    ID: "00345679",
-    name: "Takahashi",
-    division: "Corporate Planning",
-    email: "takahashi@toyota.co.id",
-    department: "CP Dept",
-  },
+  // {
+  //   NOREG: "00123456",
+  //   PERSONAL_NAME: "Okubo",
+  //   DIVISION_NAME: "Production Planning Control",
+  //   MAIL: "okubo@toyota.co.id",
+  //   DEPARTEMENT_NAME: "PPC Dept",
+  // },
 ];
 
 export const securityCenters: string[] = [
@@ -138,9 +107,8 @@ export const mockLogDetails: LogDetail[] = Array.from(
       (i * 2) % 60
     ).padStart(2, "0")}`,
     LOCATION: `Module.FunctionName.Step${i + 1}`,
-    MESSAGE_DETAIL: `Execution step ${i + 1} completed. ${
-      i % 4 === 0 ? "Encountered a minor warning." : "Proceeding to next step."
-    }`,
+    MESSAGE_DETAIL: `Execution step ${i + 1} completed. ${i % 4 === 0 ? "Encountered a minor warning." : "Proceeding to next step."
+      }`,
   })
 );
 
@@ -860,12 +828,12 @@ const generateDivisionUserDetailData = (): UarDivisionUserReviewDetail[] => {
         comments:
           i % 5 === 0 && i < reviewedCount
             ? [
-                {
-                  user: "Hesti (Admin)",
-                  text: `Initial check for ${detailId}`,
-                  timestamp: new Date(),
-                },
-              ]
+              {
+                user: "Hesti (Admin)",
+                text: `Initial check for ${detailId}`,
+                timestamp: new Date(),
+              },
+            ]
             : undefined,
       });
     }
