@@ -47,6 +47,7 @@ const ApplicationPage: React.FC = () => {
     getApplications,
     createApplication,
     editApplication,
+    toggleApplicationStatus,
     isLoading,
     error,
   } = useApplicationStore();
@@ -218,6 +219,7 @@ const ApplicationPage: React.FC = () => {
       closeModal();
     } catch (err) {
       const { code, message } = parseApiError(err);
+      console.log("code",code)
       if (code === "VAL-ERR-304" || /already exists/i.test(message)) {
         setModalErrors({
           appId: "Application ID is already in use, please use another ID.",
@@ -277,24 +279,41 @@ const ApplicationPage: React.FC = () => {
     closeStatusConfirmation();
   };
 
-  const handleConfirmStatusChange = () => {
+  const handleConfirmStatusChange = async () => {
     if (!pendingStatusApplication) return;
+    try {
+      await toggleApplicationStatus(pendingStatusApplication);
 
-    const newStatus =
-      pendingStatusApplication.APPLICATION_STATUS === "Aktif"
-        ? "Inactive"
-        : "Aktif";
+      await postLogMonitoringApi({
+        userId: currentUser?.username ?? "anonymus",
+        module: "Application",
+        action: AuditAction.DATA_UPDATE,
+        status: "Success",
+        description: `User changed status of ${pendingStatusApplication.APPLICATION_NAME}`,
+        location: "ApplicationPage.StatusChange",
+        timestamp: new Date().toISOString(),
+      })
+      setShowSuccessModal(true)
+      setTimeout(() => setShowSuccessModal(false), 3000);
+    } catch (error) {
+      console.error("Failed to toggle status:", error)
+    }
 
-    const updatedApplication: Application = {
-      ...pendingStatusApplication,
-      APPLICATION_STATUS: newStatus,
-      CHANGED_DT: new Date().toISOString(),
-    };
+    // const newStatus =
+    //   pendingStatusApplication.APPLICATION_STATUS === "Aktif"
+    //     ? "Inactive"
+    //     : "Aktif";
 
-    updateApplication(updatedApplication);
-    handleCloseStatusConfirm();
-    setShowSuccessModal(true);
-    setTimeout(() => setShowSuccessModal(false), 3000);
+    // const updatedApplication: Application = {
+    //   ...pendingStatusApplication,
+    //   APPLICATION_STATUS: newStatus,
+    //   CHANGED_DT: new Date().toISOString(),
+    // };
+
+    // updateApplication(updatedApplication);
+    // handleCloseStatusConfirm();
+    // setShowSuccessModal(true);
+    // setTimeout(() => setShowSuccessModal(false), 3000);
   };
 
   const enhancedApplications = useMemo(() => {

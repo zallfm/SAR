@@ -23,6 +23,7 @@ interface ApplicationState {
   getApplications: () => Promise<void>;
   createApplication: (payload: Omit<Application, "CREATED_BY" | "CREATED_DT" | "CHANGED_BY" | "CHANGED_DT">) => Promise<Application>;
   editApplication: (id: string, payload: Partial<Application>) => Promise<Application>;
+  toggleApplicationStatus: (app: Application) => void;
 
 
   setApplications: (apps: Application[]) => void;
@@ -120,6 +121,30 @@ export const useApplicationStore = create<ApplicationState>()(
           }));
 
           return merged;
+        },
+
+        toggleApplicationStatus: async (app) => {
+          const nextStatus = app.APPLICATION_STATUS === "Aktif" ? "Inactive" : "Aktif"
+
+          const res = await editApplicationApi(app.APPLICATION_ID, {
+            APPLICATION_STATUS: nextStatus,
+          })
+
+          const updated = res.data ?? {
+            ...app,
+            APPLICATION_STATUS: nextStatus,
+            CHANGED_DT: new Date().toISOString(),
+          }
+
+          set((s) => ({
+            applications: s.applications.map((a) =>
+              a.APPLICATION_ID === app.APPLICATION_ID ? updated : a),
+            filteredApplications: s.filteredApplications.map((a) => a.APPLICATION_ID === app.APPLICATION_ID ? updated : a),
+            isStatusConfirmationOpen: false,
+            pendingStatusApplication: null
+          }))
+
+          return updated
         },
 
         addApplication: (app) =>
