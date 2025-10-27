@@ -105,7 +105,7 @@ export const useUarPicStore = create<UarPicState>()(
         error: null,
 
         getPics: async (params) => {
-          console.log("Getting PICS");
+          ("Getting PICS");
           const state = get();
           const page = params?.page ?? state.currentPage;
           const limit = params?.limit ?? state.itemsPerPage;
@@ -119,7 +119,6 @@ export const useUarPicStore = create<UarPicState>()(
 
           set({ isLoading: true, error: null });
           try {
-            console.log("query", query);
             const res = await getUarApi(query);
             const { data: raw, meta: metaFromApi } = res as {
               data: UarPic[];
@@ -172,7 +171,6 @@ export const useUarPicStore = create<UarPicState>()(
 
         resetFilters: async () => {
           set({ filters: initialFilters, currentPage: 1 });
-          console.log("resetFilters", get().filters);
           await get().getPics(initialFilters);
         },
 

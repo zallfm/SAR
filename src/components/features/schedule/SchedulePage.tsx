@@ -145,7 +145,6 @@ const SchedulePage: React.FC = () => {
     newSchedules: Omit<ScheduleData, "ID">[]
   ) => {
     try {
-      console.log("Adding new schedules:", newSchedules);
       for (const schedule of newSchedules) {
         await addSchedule(schedule);
       }
@@ -163,7 +162,6 @@ const SchedulePage: React.FC = () => {
   }, [getSchedules, filters, currentPage, itemsPerPage]);
 
   const handleOpenStatusConfirm = (schedule: ScheduleData) => {
-    console.log("handleOpenStatusConfirm", schedule);
     setScheduleToChangeStatus(schedule);
     setIsStatusConfirmOpen(true);
   };

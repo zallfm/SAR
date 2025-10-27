@@ -34,7 +34,6 @@ const ScheduleEditModal: React.FC<ScheduleEditModalProps> = ({
         return schedule.ID === id ? { ...schedule, [field]: value } : schedule;
       });
     });
-    console.log(editedSchedules);
   };
 
   useEffect(() => {

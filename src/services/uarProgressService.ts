@@ -218,7 +218,6 @@ class UarProgressService {
 
     // Calculate grand total
     const allData = [...divisions, ...Object.values(departments).flat(), ...systemApps];
-    console.log("allData", allData)
     const grandTotal = {
       review: Math.round(allData.reduce((sum, item) => sum + item.review, 0) / allData.length),
       approved: Math.round(allData.reduce((sum, item) => sum + item.approved, 0) / allData.length),

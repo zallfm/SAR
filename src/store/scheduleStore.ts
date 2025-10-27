@@ -119,9 +119,7 @@ export const useScheduleStore = create<ScheduleState>()(
         isLoading: false,
         error: null,
 
-        // ADDED: Get schedules from API
         getSchedules: async (params) => {
-          console.log("Getting Schedules");
           const state = get();
           const page = params?.page ?? state.currentPage;
           const limit = params?.limit ?? state.itemsPerPage;
@@ -135,7 +133,6 @@ export const useScheduleStore = create<ScheduleState>()(
 
           set({ isLoading: true, error: null });
           try {
-            console.log("query", query);
             const res = await getScheduleApi(query);
             const response = res as {
               data: Schedule[];
@@ -160,7 +157,6 @@ export const useScheduleStore = create<ScheduleState>()(
               CHANGED_DT: item.CHANGED_DT,
             }));
 
-            console.log("Schedules", schedules);
 
             set({
               schedules,
@@ -204,7 +200,6 @@ export const useScheduleStore = create<ScheduleState>()(
         // MODIFIED: resetFilters now refetches
         resetFilters: async () => {
           set({ filters: initialFilters, currentPage: 1 });
-          console.log("resetFilters", get().filters);
           await get().getSchedules(initialFilters);
         },
 

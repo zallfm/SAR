@@ -16,7 +16,6 @@ export default function ShortDatePicker({
 }: Props) {
   // Parse current value
   const [day, month] = value ? value.split("/") : [null, null];
-  console.log(day, month);
 
   const handleDayChange = (newDay: string) => {
     if (!newDay) return;
