@@ -44,6 +44,8 @@ const UarPicPage: React.FC = () => {
   } = useUarPicActions();
 
   const getPics = useUarPicStore((state) => state.getPics);
+  const meta = useUarPicStore((state) => state.meta);
+  const totalItems = meta?.total ?? 0;
   // Local state for UI interactions
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [editingPic, setEditingPic] = useState<PicUser | null>(null);
@@ -54,41 +56,23 @@ const UarPicPage: React.FC = () => {
 
   const [isInfoOpen, setIsInfoOpen] = useState(false);
   const [infoMessage, setInfoMessage] = useState("");
+  const controller = new AbortController();
 
-  const filteredPics = useMemo(() => {
-    return pics.filter((pic) => {
-      const nameMatch = pic.PIC_NAME.toLowerCase().includes(
-        filters.name.toLowerCase()
-      );
-      const divisionMatch = filters.division
-        ? divisions[pic.DIVISION_ID - 1] === filters.division
-        : true;
-      return nameMatch && divisionMatch;
-    });
-  }, [pics, filters]);
-
-  React.useEffect(() => {
-    const haveSameLength = storeFilteredPics.length === filteredPics.length;
-    const haveSameIds =
-      haveSameLength &&
-      storeFilteredPics.every(
-        (pic, index) => pic.ID === filteredPics[index]?.ID
-      );
-
-    if (!haveSameIds) {
-      setFilteredPics(filteredPics);
-    }
-  }, [filteredPics, setFilteredPics, storeFilteredPics]);
-
-  React.useEffect(() => {
-    getPics();
-  }, [getPics]);
+React.useEffect(() => {
+  getPics({
+    pic_name: filters.pic_name,
+    divisionId: filters.divisionId,
+    page: currentPage,
+    limit: itemsPerPage,
+  });
+}, [getPics, filters, currentPage, itemsPerPage]);
 
   const totalPages = getTotalPages();
   const currentPics = getCurrentPagePics();
   const startItem =
     currentPics.length > 0 ? (currentPage - 1) * itemsPerPage + 1 : 0;
-  const endItem = Math.min(currentPage * itemsPerPage, filteredPics.length);
+  // MODIFY THIS LINE
+  const endItem = Math.min(currentPage * itemsPerPage, totalItems);
 
   const handleOpenAddModal = () => {
     setEditingPic(null);
@@ -167,16 +151,23 @@ const UarPicPage: React.FC = () => {
           <div className="flex items-center gap-4">
             <SearchableDropdown
               label="Name"
-              value={filters.name}
-              onChange={(value) => setFilters({ name: value })}
+              value={filters.pic_name}
+              onChange={(value) => setFilters({ pic_name: value })}
               options={[...new Set(pics.map((pic) => pic.PIC_NAME))]}
               placeholder="Name"
               className="w-full sm:w-40"
             />
             <SearchableDropdown
               label="Division"
-              value={filters.division}
-              onChange={(value) => setFilters({ division: value })}
+              value={divisions[Number(filters.divisionId ?? 1) - 1]}
+              onChange={(value) => {
+                const divisionId = divisions.indexOf(value) + 1;
+                if (divisionId > 0 && divisionId <= divisions.length) {
+                  setFilters({ divisionId: divisionId });
+                } else {
+                  setFilters({ divisionId: "" });
+                }
+              }}
               options={[...new Set(divisions)].sort()}
               searchable={false}
               placeholder="Division"
@@ -271,9 +262,10 @@ const UarPicPage: React.FC = () => {
             <div className="relative">
               <select
                 value={itemsPerPage}
-                onChange={(e) => {
+                onChange={async (e) => {
                   setItemsPerPage(Number(e.target.value));
                   setCurrentPage(1);
+                  await getPics();
                 }}
                 className="pl-3 pr-8 py-1.5 border border-gray-300 rounded-md hover:bg-gray-100 appearance-none bg-white"
               >
@@ -288,7 +280,7 @@ const UarPicPage: React.FC = () => {
           </div>
           <div className="flex items-center gap-4">
             <span>
-              Showing {startItem}-{endItem} of {filteredPics.length}
+              Showing {startItem}-{endItem} of {totalItems}
             </span>
             <div className="flex gap-2">
               <button

@@ -1,13 +1,13 @@
 import React, { useState, useEffect, useMemo, useRef } from "react";
-import type { Schedule } from "../../../../data";
 import { initialSchedules } from "../../../../data";
 import { isValidDdMm, isUarDateValid } from "../../../../utils/dateFormatter";
 import { TrashIcon } from "../../icons/TrashIcon";
 import ShortDatePicker from "../Button/ShortDatePicker";
+import { ScheduleData } from "@/src/types/schedule";
 
 interface SetScheduleModalProps {
   onClose: () => void;
-  onSave: (newSchedules: Omit<Schedule, "id">[]) => void;
+  onSave: (newSchedules: Omit<ScheduleData, "ID">[]) => void;
 }
 
 type AppOption = { id: string; name: string };
@@ -28,7 +28,11 @@ const SetScheduleModal: React.FC<SetScheduleModalProps> = ({
   const [appName, setAppName] = useState("");
   const [isDropdownOpen, setIsDropdownOpen] = useState(false);
   const [schedules, setSchedules] = useState([
-    { syncStart: "", syncEnd: "", uar: "" },
+    {
+      SCHEDULE_SYNC_START_DT: "",
+      SCHEDULE_SYNC_END_DT: "",
+      SCHEDULE_UAR_DT: "",
+    },
   ]);
   const dropdownRef = useRef<HTMLDivElement>(null);
 
@@ -57,7 +61,10 @@ const SetScheduleModal: React.FC<SetScheduleModalProps> = ({
 
   const handleScheduleChange = (
     index: number,
-    field: "syncStart" | "syncEnd" | "uar",
+    field:
+      | "SCHEDULE_SYNC_START_DT"
+      | "SCHEDULE_SYNC_END_DT"
+      | "SCHEDULE_UAR_DT",
     value: string
   ) => {
     const newSchedules = [...schedules];
@@ -66,7 +73,14 @@ const SetScheduleModal: React.FC<SetScheduleModalProps> = ({
   };
 
   const addSchedule = () => {
-    setSchedules([...schedules, { syncStart: "", syncEnd: "", uar: "" }]);
+    setSchedules([
+      ...schedules,
+      {
+        SCHEDULE_SYNC_END_DT: "",
+        SCHEDULE_SYNC_START_DT: "",
+        SCHEDULE_UAR_DT: "",
+      },
+    ]);
   };
 
   const removeSchedule = (indexToRemove: number) => {
@@ -77,28 +91,42 @@ const SetScheduleModal: React.FC<SetScheduleModalProps> = ({
     if (selectedApps.length === 0 || !appName.trim()) return false;
     return schedules.every(
       (s) =>
-        isValidDdMm(s.syncStart) && isValidDdMm(s.syncEnd) && isValidDdMm(s.uar) && isUarDateValid(s.syncEnd, s.uar)
+        isValidDdMm(s.SCHEDULE_SYNC_START_DT) &&
+        isValidDdMm(s.SCHEDULE_SYNC_END_DT) &&
+        isValidDdMm(s.SCHEDULE_UAR_DT) &&
+        isUarDateValid(s.SCHEDULE_SYNC_START_DT, s.SCHEDULE_UAR_DT)
     );
   }, [selectedApps, appName, schedules]);
 
   const handleSave = () => {
     if (!isFormValid) return;
-    const newScheduleEntries: Omit<Schedule, "id">[] = [];
+
+    // This type should match what 'addSchedule' expects
+    const newScheduleEntries: Omit<ScheduleData, "ID">[] = [];
+
     selectedApps.forEach((app) => {
       schedules.forEach((schedule) => {
         newScheduleEntries.push({
-          applicationId: app.id,
-          applicationName: appName,
-          scheduleSync: `${schedule.syncStart.trim()} - ${schedule.syncEnd.trim()}`,
-          scheduleUar: schedule.uar.trim(),
-          status: "Active",
+          APPLICATION_ID: app.id,
+          SCHEDULE_SYNC_START_DT: schedule.SCHEDULE_SYNC_START_DT.trim(),
+          SCHEDULE_SYNC_END_DT: schedule.SCHEDULE_SYNC_END_DT.trim(),
+          SCHEDULE_UAR_DT: schedule.SCHEDULE_UAR_DT.trim(),
+          SCHEDULE_STATUS: "Pending",
         });
       });
     });
+
     onSave(newScheduleEntries);
   };
 
-  const getInputClasses = (schedule: { syncStart: string; syncEnd: string; uar: string }, field: 'syncStart' | 'syncEnd' | 'uar') => {
+  const getInputClasses = (
+    schedule: {
+      SCHEDULE_SYNC_START_DT: string;
+      SCHEDULE_SYNC_END_DT: string;
+      SCHEDULE_UAR_DT: string;
+    },
+    field: "SCHEDULE_SYNC_START_DT" | "SCHEDULE_SYNC_END_DT" | "SCHEDULE_UAR_DT"
+  ) => {
     const baseClasses =
       "w-full px-3 py-2 border rounded-md focus:outline-none focus:ring-1";
     const validClasses =
@@ -108,13 +136,16 @@ const SetScheduleModal: React.FC<SetScheduleModalProps> = ({
 
     const value = schedule[field];
 
-    // Check basic date format validation
     if (!isValidDdMm(value) && value.length > 0) {
       return `${baseClasses} ${invalidClasses}`;
     }
 
-    // Check UAR date validation against sync end date
-    if (field === 'uar' && value.length > 0 && isValidDdMm(schedule.syncEnd) && !isUarDateValid(schedule.syncEnd, value)) {
+    if (
+      field === "SCHEDULE_UAR_DT" &&
+      value.length > 0 &&
+      isValidDdMm(schedule.SCHEDULE_SYNC_START_DT) &&
+      !isUarDateValid(schedule.SCHEDULE_SYNC_START_DT, value)
+    ) {
       return `${baseClasses} ${invalidClasses}`;
     }
 
@@ -260,19 +291,25 @@ const SetScheduleModal: React.FC<SetScheduleModalProps> = ({
                 <div className="grid grid-cols-2 gap-4">
                   {/* schedule syncronize start */}
                   <ShortDatePicker
-                    value={schedule.syncStart}
+                    value={schedule.SCHEDULE_SYNC_START_DT}
                     onChange={(val) =>
-                      handleScheduleChange(index, "syncStart", val)
+                      handleScheduleChange(index, "SCHEDULE_SYNC_START_DT", val)
                     }
-                    className={getInputClasses(schedule, "syncStart")}
+                    className={getInputClasses(
+                      schedule,
+                      "SCHEDULE_SYNC_START_DT"
+                    )}
                   />
                   {/* schedule syncronize end */}
                   <ShortDatePicker
-                    value={schedule.syncEnd}
+                    value={schedule.SCHEDULE_SYNC_END_DT}
                     onChange={(val) =>
-                      handleScheduleChange(index, "syncEnd", val)
+                      handleScheduleChange(index, "SCHEDULE_SYNC_END_DT", val)
                     }
-                    className={getInputClasses(schedule, "syncEnd")}
+                    className={getInputClasses(
+                      schedule,
+                      "SCHEDULE_SYNC_END_DT"
+                    )}
                   />
                 </div>
               </div>
@@ -280,17 +317,26 @@ const SetScheduleModal: React.FC<SetScheduleModalProps> = ({
                 <label className="block text-sm font-medium text-gray-700 mb-1">
                   Schedule UAR <span className="text-red-500">*</span>
                 </label>
-                {/* schedule uar */}
+                {/* schedule SCHEDULE_UAR_DT */}
                 <ShortDatePicker
-                  value={schedule.uar}
-                  onChange={(val) => handleScheduleChange(index, "uar", val)}
-                  className={getInputClasses(schedule, "uar")}
+                  value={schedule.SCHEDULE_UAR_DT}
+                  onChange={(val) =>
+                    handleScheduleChange(index, "SCHEDULE_UAR_DT", val)
+                  }
+                  className={getInputClasses(schedule, "SCHEDULE_UAR_DT")}
                 />
-                {schedule.uar.length > 0 && isValidDdMm(schedule.syncEnd) && isValidDdMm(schedule.uar) && !isUarDateValid(schedule.syncEnd, schedule.uar) && (
-                  <p className="mt-1 text-sm text-red-600">
-                    Schedule UAR must be after Schedule Synchronize date ({schedule.syncEnd})
-                  </p>
-                )}
+                {schedule.SCHEDULE_UAR_DT.length > 0 &&
+                  isValidDdMm(schedule.SCHEDULE_SYNC_START_DT) &&
+                  isValidDdMm(schedule.SCHEDULE_UAR_DT) &&
+                  !isUarDateValid(
+                    schedule.SCHEDULE_SYNC_START_DT,
+                    schedule.SCHEDULE_UAR_DT
+                  ) && (
+                    <p className="mt-1 text-sm text-red-600">
+                      Schedule UAR must be after Schedule Synchronize date (
+                      {schedule.SCHEDULE_SYNC_START_DT})
+                    </p>
+                  )}
               </div>
             </div>
           ))}

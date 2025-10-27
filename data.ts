@@ -115,12 +115,9 @@ export interface LogEntry {
   START_DATE: string;
   END_DATE: string;
   STATUS: "Success" | "Error" | "Warning" | "InProgress";
-  DETAILS: any
+  DETAILS: any;
 }
 
-// Categorized logs - only important data changes and critical actions
-// Sorted from latest to oldest (newest first) - DESC order
-// New activities will appear at the top automatically
 export const mockLogs: LogEntry[] = [];
 
 export interface LogDetail {
@@ -408,6 +405,25 @@ export const roleInformationData: Record<string, string[]> = {
   PAS_PROD_LEAD: ["Production Line Supervisor", "Shift Leader"],
   PAS_QC_INSPECT: ["Quality Control Inspector", "Product Tester"],
 };
+
+export const applications = [
+  {
+    APPLICATION_ID: "IPPCS",
+    APP_NAME: "IPPCS",
+  },
+  {
+    APPLICATION_ID: "TVEST",
+    APP_NAME: "TVEST",
+  },
+  {
+    APPLICATION_ID: "IFAST",
+    APP_NAME: "IFAST",
+  },
+  {
+    APPLICATION_ID: "RCS",
+    APP_NAME: "RCS",
+  },
+];
 
 export interface Schedule {
   ID: number;

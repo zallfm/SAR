@@ -1,151 +1,358 @@
-import { create } from 'zustand'
-import { persist } from 'zustand/middleware'
-import { devtools } from 'zustand/middleware'
-import type { Schedule } from '../../data'
-import { initialSchedules } from '../../data'
+import { create } from "zustand";
+import { persist } from "zustand/middleware";
+import { devtools } from "zustand/middleware";
+
+import {
+  getScheduleApi,
+  createScheduleApi,
+  editScheduleApi,
+  deleteScheduleApi,
+  updateStatusScheduleApi,
+} from "../api/schedule.api";
+
+import {
+  BackendCreateScheduleResponse,
+  CreateSchedulePayload,
+  BackendUpdateScheduleResponse,
+  UpdateSchedulePayload,
+  Schedule,
+  BackendGetScheduleResponse,
+  ScheduleData,
+  UpdateScheduleStatusPayload,
+} from "../types/schedule";
+import { applications } from "@/data";
+
+type ApiMeta = {
+  page: number;
+  limit: number;
+  total: number;
+  totalPages: number;
+};
+
+// --- Original Types ---
 
 export interface ScheduleFilters {
-  applicationId: string
-  applicationName: string
-  status: string
+  page?: number;
+  limit?: number;
+  q?: string;
+  order?: "asc" | "desc";
+  applicationId: string;
+  applicationName: string;
+  status: string;
+}
+
+// Added: Response type for CRUD operations
+interface ScheduleResponse {
+  data: Schedule[] | undefined;
+  error: { message: string; code?: number } | undefined;
 }
 
 export interface ScheduleState {
   // Data
-  schedules: Schedule[]
-  filteredSchedules: Schedule[]
-  selectedSchedule: Schedule | null
-  
+  schedules: Schedule[];
+  filteredSchedules: Schedule[]; // Kept for compatibility, will mirror 'schedules'
+  selectedSchedule: Schedule | null;
+
+  // ADDED: Meta from server
+  meta: ApiMeta | null;
+
   // Filters
-  filters: ScheduleFilters
-  
+  filters: ScheduleFilters;
+
   // Pagination
-  currentPage: number
-  itemsPerPage: number
-  
+  currentPage: number;
+  itemsPerPage: number;
+
   // UI State
-  isLoading: boolean
-  error: string | null
-  
+  isLoading: boolean;
+  error: string | null;
+
   // Actions
-  setSchedules: (schedules: Schedule[]) => void
-  setFilteredSchedules: (schedules: Schedule[]) => void
-  setSelectedSchedule: (schedule: Schedule | null) => void
-  setFilters: (filters: Partial<ScheduleFilters>) => void
-  resetFilters: () => void
-  setCurrentPage: (page: number) => void
-  setItemsPerPage: (size: number) => void
-  setLoading: (loading: boolean) => void
-  setError: (error: string | null) => void
-  
+  setSchedules: (schedules: Schedule[]) => void;
+  setFilteredSchedules: (schedules: Schedule[]) => void;
+  setSelectedSchedule: (schedule: Schedule | null) => void;
+  setFilters: (filters: Partial<ScheduleFilters>) => void;
+  resetFilters: () => void;
+  setCurrentPage: (page: number) => void;
+  setItemsPerPage: (size: number) => void;
+  setLoading: (loading: boolean) => void;
+  setError: (error: string | null) => void;
+
   // CRUD Operations
-  addSchedule: (schedule: Omit<Schedule, 'id'>) => void
-  updateSchedule: (id: number, updates: Partial<Schedule>) => void
-  deleteSchedule: (id: number) => void
-  
+  // MODIFIED: All CRUD ops are now async and API-driven
+  getSchedules: (params?: ScheduleFilters) => Promise<void>;
+  addSchedule: (
+    schedule: Omit<ScheduleData, "ID">
+  ) => Promise<ScheduleResponse>;
+  updateSchedule: (
+    id: string,
+    updates: Partial<Schedule>
+  ) => Promise<ScheduleResponse>;
+  deleteSchedule: (id: string) => Promise<void>;
+  updateStatusSchedule: (
+    id: string,
+    status: string
+  ) => Promise<ScheduleResponse>;
   // Computed
-  getTotalPages: () => number
-  getCurrentPageSchedules: () => Schedule[]
+  getTotalPages: () => number;
+  getCurrentPageSchedules: () => Schedule[];
 }
 
 const initialFilters: ScheduleFilters = {
-  applicationId: '',
-  applicationName: '',
-  status: '',
-}
+  applicationId: "",
+  applicationName: "",
+  status: "",
+};
 
 export const useScheduleStore = create<ScheduleState>()(
   devtools(
     persist(
       (set, get) => ({
-  // Initial state
-  schedules: initialSchedules,
-  filteredSchedules: initialSchedules,
-  selectedSchedule: null,
-  filters: initialFilters,
-  currentPage: 1,
-  itemsPerPage: 10,
-  isLoading: false,
-  error: null,
-  
-  // Actions
-  setSchedules: (schedules) => set({ schedules, filteredSchedules: schedules }),
-  
-  setFilteredSchedules: (filteredSchedules) => set({ filteredSchedules }),
-  
-  setSelectedSchedule: (selectedSchedule) => set({ selectedSchedule }),
-  
-  setFilters: (newFilters) => 
-    set((state) => ({
-      filters: { ...state.filters, ...newFilters },
-      currentPage: 1, // Reset to first page when filters change
-    })),
-  
-  resetFilters: () => set({ filters: initialFilters, currentPage: 1 }),
-  
-  setCurrentPage: (currentPage) => set({ currentPage }),
-  
-  setItemsPerPage: (itemsPerPage) => set({ itemsPerPage, currentPage: 1 }),
-  
-  setLoading: (isLoading) => set({ isLoading }),
-  
-  setError: (error) => set({ error }),
-  
-  // CRUD Operations
-  addSchedule: (newSchedule) => {
-    const { schedules } = get()
-    const id = Math.max(...schedules.map(s => s.id), 0) + 1
-    const schedule: Schedule = { ...newSchedule, id }
-    set((state) => ({
-      schedules: [schedule, ...state.schedules],
-      filteredSchedules: [schedule, ...state.filteredSchedules],
-    }))
-  },
-  
-  updateSchedule: (id, updates) => {
-    set((state) => ({
-      schedules: state.schedules.map(schedule =>
-        schedule.id === id ? { ...schedule, ...updates } : schedule
-      ),
-      filteredSchedules: state.filteredSchedules.map(schedule =>
-        schedule.id === id ? { ...schedule, ...updates } : schedule
-      ),
-    }))
-  },
-  
-  deleteSchedule: (id) => {
-    set((state) => ({
-      schedules: state.schedules.filter(schedule => schedule.id !== id),
-      filteredSchedules: state.filteredSchedules.filter(schedule => schedule.id !== id),
-    }))
-  },
-  
-  // Computed
-  getTotalPages: () => {
-    const { filteredSchedules, itemsPerPage } = get()
-    return Math.ceil(filteredSchedules.length / itemsPerPage)
-  },
-  
-  getCurrentPageSchedules: () => {
-    const { filteredSchedules, currentPage, itemsPerPage } = get()
-    const startIndex = (currentPage - 1) * itemsPerPage
-    const endIndex = startIndex + itemsPerPage
-    return filteredSchedules.slice(startIndex, endIndex)
-  },
-}),
-    {
-      name: 'schedule-store',
-      // Only persist data, not UI state
-      partialize: (state) => ({
-        schedules: state.schedules,
-        filters: state.filters,
-        currentPage: state.currentPage,
-        itemsPerPage: state.itemsPerPage,
+        // Initial state
+        schedules: [],
+        filteredSchedules: [],
+        selectedSchedule: null,
+        meta: null, // ADDED
+        filters: initialFilters,
+        currentPage: 1,
+        itemsPerPage: 10,
+        isLoading: false,
+        error: null,
+
+        // ADDED: Get schedules from API
+        getSchedules: async (params) => {
+          console.log("Getting Schedules");
+          const state = get();
+          const page = params?.page ?? state.currentPage;
+          const limit = params?.limit ?? state.itemsPerPage;
+
+          const query: ScheduleFilters = {
+            ...state.filters,
+            ...params,
+            page,
+            limit,
+          };
+
+          set({ isLoading: true, error: null });
+          try {
+            console.log("query", query);
+            const res = await getScheduleApi(query);
+            const response = res as {
+              data: Schedule[];
+              meta?: ApiMeta;
+            };
+            const { data: raw, meta: metaFromApi } = response;
+
+            const schedules: Schedule[] = (raw ?? []).map((item: Schedule) => ({
+              ID: item.ID,
+              APPLICATION_ID: item.APPLICATION_ID,
+              APPLICATION_NAME:
+                applications.find(
+                  (app) => app.APPLICATION_ID === item.APPLICATION_ID
+                )?.APP_NAME ?? "Unknown",
+              SCHEDULE_STATUS: item.SCHEDULE_STATUS,
+              SCHEDULE_SYNC_START_DT: item.SCHEDULE_SYNC_START_DT,
+              SCHEDULE_SYNC_END_DT: item.SCHEDULE_SYNC_END_DT,
+              SCHEDULE_UAR_DT: item.SCHEDULE_UAR_DT,
+              CREATED_BY: item.CREATED_BY,
+              CREATED_DT: item.CREATED_DT,
+              CHANGED_BY: item.CHANGED_BY,
+              CHANGED_DT: item.CHANGED_DT,
+            }));
+
+            console.log("Schedules", schedules);
+
+            set({
+              schedules,
+              filteredSchedules: schedules,
+              meta: metaFromApi ?? {
+                page,
+                limit,
+                total: schedules.length,
+                totalPages: 1,
+              },
+              isLoading: false,
+              currentPage: metaFromApi?.page ?? page,
+              itemsPerPage: metaFromApi?.limit ?? limit,
+            });
+          } catch (error) {
+            set({ error: (error as Error).message, isLoading: false });
+          }
+        },
+
+        // Actions
+        setSchedules: (schedules) =>
+          set({ schedules, filteredSchedules: schedules }),
+
+        setFilteredSchedules: (filteredSchedules) => set({ filteredSchedules }),
+
+        setSelectedSchedule: (selectedSchedule) => set({ selectedSchedule }),
+
+        setFilters: (newFilters: Partial<ScheduleFilters>) => {
+          const mergedFilters: ScheduleFilters = {
+            ...initialFilters,
+            ...get().filters,
+            ...newFilters,
+          };
+
+          set((state) => ({
+            filters: mergedFilters,
+            currentPage: 1, // Reset to first page
+          }));
+        },
+
+        // MODIFIED: resetFilters now refetches
+        resetFilters: async () => {
+          set({ filters: initialFilters, currentPage: 1 });
+          console.log("resetFilters", get().filters);
+          await get().getSchedules(initialFilters);
+        },
+
+        setCurrentPage: (currentPage) => {
+          set({ currentPage });
+          // Note: You might want to call getSchedules() here if pagination is
+          // *only* controlled by this, but getSchedules() already takes
+          // currentPage from state, so it's usually called by the UI component.
+        },
+
+        setItemsPerPage: (itemsPerPage) =>
+          set({ itemsPerPage, currentPage: 1 }), // Reset to page 1
+
+        setLoading: (isLoading) => set({ isLoading }),
+
+        setError: (error) => set({ error }),
+
+        // CRUD Operations
+        // MODIFIED: addSchedule calls API
+        addSchedule: async (newSchedule) => {
+          try {
+            const payload: CreateSchedulePayload = {
+              APPLICATION_ID: newSchedule.APPLICATION_ID,
+              SCHEDULE_SYNC_START_DT: newSchedule.SCHEDULE_SYNC_START_DT,
+              SCHEDULE_SYNC_END_DT: newSchedule.SCHEDULE_SYNC_END_DT,
+              SCHEDULE_UAR_DT: newSchedule.SCHEDULE_UAR_DT,
+              SCHEDULE_STATUS: "1",
+            };
+
+            const data: BackendCreateScheduleResponse = await createScheduleApi(
+              payload
+            );
+
+            const schedule: Schedule = {
+              ID: data.data.ID,
+              APPLICATION_ID: data.data.APPLICATION_ID,
+              SCHEDULE_SYNC_START_DT: data.data.SCHEDULE_SYNC_START_DT,
+              SCHEDULE_SYNC_END_DT: data.data.SCHEDULE_SYNC_END_DT,
+              SCHEDULE_UAR_DT: data.data.SCHEDULE_UAR_DT,
+              SCHEDULE_STATUS: data.data.SCHEDULE_STATUS,
+              CREATED_BY: data.data.CREATED_BY,
+              CREATED_DT: data.data.CREATED_DT,
+              CHANGED_BY: data.data.CHANGED_BY,
+              CHANGED_DT: data.data.CHANGED_DT,
+            };
+
+            await get().getSchedules(); // Refetch list
+
+            return { data: [schedule], error: undefined };
+          } catch (error) {
+            console.error("Error creating schedule:", error);
+            return {
+              data: undefined,
+              error: {
+                message: (error as Error).message,
+                code: (error as any).code,
+              },
+            };
+          }
+        },
+
+        updateSchedule: async (id, updates) => {
+          try {
+            const payload: UpdateSchedulePayload = {
+              APPLICATION_ID: updates.APPLICATION_ID,
+              SCHEDULE_SYNC_START_DT: updates.SCHEDULE_SYNC_START_DT,
+              SCHEDULE_SYNC_END_DT: updates.SCHEDULE_SYNC_END_DT,
+              SCHEDULE_UAR_DT: updates.SCHEDULE_UAR_DT,
+              SCHEDULE_STATUS: updates.SCHEDULE_STATUS,
+            };
+
+            const data: BackendCreateScheduleResponse = await editScheduleApi(
+              id,
+              payload
+            );
+
+            await get().getSchedules();
+
+            return { data: [data.data], error: undefined };
+          } catch (error) {
+            console.error("Error updating schedule:", error);
+            return {
+              data: undefined,
+              error: {
+                message: (error as Error).message,
+                code: (error as any).code,
+              },
+            };
+          }
+        },
+
+        updateStatusSchedule: async (id, status) => {
+          try {
+            const payload: UpdateScheduleStatusPayload = {
+              SCHEDULE_STATUS: status,
+            };
+
+            const data: BackendCreateScheduleResponse =
+              await updateStatusScheduleApi(id, payload);
+
+            await get().getSchedules();
+
+            return { data: [data.data], error: undefined };
+          } catch (error) {
+            console.error("Error updating schedule:", error);
+            return {
+              data: undefined,
+              error: {
+                message: (error as Error).message,
+                code: (error as any).code,
+              },
+            };
+          }
+        },
+
+        // MODIFIED: deleteSchedule calls API
+        deleteSchedule: async (id) => {
+          try {
+            await deleteScheduleApi(id);
+            await get().getSchedules();
+          } catch (error) {
+            console.error("Error deleting schedule:", error);
+            set({ error: (error as Error).message, isLoading: false });
+          }
+        },
+
+        getTotalPages: () => {
+          const { meta } = get();
+          return meta?.totalPages ?? 1;
+        },
+
+        getCurrentPageSchedules: () => {
+          const { schedules } = get();
+          return schedules;
+        },
       }),
-    }
-  ),
+      {
+        name: "schedule-store",
+        // Only persist filters and pagination settings
+        partialize: (state) => ({
+          filters: state.filters,
+          currentPage: state.currentPage,
+          itemsPerPage: state.itemsPerPage,
+        }),
+      }
+    ),
     {
-      name: 'ScheduleStore',
+      name: "ScheduleStore",
     }
   )
-)
+);

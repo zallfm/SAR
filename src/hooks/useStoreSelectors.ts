@@ -25,6 +25,7 @@ import type {
   UarProgressFilters,
   UarProgressData,
 } from "../services/uarProgressService";
+import { ScheduleData } from "../types/schedule";
 
 // Auth Store Selectors
 export const useAuthUser = (): User | null =>
@@ -206,9 +207,9 @@ export const useLoggingActions = () => {
 };
 
 // Schedule Store Selectors
-export const useSchedules = (): Schedule[] =>
+export const useSchedules = (): ScheduleData[] =>
   useScheduleStore((state) => state.schedules);
-export const useFilteredSchedules = (): Schedule[] =>
+export const useFilteredSchedules = (): ScheduleData[] =>
   useScheduleStore((state) => state.filteredSchedules);
 
 export const useScheduleFilters = () => {
@@ -294,7 +295,9 @@ export const useScheduleActions = () => {
   const deleteSchedule = useScheduleStore((state) => state.deleteSchedule);
   const setLoading = useScheduleStore((state) => state.setLoading);
   const setError = useScheduleStore((state) => state.setError);
-
+  const updateStatusSchedule = useScheduleStore(
+    (state) => state.updateStatusSchedule
+  );
   return useMemo(
     () => ({
       setSchedules,
@@ -302,6 +305,7 @@ export const useScheduleActions = () => {
       setSelectedSchedule,
       addSchedule,
       updateSchedule,
+      updateStatusSchedule,
       deleteSchedule,
       setLoading,
       setError,

@@ -16,6 +16,12 @@ export type EditUarPayload = Partial<CreateUarPayload>;
 export type BackendGetUarResponse = {
   requestId: string;
   data: UarPic[];
+  meta: {
+    page: number;
+    limit: number;
+    total: number;
+    totalPages: number;
+  };
 };
 
 export type BackendCreateUarResponse = {

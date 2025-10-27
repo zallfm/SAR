@@ -1,4 +1,6 @@
 import { http } from "./client";
+import { UarPicFilters } from "../store/uarPicStore";
+
 import type {
   BackendGetUarResponse,
   BackendCreateUarResponse,
@@ -7,10 +9,11 @@ import type {
   EditUarPayload,
 } from "../types/pic";
 
-export const getUarApi = () =>
+export const getUarApi = (params: UarPicFilters) =>
   http<BackendGetUarResponse>({
     path: "/sar/uarpic",
     method: "GET",
+    params,
   });
 
 export const createUarApi = (data: CreateUarPayload) =>

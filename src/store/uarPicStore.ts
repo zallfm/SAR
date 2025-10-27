@@ -2,7 +2,6 @@ import { create } from "zustand";
 import { persist } from "zustand/middleware";
 import { devtools } from "zustand/middleware";
 import type { PicUser } from "../../data";
-import { divisions, initialPicUsers } from "../../data";
 import {
   createUarApi,
   deleteUarApi,
@@ -16,10 +15,24 @@ import {
   UarPic,
 } from "../types/pic";
 
+type ApiMeta = {
+  page: number;
+  limit: number;
+  total: number;
+  totalPages: number;
+};
+
+// --- Original Types ---
+
 export interface UarPicFilters {
-  name: string;
-  division: string;
+  page?: number;
+  limit?: number;
+  q?: string;
+  order?: "asc" | "desc";
+  pic_name: string;
+  divisionId: string;
 }
+
 interface PicResponse {
   data: UarPic[] | undefined;
   error: { message: string; code?: number } | undefined;
@@ -28,8 +41,11 @@ interface PicResponse {
 export interface UarPicState {
   // Data
   pics: PicUser[];
-  filteredPics: PicUser[];
+  filteredPics: PicUser[]; // Kept for compatibility, will mirror 'pics'
   selectedPic: PicUser | null;
+
+  // ADDED: Meta from server
+  meta: ApiMeta | null;
 
   // Filters
   filters: UarPicFilters;
@@ -56,8 +72,10 @@ export interface UarPicState {
   // CRUD Operations
   addPic: (pic: Omit<PicUser, "id">) => Promise<PicResponse>;
   updatePic: (id: string, updates: Partial<PicUser>) => Promise<PicResponse>;
-  deletePic: (id: string) => void;
-  getPics: () => Promise<void>;
+  // MODIFIED: deletePic is now async to allow for refetch
+  deletePic: (id: string) => Promise<void>;
+  // MODIFIED: getPics now accepts params
+  getPics: (params?: UarPicFilters) => Promise<void>;
 
   // Computed
   getTotalPages: () => number;
@@ -65,8 +83,8 @@ export interface UarPicState {
 }
 
 const initialFilters: UarPicFilters = {
-  name: "",
-  division: "",
+  pic_name: "",
+  divisionId: "",
 };
 
 export const useUarPicStore = create<UarPicState>()(
@@ -77,23 +95,58 @@ export const useUarPicStore = create<UarPicState>()(
         pics: [],
         filteredPics: [],
         selectedPic: null,
+
+        meta: null, // ADDED
+
         filters: initialFilters,
         currentPage: 1,
         itemsPerPage: 10,
         isLoading: false,
         error: null,
 
-        getPics: async () => {
+        getPics: async (params) => {
+          console.log("Getting PICS");
+          const state = get();
+          const page = params?.page ?? state.currentPage;
+          const limit = params?.limit ?? state.itemsPerPage;
+
+          const query: UarPicFilters = {
+            ...state.filters,
+            ...params,
+            page,
+            limit,
+          };
+
           set({ isLoading: true, error: null });
           try {
-            const data = await getUarApi();
-            const pics: PicUser[] = data.data.map((item: UarPic) => ({
+            console.log("query", query);
+            const res = await getUarApi(query);
+            const { data: raw, meta: metaFromApi } = res as {
+              data: UarPic[];
+              meta?: ApiMeta;
+            };
+
+            const pics: PicUser[] = (raw ?? []).map((item: UarPic) => ({
               ID: item.ID,
               PIC_NAME: item.PIC_NAME,
               DIVISION_ID: item.DIVISION_ID,
               MAIL: item.MAIL,
             }));
-            set({ pics, filteredPics: pics, isLoading: false });
+
+
+            set({
+              pics,
+              filteredPics: pics,
+              meta: metaFromApi ?? {
+                page,
+                limit,
+                total: pics.length,
+                totalPages: 1,
+              },
+              isLoading: false,
+              currentPage: metaFromApi?.page ?? page,
+              itemsPerPage: metaFromApi?.limit ?? limit,
+            });
           } catch (error) {
             set({ error: (error as Error).message, isLoading: false });
           }
@@ -101,29 +154,38 @@ export const useUarPicStore = create<UarPicState>()(
 
         // Actions
         setPics: (pics) => set({ pics, filteredPics: pics }),
-
         setFilteredPics: (filteredPics) => set({ filteredPics }),
-
         setSelectedPic: (selectedPic) => set({ selectedPic }),
 
-        setFilters: (newFilters) =>
+        setFilters: (newFilters: Partial<UarPicFilters>) => {
+          const mergedFilters: UarPicFilters = {
+            ...initialFilters,
+            ...get().filters,
+            ...newFilters,
+          };
+
           set((state) => ({
-            filters: { ...state.filters, ...newFilters },
-            currentPage: 1, // Reset to first page when filters change
-          })),
+            filters: mergedFilters,
+            currentPage: 1,
+          }));
+        },
 
-        resetFilters: () => set({ filters: initialFilters, currentPage: 1 }),
+        resetFilters: async () => {
+          set({ filters: initialFilters, currentPage: 1 });
+          console.log("resetFilters", get().filters);
+          await get().getPics(initialFilters);
+        },
 
-        setCurrentPage: (currentPage) => set({ currentPage }),
+        setCurrentPage: async (currentPage) => {
+          set({ currentPage });
+        },
 
         setItemsPerPage: (itemsPerPage) =>
           set({ itemsPerPage, currentPage: 1 }),
 
         setLoading: (isLoading) => set({ isLoading }),
-
         setError: (error) => set({ error }),
 
-        // CRUD Operations
         addPic: async (newPic) => {
           try {
             const payload: CreateUarPayload = {
@@ -140,10 +202,8 @@ export const useUarPicStore = create<UarPicState>()(
               MAIL: data.data.MAIL,
             };
 
-            set((state) => ({
-              pics: [pic, ...state.pics],
-              filteredPics: [pic, ...state.filteredPics],
-            }));
+            await get().getPics();
+
             return { data: [pic], error: undefined };
           } catch (error) {
             console.error("Error creating PIC:", error);
@@ -170,14 +230,7 @@ export const useUarPicStore = create<UarPicState>()(
               payload
             );
 
-            set((state) => ({
-              pics: state.pics.map((pic) =>
-                pic.ID === id ? { ...pic, ...data.data } : pic
-              ),
-              filteredPics: state.filteredPics.map((pic) =>
-                pic.ID === id ? { ...pic, ...data.data } : pic
-              ),
-            }));
+            await get().getPics();
 
             return { data: [data.data], error: undefined };
           } catch (error) {
@@ -193,31 +246,29 @@ export const useUarPicStore = create<UarPicState>()(
         },
 
         deletePic: async (id) => {
-          await deleteUarApi(id);
-          set((state) => ({
-            pics: state.pics.filter((pic) => pic.ID !== id),
-            filteredPics: state.filteredPics.filter((pic) => pic.ID !== id),
-          }));
+          try {
+            await deleteUarApi(id);
+            await get().getPics();
+          } catch (error) {
+            console.error("Error deleting PIC:", error);
+            set({ error: (error as Error).message, isLoading: false });
+          }
         },
 
-        // Computed
+        // MODIFIED: Computed properties now read from server meta
         getTotalPages: () => {
-          const { filteredPics, itemsPerPage } = get();
-          return Math.ceil(filteredPics.length / itemsPerPage);
+          const { meta } = get();
+          return meta?.totalPages ?? 1;
         },
 
         getCurrentPagePics: () => {
-          const { filteredPics, currentPage, itemsPerPage } = get();
-          const startIndex = (currentPage - 1) * itemsPerPage;
-          const endIndex = startIndex + itemsPerPage;
-          return filteredPics.slice(startIndex, endIndex);
+          const { pics } = get();
+          return pics;
         },
       }),
       {
         name: "uar-pic-store",
-        // Only persist data, not UI state
         partialize: (state) => ({
-          pics: state.pics,
           filters: state.filters,
           currentPage: state.currentPage,
           itemsPerPage: state.itemsPerPage,
