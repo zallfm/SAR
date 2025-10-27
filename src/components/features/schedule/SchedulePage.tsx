@@ -128,10 +128,21 @@ const SchedulePage: React.FC = () => {
     setIsSaveConfirmOpen(true);
   };
 
-  const handleConfirmEditSave = () => {
+  const handleConfirmEditSave = async () => {
     if (pendingUpdate) {
       pendingUpdate.forEach((updatedSchedule) => {
         updateSchedule(updatedSchedule.ID, updatedSchedule);
+      });
+      await postLogMonitoringApi({
+        userId: currentUser?.username ?? "anonymous",
+        module: "Schedule",
+        action: AuditAction.DATA_EDIT,
+        status: "Success",
+        description: `User ${
+          currentUser?.username ?? "unknown"
+        } update Schedule ${updateSchedule.name}`,
+        location: "SchedulePage.CreateForm",
+        timestamp: new Date().toISOString(),
       });
 
       setSelectedRows([]);
@@ -148,7 +159,17 @@ const SchedulePage: React.FC = () => {
       for (const schedule of newSchedules) {
         await addSchedule(schedule);
       }
-
+      await postLogMonitoringApi({
+        userId: currentUser?.username ?? "anonymous",
+        module: "Schedule",
+        action: AuditAction.DATA_CREATE,
+        status: "Success",
+        description: `User ${
+          currentUser?.username ?? "unknown"
+        } create Schedule`,
+        location: "SchedulePage.CreateForm",
+        timestamp: new Date().toISOString(),
+      });
       setShowSuccessModal(true);
     } catch (error) {
       console.error("Failed to add one or more schedules:", error);

@@ -94,9 +94,8 @@ const LoggingMonitoringDetailPage: React.FC<
     }
     return "";
   };
-
-  const formattedStartDate = formatDate(logEntry.START_DATE);
-  const formattedEndDate = formatDate(logEntry.END_DATE);
+  const formattedStartDate = logEntry.START_DATE;
+  const formattedEndDate = logEntry.END_DATE;
 
   const currentDetails = useMemo(() => {
     const startIndex = (currentPage - 1) * itemsPerPage;
