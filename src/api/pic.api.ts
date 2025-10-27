@@ -6,29 +6,42 @@ import type {
   CreateUarPayload,
   EditUarPayload,
 } from "../types/pic";
+import { withToken } from "./helper";
 
 export const getUarApi = () =>
-  http<BackendGetUarResponse>({
-    path: "/sar/uarpic",
-    method: "GET",
-  });
+  withToken((token) => 
+    http<BackendGetUarResponse>({
+      path: "/sar/uarpic",
+      method: "GET",
+      token
+    })
+  )
 
 export const createUarApi = (data: CreateUarPayload) =>
-  http<BackendCreateUarResponse>({
-    path: "/sar/uarpic",
-    method: "POST",
-    body: data,
-  });
+  withToken((token) => 
+    http<BackendCreateUarResponse>({
+      path: "/sar/uarpic",
+      method: "POST",
+      token,
+      body: data,
+    })
+  )
 
 export const editUarApi = (id: string, data: EditUarPayload) =>
-  http<BackendEditUarResponse>({
-    path: `/sar/uarpic/${id}`,
-    method: "PUT",
-    body: data,
-  });
+  withToken((token) => 
+    http<BackendEditUarResponse>({
+      path: `/sar/uarpic/${id}`,
+      method: "PUT",
+      token,
+      body: data,
+    })
+  )
 
 export const deleteUarApi = (id: string) =>
-  http<void>({
-    path: `/sar/uarpic/${id}`,
-    method: "DELETE",
-  });
+  withToken((token) => 
+    http<void>({
+      path: `/sar/uarpic/${id}`,
+      method: "DELETE",
+      token,
+    })
+  )

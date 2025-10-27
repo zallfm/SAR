@@ -470,7 +470,7 @@ const AddApplicationModal: React.FC<AddApplicationModalProps> = ({
             <input
               id="appName"
               type="text"
-              placeholder="Application Names"
+              placeholder="Application Name"
               value={appName}
               onChange={(e) => {
                 setAppName(e.target.value);

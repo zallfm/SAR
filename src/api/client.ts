@@ -11,6 +11,10 @@ export type HttpError = {
   details?: Record<string, any>;
 };
 
+const emit = (name: 'http:unauthorized' | 'http:forbidden', detail?: any) => {
+  try { window.dispatchEvent(new CustomEvent(name, { detail })); } catch { }
+};
+
 // ✅ tambahkan properti params di sini
 type HttpOptions = {
   path: string; // contoh: '/auth/login'
@@ -53,6 +57,18 @@ function buildQuery(params?: Record<string, any>): string {
   return q ? `?${q}` : '';
 }
 
+function getTokenFallback(): string | null {
+  try {
+    const raw = localStorage.getItem('auth-store');
+    if (!raw) return null;
+    const parsed = JSON.parse(raw);
+    return parsed?.state?.token ?? null;
+  } catch {
+    return null;
+  }
+}
+
+
 export async function http<T>(opts: HttpOptions): Promise<T> {
   // ✅ tambahkan dukungan untuk params/query
   const url = buildUrl(opts.path) + buildQuery(opts.params);
@@ -63,6 +79,7 @@ export async function http<T>(opts: HttpOptions): Promise<T> {
     'x-request-id': genReqId(),
     ...(opts.token ? { Authorization: `Bearer ${opts.token}` } : {}),
   };
+  console.log("headers", headers)
 
   // hanya tambahkan content-type kalau ada body
   if (opts.body) {
@@ -85,6 +102,8 @@ export async function http<T>(opts: HttpOptions): Promise<T> {
       requestId: json?.requestId,
       details: json?.details,
     };
+    if (res.status === 401) emit('http:unauthorized', err);
+    if (res.status === 403) emit('http:forbidden', err);
     throw err;
   }
 
