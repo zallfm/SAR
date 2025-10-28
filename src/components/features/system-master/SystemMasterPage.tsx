@@ -1,5 +1,4 @@
 import React, { useState, useMemo } from "react";
-import type { SystemMasterRecord } from "../../../../data";
 import type { User } from "../../../../types";
 import { SearchIcon } from "../../icons/SearchIcon";
 import { ChevronDownIcon } from "../../icons/ChevronDownIcon";
@@ -12,15 +11,18 @@ import { AddButton } from "../../common/Button/AddButton";
 import { IconButton } from "../../common/Button/IconButton";
 import SearchableDropdown from "../../common/SearchableDropdown";
 import {
-  useSystemMasterRecords,
-  useFilteredSystemMasterRecords,
   useSystemMasterFilters,
   useSystemMasterPagination,
   useSystemMasterActions,
+  useSystemMasterRecords,
+  useFilteredSystemMasterRecords,
 } from "../../../hooks/useStoreSelectors";
 import { useAuthStore } from "@/src/store/authStore";
 import { postLogMonitoringApi } from "@/src/api/log_monitoring";
 import { AuditAction } from "@/src/constants/auditActions";
+import { SystemMaster } from "@/src/types/systemMaster";
+import { useSystemMasterStore } from "@/src/store/systemMasterStore";
+import { formatDate } from "@/utils/dateFormatter";
 
 interface SystemMasterPageProps {
   user: User;
@@ -31,6 +33,11 @@ const SystemMasterPage: React.FC<SystemMasterPageProps> = ({ user }) => {
   const records = useSystemMasterRecords();
   const storeFilteredRecords = useFilteredSystemMasterRecords();
   const { filters, setFilters } = useSystemMasterFilters();
+  const meta = useSystemMasterStore((state) => state.meta);
+  const getSystemMasters = useSystemMasterStore(
+    (state) => state.getSystemMasters
+  );
+
   const {
     currentPage,
     itemsPerPage,
@@ -40,9 +47,7 @@ const SystemMasterPage: React.FC<SystemMasterPageProps> = ({ user }) => {
     getCurrentPageRecords,
   } = useSystemMasterPagination();
   const {
-    setSystemMasterRecords,
     setFilteredRecords,
-    setSelectedRecord,
     addSystemMasterRecord,
     updateSystemMasterRecord,
     deleteSystemMasterRecord,
@@ -53,63 +58,37 @@ const SystemMasterPage: React.FC<SystemMasterPageProps> = ({ user }) => {
 
   // Local state for UI interactions
   const [isModalOpen, setIsModalOpen] = useState(false);
-  const [editingRecord, setEditingRecord] = useState<SystemMasterRecord | null>(
-    null
-  );
+  const [editingRecord, setEditingRecord] = useState<SystemMaster | null>(null);
 
   const [isDeleteConfirmOpen, setIsDeleteConfirmOpen] = useState(false);
-  const [recordToDelete, setRecordToDelete] =
-    useState<SystemMasterRecord | null>(null);
+  const [recordToDelete, setRecordToDelete] = useState<SystemMaster | null>(
+    null
+  );
 
   const [infoMessage, setInfoMessage] = useState("");
   const [isInfoOpen, setIsInfoOpen] = useState(false);
 
   const systemTypes = useMemo(
-    () => [...new Set(records.map((r) => r.systemType))],
+    () => [...new Set(records.map((r) => r.SYSTEM_TYPE))],
     [records]
   );
 
-  const filteredRecords = useMemo(() => {
-    return records.filter((record) => {
-      const typeMatch = filters.systemType
-        ? record.systemType === filters.systemType
-        : true;
-      const codeMatch = filters.systemCode
-        ? record.systemCode
-            .toLowerCase()
-            .includes(filters.systemCode.toLowerCase())
-        : true;
-      return typeMatch && codeMatch;
-    });
-  }, [records, filters]);
-
-  // Update filtered records in store when filters change
   React.useEffect(() => {
-    const haveSameLength =
-      storeFilteredRecords.length === filteredRecords.length;
-    const haveSameIds =
-      haveSameLength &&
-      storeFilteredRecords.every(
-        (record, index) => record.ID === filteredRecords[index]?.ID
-      );
-
-    if (!haveSameIds) {
-      setFilteredRecords(filteredRecords);
-    }
-  }, [filteredRecords, storeFilteredRecords, setFilteredRecords]);
+    getSystemMasters();
+  }, [getSystemMasters, filters, currentPage, itemsPerPage]);
 
   const totalPages = getTotalPages();
+  const totalItems = meta?.total ?? 0;
   const currentRecords = getCurrentPageRecords();
   const startItem =
     currentRecords.length > 0 ? (currentPage - 1) * itemsPerPage + 1 : 0;
-  const endItem = Math.min(currentPage * itemsPerPage, filteredRecords.length);
-
+  const endItem = Math.min(currentPage * itemsPerPage, totalItems);
   const handleOpenAddModal = () => {
     setEditingRecord(null);
     setIsModalOpen(true);
   };
 
-  const handleOpenEditModal = (record: SystemMasterRecord) => {
+  const handleOpenEditModal = (record: SystemMaster) => {
     setEditingRecord(record);
     setIsModalOpen(true);
   };
@@ -119,47 +98,80 @@ const SystemMasterPage: React.FC<SystemMasterPageProps> = ({ user }) => {
     setEditingRecord(null);
   };
 
-  const handleSaveRecord = async (record: SystemMasterRecord) => {
+  const handleSaveRecord = async (
+    record: Omit<
+      SystemMaster,
+      "CREATED_BY" | "CHANGED_BY" | "CREATED_DT" | "CHANGED_DT"
+    >
+  ) => {
     const username = currentUser?.username ?? "anonymous";
     if (editingRecord) {
-      updateSystemMasterRecord(record.ID, record);
+      const status = await updateSystemMasterRecord(record.SYSTEM_CD, record);
+      if (status.error === undefined) {
+        setInfoMessage("Save Successfully");
+        setIsInfoOpen(true);
 
-      try {
         await postLogMonitoringApi({
           userId: username,
           module: "SystemMaster",
           action: AuditAction.DATA_UPDATE,
           status: "Success",
-          description: `User ${username} updated SystemMaster record ${record.systemCode}`,
+          description: `User ${username} updated SystemMaster record ${record.SYSTEM_CD}`,
           location: "SystemMasterPage.handleSaveRecord",
           timestamp: new Date().toISOString(),
         });
-      } catch (err) {
-        console.warn("Failed to log update:", err);
+      } else {
+        setInfoMessage(
+          `Error: ${status.error.message} Code: ${status.error.code ?? ""}`
+        );
+        setIsInfoOpen(true);
+
+        await postLogMonitoringApi({
+          userId: username,
+          module: "SystemMaster",
+          action: AuditAction.DATA_UPDATE,
+          status: "Error",
+          description: `Failed to update SystemMaster record ${record.SYSTEM_CD}: ${status.error}`,
+          location: "SystemMasterPage.handleSaveRecord",
+          timestamp: new Date().toISOString(),
+        });
       }
     } else {
-      addSystemMasterRecord(record);
+      const status = await addSystemMasterRecord(record);
+      if (status.error === undefined) {
+        setInfoMessage("Save Successfully");
+        setIsInfoOpen(true);
 
-      try {
         await postLogMonitoringApi({
           userId: username,
           module: "SystemMaster",
           action: AuditAction.DATA_CREATE,
           status: "Success",
-          description: `User ${username} added new SystemMaster record ${record.systemCode}`,
+          description: `User ${username} added new SystemMaster record ${record.SYSTEM_CD}`,
           location: "SystemMasterPage.handleSaveRecord",
           timestamp: new Date().toISOString(),
         });
-      } catch (err) {
-        console.warn("Failed to log create:", err);
+      } else {
+        setInfoMessage(
+          `Error: ${status.error.message} Code: ${status.error.code ?? ""}`
+        );
+        setIsInfoOpen(true);
+
+        await postLogMonitoringApi({
+          userId: username,
+          module: "SystemMaster",
+          action: AuditAction.DATA_CREATE,
+          status: "Error",
+          description: `Failed to add new SystemMaster record ${record.SYSTEM_CD}: ${status.error}`,
+          location: "SystemMasterPage.handleSaveRecord",
+          timestamp: new Date().toISOString(),
+        });
       }
     }
     handleCloseModal();
-    setInfoMessage("Save Successfully");
-    setIsInfoOpen(true);
   };
 
-  const handleOpenDeleteConfirm = (record: SystemMasterRecord) => {
+  const handleOpenDeleteConfirm = (record: SystemMaster) => {
     setRecordToDelete(record);
     setIsDeleteConfirmOpen(true);
   };
@@ -172,8 +184,12 @@ const SystemMasterPage: React.FC<SystemMasterPageProps> = ({ user }) => {
   const handleDeleteRecord = async () => {
     if (!recordToDelete) return;
     const username = currentUser?.username ?? "anonymous";
-
-    deleteSystemMasterRecord(recordToDelete.ID);
+    const compoundId = {
+      SYSTEM_TYPE: recordToDelete.SYSTEM_TYPE,
+      SYSTEM_CD: recordToDelete.SYSTEM_CD,
+      VALID_FROM_DT: recordToDelete.VALID_FROM_DT,
+    };
+    await deleteSystemMasterRecord(compoundId);
     handleCloseDeleteConfirm();
 
     // 🧩 Log Delete
@@ -183,7 +199,7 @@ const SystemMasterPage: React.FC<SystemMasterPageProps> = ({ user }) => {
         module: "SystemMaster",
         action: AuditAction.DATA_DELETE,
         status: "Success",
-        description: `User ${username} deleted SystemMaster record ${recordToDelete.systemCode}`,
+        description: `User ${username} deleted SystemMaster record ${recordToDelete.SYSTEM_CD}`,
         location: "SystemMasterPage.handleDeleteRecord",
         timestamp: new Date().toISOString(),
       });
@@ -235,7 +251,7 @@ const SystemMasterPage: React.FC<SystemMasterPageProps> = ({ user }) => {
               label="System Code"
               value={filters.systemCode}
               onChange={(value) => handleFilterChange("systemCode", value)}
-              options={[...new Set(records.map((r) => r.systemCode))]}
+              options={[...new Set(records.map((r) => r.SYSTEM_CD))].sort()}
               placeholder="System Code"
               className="w-full sm:w-40"
             />
@@ -274,41 +290,41 @@ const SystemMasterPage: React.FC<SystemMasterPageProps> = ({ user }) => {
             <tbody>
               {currentRecords.map((record) => (
                 <tr
-                  key={record.ID}
+                  key={record.SYSTEM_CD}
                   className="bg-white border-b hover:bg-gray-50"
                 >
                   <td className="px-4 py-3 whitespace-nowrap text-sm">
-                    {record.systemType}
+                    {record.SYSTEM_TYPE}
                   </td>
                   <td className="px-4 py-3 whitespace-nowrap text-sm">
-                    {record.systemCode}
+                    {record.SYSTEM_CD}
                   </td>
                   <td className="px-4 py-3 whitespace-nowrap text-sm">
-                    {record.validFrom}
+                    {formatDate(record.VALID_FROM_DT)}
                   </td>
                   <td className="px-4 py-3 whitespace-nowrap text-sm">
-                    {record.validTo}
+                    {formatDate(record.VALID_TO_DT)}
                   </td>
                   <td className="px-4 py-3 whitespace-nowrap text-sm">
-                    {record.systemValueText}
+                    {record.VALUE_TEXT}
                   </td>
                   <td className="px-4 py-3 whitespace-nowrap text-sm">
-                    {record.systemValueNum}
+                    {record.VALUE_NUM}
                   </td>
                   <td className="px-4 py-3 whitespace-nowrap text-sm">
-                    {record.systemValueTime}
+                    {formatDate(record.VALUE_TIME ?? "")}
                   </td>
                   <td className="px-4 py-3 whitespace-nowrap text-sm">
-                    {record.createdBy}
+                    {record.CREATED_BY}
                   </td>
                   <td className="px-4 py-3 whitespace-nowrap text-sm">
-                    {record.createdDate.replace("\\n", " ")}
+                    {formatDate(record.CREATED_DT)}
                   </td>
                   <td className="px-4 py-3 whitespace-nowrap text-sm">
-                    {record.changedBy}
+                    {record.CHANGED_BY ? record.CHANGED_BY : "-"}
                   </td>
                   <td className="px-4 py-3 whitespace-nowrap text-sm">
-                    {record.changedDate.replace("\\n", " ")}
+                    {formatDate(record.CHANGED_DT ?? "")}
                   </td>
                   <td className="px-4 py-3 whitespace-nowrap text-sm">
                     <div className="flex items-center gap-4">
@@ -320,7 +336,7 @@ const SystemMasterPage: React.FC<SystemMasterPageProps> = ({ user }) => {
                         <IconButton
                           onClick={() => handleOpenEditModal(record)}
                           tooltip="Edit"
-                          aria-label={`Edit ${record.systemCode}`}
+                          aria-label={`Edit ${record.SYSTEM_CD}`}
                           hoverColor="blue"
                         >
                           <EditIcon />
@@ -340,7 +356,7 @@ const SystemMasterPage: React.FC<SystemMasterPageProps> = ({ user }) => {
                         <IconButton
                           onClick={() => handleOpenDeleteConfirm(record)}
                           tooltip="Delete"
-                          aria-label={`Delete ${record.systemCode}`}
+                          aria-label={`Delete ${record.SYSTEM_CD}`}
                           hoverColor="red"
                         >
                           <DeleteIcon />
@@ -376,7 +392,7 @@ const SystemMasterPage: React.FC<SystemMasterPageProps> = ({ user }) => {
           </div>
           <div className="flex items-center gap-4">
             <span>
-              Showing {startItem}-{endItem} of {filteredRecords.length}
+              Showing {startItem}-{endItem} of {totalItems}
             </span>
             <div className="flex gap-2">
               <button

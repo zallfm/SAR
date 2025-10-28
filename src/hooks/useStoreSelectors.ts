@@ -26,6 +26,7 @@ import type {
   UarProgressData,
 } from "../services/uarProgressService";
 import { ScheduleData } from "../types/schedule";
+import { SystemMaster } from "../types/systemMaster";
 
 // Auth Store Selectors
 export const useAuthUser = (): User | null =>
@@ -436,9 +437,9 @@ export const useUarPicActions = () => {
 };
 
 // System Master Store Selectors
-export const useSystemMasterRecords = (): SystemMasterRecord[] =>
-  useSystemMasterStore((state) => state.systemMasterRecords);
-export const useFilteredSystemMasterRecords = (): SystemMasterRecord[] =>
+export const useSystemMasterRecords = (): SystemMaster[] =>
+  useSystemMasterStore((state) => state.records);
+export const useFilteredSystemMasterRecords = (): SystemMaster[] =>
   useSystemMasterStore((state) => state.filteredRecords);
 
 export const useSystemMasterFilters = () => {
@@ -515,22 +516,22 @@ export const useSystemMasterPagination = () => {
 
 export const useSystemMasterActions = () => {
   const setSystemMasterRecords = useSystemMasterStore(
-    (state) => state.setSystemMasterRecords
+    (state) => state.setRecords
   );
   const setFilteredRecords = useSystemMasterStore(
     (state) => state.setFilteredRecords
   );
   const setSelectedRecord = useSystemMasterStore(
-    (state) => state.setSelectedRecord
+    (state) => state.setSelectedSystemMaster
   );
   const addSystemMasterRecord = useSystemMasterStore(
-    (state) => state.addSystemMasterRecord
+    (state) => state.addSystemMaster
   );
   const updateSystemMasterRecord = useSystemMasterStore(
-    (state) => state.updateSystemMasterRecord
+    (state) => state.updateSystemMaster
   );
   const deleteSystemMasterRecord = useSystemMasterStore(
-    (state) => state.deleteSystemMasterRecord
+    (state) => state.deleteSystemMaster
   );
   const setLoading = useSystemMasterStore((state) => state.setLoading);
   const setError = useSystemMasterStore((state) => state.setError);

@@ -157,7 +157,6 @@ export const useScheduleStore = create<ScheduleState>()(
               CHANGED_DT: item.CHANGED_DT,
             }));
 
-
             set({
               schedules,
               filteredSchedules: schedules,
@@ -246,7 +245,7 @@ export const useScheduleStore = create<ScheduleState>()(
               CHANGED_DT: data.data.CHANGED_DT,
             };
 
-            await get().getSchedules(); // Refetch list
+            await get().getSchedules();
 
             return { data: [schedule], error: undefined };
           } catch (error) {

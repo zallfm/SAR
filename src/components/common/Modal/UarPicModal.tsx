@@ -81,11 +81,21 @@ const UarPicModal: React.FC<UarPicModalProps> = ({
     return null;
   }, [email]);
 
+  const nameError = useMemo(() => {
+    const invalidChars = /[^a-zA-Z .]/;
+    if (name.length > 0) {
+      if (invalidChars.test(name)) {
+        return "Name can only contain letters and spaces.";
+      }
+    }
+    return null;
+  }, [name]);
+
   const isFormValid = useMemo(() => {
     // Check if email is valid (either with or without domain)
     const isEmailValid = email.trim() && !emailError;
-    return name.trim() && division && isEmailValid;
-  }, [name, division, email, emailError]);
+    return name.trim() && division && isEmailValid && !nameError;
+  }, [name, division, email, emailError, nameError]);
 
   const handleSave = () => {
     if (!isFormValid) return;
@@ -144,8 +154,19 @@ const UarPicModal: React.FC<UarPicModalProps> = ({
               placeholder="Enter Name"
               value={name}
               onChange={(e) => setName(e.target.value)}
-              className="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-1 focus:ring-blue-500 focus:border-blue-500"
+              className={`w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-1 
+              
+                ${
+                  nameError
+                    ? "border-red-500 focus:ring-red-500 focus:border-red-500"
+                    : "border-gray-300 focus:ring-blue-500 focus:border-blue-500"
+                }  
+              
+                `}
             />
+            {nameError && (
+              <p className="text-red-500 text-xs mt-1">{nameError}</p>
+            )}
           </div>
           <div ref={divisionDropdownRef}>
             <label

@@ -1,31 +1,42 @@
 const monthNameToNumber: { [key: string]: string } = {
-    'january': '01', 'jan': '01',
-    'february': '02', 'feb': '02',
-    'march': '03', 'mar': '03',
-    'april': '04', 'apr': '04',
-    'may': '05',
-    'june': '06', 'jun': '06',
-    'july': '07', 'jul': '07',
-    'august': '08', 'aug': '08',
-    'september': '09', 'sep': '09',
-    'october': '10', 'oct': '10',
-    'november': '11', 'nov': '11',
-    'december': '12', 'dec': '12'
+  january: "01",
+  jan: "01",
+  february: "02",
+  feb: "02",
+  march: "03",
+  mar: "03",
+  april: "04",
+  apr: "04",
+  may: "05",
+  june: "06",
+  jun: "06",
+  july: "07",
+  jul: "07",
+  august: "08",
+  aug: "08",
+  september: "09",
+  sep: "09",
+  october: "10",
+  oct: "10",
+  november: "11",
+  nov: "11",
+  december: "12",
+  dec: "12",
 };
 
 const monthNumberToName: { [key: string]: string } = {
-    '01': 'January',
-    '02': 'February',
-    '03': 'March',
-    '04': 'April',
-    '05': 'May',
-    '06': 'June',
-    '07': 'July',
-    '08': 'August',
-    '09': 'September',
-    '10': 'October',
-    '11': 'November',
-    '12': 'December'
+  "01": "January",
+  "02": "February",
+  "03": "March",
+  "04": "April",
+  "05": "May",
+  "06": "June",
+  "07": "July",
+  "08": "August",
+  "09": "September",
+  "10": "October",
+  "11": "November",
+  "12": "December",
 };
 
 /**
@@ -35,27 +46,27 @@ const monthNumberToName: { [key: string]: string } = {
  * @returns The date string in "dd/mm" format, or an empty string if invalid.
  */
 export const formatDisplayDateToDdMm = (dateStr: string): string => {
-    if (!dateStr) return '';
-    const trimmedDateStr = dateStr.trim();
+  if (!dateStr) return "";
+  const trimmedDateStr = dateStr.trim();
 
-    const ddMmParts = trimmedDateStr.match(/^(\d{1,2})\/(\d{1,2})$/);
-    if (ddMmParts) {
-        const day = ddMmParts[1].padStart(2, '0');
-        const month = ddMmParts[2].padStart(2, '0');
-        return `${day}/${month}`;
-    }
-    
-    const ddMonthParts = trimmedDateStr.split(' ');
-    if (ddMonthParts.length === 2) {
-        const day = ddMonthParts[0].padStart(2, '0');
-        const monthName = ddMonthParts[1].toLowerCase();
-        const monthNumber = monthNameToNumber[monthName];
-        if (monthNumber) {
-            return `${day}/${monthNumber}`;
-        }
-    }
+  const ddMmParts = trimmedDateStr.match(/^(\d{1,2})\/(\d{1,2})$/);
+  if (ddMmParts) {
+    const day = ddMmParts[1].padStart(2, "0");
+    const month = ddMmParts[2].padStart(2, "0");
+    return `${day}/${month}`;
+  }
 
-    return ''; 
+  const ddMonthParts = trimmedDateStr.split(" ");
+  if (ddMonthParts.length === 2) {
+    const day = ddMonthParts[0].padStart(2, "0");
+    const monthName = ddMonthParts[1].toLowerCase();
+    const monthNumber = monthNameToNumber[monthName];
+    if (monthNumber) {
+      return `${day}/${monthNumber}`;
+    }
+  }
+
+  return "";
 };
 
 /**
@@ -64,15 +75,14 @@ export const formatDisplayDateToDdMm = (dateStr: string): string => {
  * @returns The date string in "dd Month" format, or the original string if invalid.
  */
 export const formatDdMmToDisplayDate = (ddMm: string): string => {
-    if (!isValidDdMm(ddMm)) return ddMm;
-    const [day, month] = ddMm.split('/');
-    const monthName = monthNumberToName[month.padStart(2, '0')];
-    if (monthName) {
-        return `${parseInt(day, 10)} ${monthName}`;
-    }
-    return ddMm;
+  if (!isValidDdMm(ddMm)) return ddMm;
+  const [day, month] = ddMm.split("/");
+  const monthName = monthNumberToName[month.padStart(2, "0")];
+  if (monthName) {
+    return `${parseInt(day, 10)} ${monthName}`;
+  }
+  return ddMm;
 };
-
 
 /**
  * Validates if a string is in "dd/mm" format and represents a plausible date.
@@ -80,17 +90,17 @@ export const formatDdMmToDisplayDate = (ddMm: string): string => {
  * @returns True if valid, false otherwise.
  */
 export const isValidDdMm = (ddMm: string): boolean => {
-    if (!ddMm) return false;
-    const trimmedDdMm = ddMm.trim();
-    if (!/^\d{1,2}\/\d{1,2}$/.test(trimmedDdMm)) return false;
+  if (!ddMm) return false;
+  const trimmedDdMm = ddMm.trim();
+  if (!/^\d{1,2}\/\d{1,2}$/.test(trimmedDdMm)) return false;
 
-    const parts = trimmedDdMm.split('/');
-    const day = parseInt(parts[0], 10);
-    const month = parseInt(parts[1], 10);
+  const parts = trimmedDdMm.split("/");
+  const day = parseInt(parts[0], 10);
+  const month = parseInt(parts[1], 10);
 
-    if (isNaN(day) || isNaN(month)) return false;
+  if (isNaN(day) || isNaN(month)) return false;
 
-    return day > 0 && day <= 31 && month > 0 && month <= 12;
+  return day > 0 && day <= 31 && month > 0 && month <= 12;
 };
 
 /**
@@ -99,16 +109,30 @@ export const isValidDdMm = (ddMm: string): boolean => {
  * @param uarDate - The UAR date in "dd/mm" format.
  * @returns True if UAR date is after sync end date, false otherwise.
  */
-export const isUarDateValid = (syncEndDate: string, uarDate: string): boolean => {
-    if (!isValidDdMm(syncEndDate) || !isValidDdMm(uarDate)) return true; // If either date is invalid, don't block
+export const isUarDateValid = (
+  syncEndDate: string,
+  uarDate: string
+): boolean => {
+  if (!isValidDdMm(syncEndDate) || !isValidDdMm(uarDate)) return true; // If either date is invalid, don't block
 
-    const [syncEndDay, syncEndMonth] = syncEndDate.split('/').map(Number);
-    const [uarDay, uarMonth] = uarDate.split('/').map(Number);
+  const [syncEndDay, syncEndMonth] = syncEndDate.split("/").map(Number);
+  const [uarDay, uarMonth] = uarDate.split("/").map(Number);
 
-    // Compare months first
-    if (uarMonth > syncEndMonth) return true;
-    if (uarMonth < syncEndMonth) return false;
+  // Compare months first
+  if (uarMonth > syncEndMonth) return true;
+  if (uarMonth < syncEndMonth) return false;
 
-    // If same month, compare days
-    return uarDay > syncEndDay;
+  // If same month, compare days
+  return uarDay > syncEndDay;
+};
+
+export const formatDate = (dateString: string) => {
+  const date = new Date(dateString);
+  if (isNaN(date.getTime())) return "";
+
+  const day = String(date.getDate()).padStart(2, "0");
+  const month = String(date.getMonth() + 1).padStart(2, "0");
+  const year = date.getFullYear();
+
+  return `${day}-${month}-${year}`;
 };
