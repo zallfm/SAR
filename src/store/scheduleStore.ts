@@ -90,7 +90,11 @@ export interface ScheduleState {
   ) => Promise<ScheduleResponse>;
   deleteSchedule: (id: string) => Promise<void>;
   updateStatusSchedule: (
-    id: string,
+    compoundId: {
+      APPLICATION_ID: string;
+      SCHEDULE_SYNC_START_DT: string;
+      SCHEDULE_UAR_DT: string;
+    },
     status: string
   ) => Promise<ScheduleResponse>;
   // Computed

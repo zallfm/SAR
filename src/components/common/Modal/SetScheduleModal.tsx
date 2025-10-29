@@ -312,6 +312,18 @@ const SetScheduleModal: React.FC<SetScheduleModalProps> = ({
                     )}
                   />
                 </div>
+                {schedule.SCHEDULE_UAR_DT.length > 0 &&
+                  isValidDdMm(schedule.SCHEDULE_SYNC_START_DT) &&
+                  isValidDdMm(schedule.SCHEDULE_SYNC_END_DT) &&
+                  !isUarDateValid(
+                    schedule.SCHEDULE_SYNC_START_DT,
+                    schedule.SCHEDULE_SYNC_END_DT
+                  ) && (
+                    <p className="mt-1 text-sm text-red-600">
+                      Schedule End must be after Schedule Synchronize date (
+                      {schedule.SCHEDULE_SYNC_START_DT})
+                    </p>
+                  )}
               </div>
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-1">
@@ -329,12 +341,12 @@ const SetScheduleModal: React.FC<SetScheduleModalProps> = ({
                   isValidDdMm(schedule.SCHEDULE_SYNC_START_DT) &&
                   isValidDdMm(schedule.SCHEDULE_UAR_DT) &&
                   !isUarDateValid(
-                    schedule.SCHEDULE_SYNC_START_DT,
+                    schedule.SCHEDULE_SYNC_END_DT,
                     schedule.SCHEDULE_UAR_DT
                   ) && (
                     <p className="mt-1 text-sm text-red-600">
                       Schedule UAR must be after Schedule Synchronize date (
-                      {schedule.SCHEDULE_SYNC_START_DT})
+                      {schedule.SCHEDULE_SYNC_END_DT})
                     </p>
                   )}
               </div>

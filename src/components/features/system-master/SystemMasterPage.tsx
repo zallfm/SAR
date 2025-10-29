@@ -280,7 +280,7 @@ const SystemMasterPage: React.FC<SystemMasterPageProps> = ({ user }) => {
                   <th
                     key={h}
                     scope="col"
-                    className="px-4 py-3 border-b text-sm"
+                    className="px-4 py-3 border-b text-sm whitespace-nowrap"
                   >
                     {h}
                   </th>
@@ -312,7 +312,7 @@ const SystemMasterPage: React.FC<SystemMasterPageProps> = ({ user }) => {
                     {record.VALUE_NUM}
                   </td>
                   <td className="px-4 py-3 whitespace-nowrap text-sm">
-                    {formatDate(record.VALUE_TIME ?? "")}
+                    {record.VALUE_TIME}
                   </td>
                   <td className="px-4 py-3 whitespace-nowrap text-sm">
                     {record.CREATED_BY}

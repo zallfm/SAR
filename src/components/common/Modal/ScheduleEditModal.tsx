@@ -46,7 +46,8 @@ const ScheduleEditModal: React.FC<ScheduleEditModalProps> = ({
         isValidDdMm(s.SCHEDULE_SYNC_START_DT) &&
         isValidDdMm(s.SCHEDULE_SYNC_END_DT) &&
         isValidDdMm(s.SCHEDULE_UAR_DT) &&
-        isUarDateValid(s.SCHEDULE_SYNC_END_DT, s.SCHEDULE_UAR_DT)
+        isUarDateValid(s.SCHEDULE_SYNC_END_DT, s.SCHEDULE_UAR_DT) &&
+        isUarDateValid(s.SCHEDULE_SYNC_START_DT, s.SCHEDULE_SYNC_END_DT)
     );
   }, [editedSchedules]);
 
@@ -186,6 +187,18 @@ const ScheduleEditModal: React.FC<ScheduleEditModalProps> = ({
                     )}
                   />
                 </div>
+                {schedule.SCHEDULE_UAR_DT.length > 0 &&
+                  isValidDdMm(schedule.SCHEDULE_SYNC_START_DT) &&
+                  isValidDdMm(schedule.SCHEDULE_SYNC_END_DT) &&
+                  !isUarDateValid(
+                    schedule.SCHEDULE_SYNC_START_DT,
+                    schedule.SCHEDULE_SYNC_END_DT
+                  ) && (
+                    <p className="mt-1 text-sm text-red-600">
+                      Schedule End must be after Schedule Synchronize date (
+                      {schedule.SCHEDULE_SYNC_START_DT})
+                    </p>
+                  )}
               </div>
               <div>
                 <label className="block text-sm font-medium text-gray-600 mb-1">

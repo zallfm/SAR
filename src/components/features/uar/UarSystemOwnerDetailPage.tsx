@@ -52,10 +52,14 @@ const UarSystemOwnerDetailPage: React.FC<UarSystemOwnerDetailPageProps> = ({
         ...item,
         approvalStatus: "Approved" as ApprovalStatus,
       }));
+    console.log("RELEVANT DETAIL", relevantDetails);
     setTableData(relevantDetails);
   }, [record.uarId]);
 
-  const handleRowApprovalChange = async(id: number, status: ApprovalStatus) => {
+  const handleRowApprovalChange = async (
+    id: number,
+    status: ApprovalStatus
+  ) => {
     setTableData((prev) =>
       prev.map((row) =>
         row.ID === id ? { ...row, approvalStatus: status } : row

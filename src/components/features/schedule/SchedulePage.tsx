@@ -223,7 +223,12 @@ const SchedulePage: React.FC = () => {
 
     const newStatus =
       scheduleToChangeStatus.SCHEDULE_STATUS === "1" ? "0" : "1";
-    updateStatusSchedule(scheduleToChangeStatus.ID, newStatus);
+    const compoundId = {
+      APPLICATION_ID: scheduleToChangeStatus.APPLICATION_ID,
+      SCHEDULE_SYNC_START_DT: scheduleToChangeStatus.SCHEDULE_SYNC_START_DT,
+      SCHEDULE_UAR_DT: scheduleToChangeStatus.SCHEDULE_UAR_DT,
+    };
+    updateStatusSchedule(compoundId, newStatus);
 
     handleCloseStatusConfirm();
     setShowSuccessModal(true);

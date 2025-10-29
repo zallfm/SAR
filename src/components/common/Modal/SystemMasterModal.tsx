@@ -112,8 +112,6 @@ const SystemMasterModal: React.FC<SystemMasterModalProps> = ({
     setIsSubmitting(true);
 
     try {
-      const now = new Date();
-
       const finalRecord: Omit<
         SystemMaster,
         "CREATED_BY" | "CHANGED_BY" | "CREATED_DT" | "CHANGED_DT"
