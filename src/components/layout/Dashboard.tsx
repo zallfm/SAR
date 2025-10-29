@@ -12,7 +12,7 @@ import { useAuthStore } from "../../store/authStore";
 import { useUIStore } from "../../store/uiStore";
 import { useUarStore } from "../../store/uarStore";
 // import { useLogout } from '@/src/hooks/useAuth'
-import { useLogout } from "../../hooks/useAuth";
+import { useLogout, useMenu } from "../../hooks/useAuth";
 import { useNavigate } from "react-router-dom";
 import { postLogMonitoringApi } from "@/src/api/log_monitoring";
 import { AuditAction } from "@/src/constants/auditActions";
@@ -56,6 +56,7 @@ interface DashboardProps {
 }
 
 const Dashboard: React.FC<DashboardProps> = () => {
+  const { data: menuTree, isLoading, error } = useMenu();
   const { currentUser } = useAuthStore();
   const { activeView, setActiveView, resetActiveView } = useUIStore();
   const {
@@ -224,6 +225,9 @@ const Dashboard: React.FC<DashboardProps> = () => {
             });
             setActiveView(view);
           }}
+          items={menuTree ?? []}
+          loading={isLoading}
+          error={error ? String(error) : null}
         />
       </div>
       <div className="flex-1 flex flex-col overflow-hidden h-full">
