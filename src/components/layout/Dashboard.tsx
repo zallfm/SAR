@@ -79,17 +79,18 @@ const Dashboard: React.FC<DashboardProps> = () => {
   const { mutateAsync: doLogout, isPending: isLoggingOut } = useLogout();
   const handleLogout = async () => {
     try {
-      await postLogMonitoringApi({
-        userId: user.username ?? "anonymous",
-        module: "Authentication",
-        action: AuditAction.LOGOUT,
-        status: "Success",
-        description: `User ${
-          user.username ?? "unknown"
-        } logged out successfully`,
-        location: "Dashboard.handleLogout",
-        timestamp: new Date().toISOString(),
-      });
+      // await postLogMonitoringApi({
+      //   userId: user.username ?? "anonymous",
+      //   module: "Authentication",
+      //   action: AuditAction.LOGOUT,
+      //   status: "Success",
+      //   description: `User ${
+      //     user.username ?? "unknown"
+      //   } logged out successfully`,
+      //   location: "Dashboard.handleLogout",
+      //   timestamp: new Date().toISOString(),
+      // });
+      
 
       await doLogout();
       const { token, currentUser, tokenExpiryMs } = useAuthStore.getState();
@@ -105,17 +106,17 @@ const Dashboard: React.FC<DashboardProps> = () => {
     } catch (e) {
       console.error("Logout error:", e);
       try {
-        await postLogMonitoringApi({
-          userId: currentUser?.username ?? "anonymous",
-          module: "Authentication",
-          action: AuditAction.LOGOUT,
-          status: "Error",
-          description: `User ${
-            currentUser?.username ?? "unknown"
-          } failed to logout: ${String(e)}`,
-          location: "Dashboard.handleLogout",
-          timestamp: new Date().toISOString(),
-        });
+        // await postLogMonitoringApi({
+        //   userId: currentUser?.username ?? "anonymous",
+        //   module: "Authentication",
+        //   action: AuditAction.LOGOUT,
+        //   status: "Error",
+        //   description: `User ${
+        //     currentUser?.username ?? "unknown"
+        //   } failed to logout: ${String(e)}`,
+        //   location: "Dashboard.handleLogout",
+        //   timestamp: new Date().toISOString(),
+        // });
       } catch (err) {
         console.warn("Failed to log logout error:", err);
       }

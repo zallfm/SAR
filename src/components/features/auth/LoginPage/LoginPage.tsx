@@ -253,15 +253,15 @@ const LoginPage: React.FC<LoginPageProps> = ({ onLoginSuccess }) => {
       });
 
       // ⬇️ Log ke backend
-      await postLogMonitoringApi({
-        userId: user.username,
-        module: "Login",
-        action: AuditAction.LOGIN_SUCCESS,
-        status: "Success",
-        description: `User ${user.username} success login`,
-        location: "LoginPage",
-        timestamp: new Date().toISOString(),
-      });
+      // await postLogMonitoringApi({
+      //   userId: user.username,
+      //   module: "Login",
+      //   action: AuditAction.LOGIN_SUCCESS,
+      //   status: "Success",
+      //   description: `User ${user.username} success login`,
+      //   location: "LoginPage",
+      //   timestamp: new Date().toISOString(),
+      // });
 
 
       // Beri tahu parent
@@ -294,15 +294,15 @@ const LoginPage: React.FC<LoginPageProps> = ({ onLoginSuccess }) => {
         timestamp: new Date().toISOString()
       });
 
-      await postLogMonitoringApi({
-        userId: username,
-        module: "Login",
-        action: AuditAction.LOGIN_FAILED,
-        status: "Error",
-        description: `User ${username} gagal login (${err?.message || "invalid credentials"})`,
-        location: "LoginPage",
-        timestamp: new Date().toISOString(),
-      });
+      // await postLogMonitoringApi({
+      //   userId: username,
+      //   module: "Login",
+      //   action: AuditAction.LOGIN_FAILED,
+      //   status: "Error",
+      //   description: `User ${username} gagal login (${err?.message || "invalid credentials"})`,
+      //   location: "LoginPage",
+      //   timestamp: new Date().toISOString(),
+      // });
 
 
       // Lock setelah mencapai batas
