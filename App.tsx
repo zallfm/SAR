@@ -60,17 +60,17 @@ const App: React.FC = () => {
 
   const handleLogout = async() => {
     try {
-      await postLogMonitoringApi({
-        userId: currentUser?.username ?? "anonymous",
-        module: "Authentication",
-        action: AuditAction.LOGOUT,
-        status: "Success",
-        description: `User ${
-          currentUser?.username ?? "unknown"
-        } logged out via App.tsx`,
-        location: "App.handleLogout",
-        timestamp: new Date().toISOString(),
-      });
+      // await postLogMonitoringApi({
+      //   userId: currentUser?.username ?? "anonymous",
+      //   module: "Authentication",
+      //   action: AuditAction.LOGOUT,
+      //   status: "Success",
+      //   description: `User ${
+      //     currentUser?.username ?? "unknown"
+      //   } logged out via App.tsx`,
+      //   location: "App.handleLogout",
+      //   timestamp: new Date().toISOString(),
+      // });
     } catch (err) {
       console.warn("Failed to log logout:", err);
     }

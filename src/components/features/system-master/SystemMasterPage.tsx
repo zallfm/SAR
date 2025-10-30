@@ -18,7 +18,7 @@ import {
   useFilteredSystemMasterRecords,
 } from "../../../hooks/useStoreSelectors";
 import { useAuthStore } from "@/src/store/authStore";
-import { postLogMonitoringApi } from "@/src/api/log_monitoring";
+// import { postLogMonitoringApi } from "@/src/api/log_monitoring";
 import { AuditAction } from "@/src/constants/auditActions";
 import { SystemMaster } from "@/src/types/systemMaster";
 import { useSystemMasterStore } from "@/src/store/systemMasterStore";
@@ -111,30 +111,30 @@ const SystemMasterPage: React.FC<SystemMasterPageProps> = ({ user }) => {
         setInfoMessage("Save Successfully");
         setIsInfoOpen(true);
 
-        await postLogMonitoringApi({
-          userId: username,
-          module: "SystemMaster",
-          action: AuditAction.DATA_UPDATE,
-          status: "Success",
-          description: `User ${username} updated SystemMaster record ${record.SYSTEM_CD}`,
-          location: "SystemMasterPage.handleSaveRecord",
-          timestamp: new Date().toISOString(),
-        });
+        // await postLogMonitoringApi({
+        //   userId: username,
+        //   module: "SystemMaster",
+        //   action: AuditAction.DATA_UPDATE,
+        //   status: "Success",
+        //   description: `User ${username} updated SystemMaster record ${record.SYSTEM_CD}`,
+        //   location: "SystemMasterPage.handleSaveRecord",
+        //   timestamp: new Date().toISOString(),
+        // });
       } else {
         setInfoMessage(
           `Error: ${status.error.message} Code: ${status.error.code ?? ""}`
         );
         setIsInfoOpen(true);
 
-        await postLogMonitoringApi({
-          userId: username,
-          module: "SystemMaster",
-          action: AuditAction.DATA_UPDATE,
-          status: "Error",
-          description: `Failed to update SystemMaster record ${record.SYSTEM_CD}: ${status.error}`,
-          location: "SystemMasterPage.handleSaveRecord",
-          timestamp: new Date().toISOString(),
-        });
+        // await postLogMonitoringApi({
+        //   userId: username,
+        //   module: "SystemMaster",
+        //   action: AuditAction.DATA_UPDATE,
+        //   status: "Error",
+        //   description: `Failed to update SystemMaster record ${record.SYSTEM_CD}: ${status.error}`,
+        //   location: "SystemMasterPage.handleSaveRecord",
+        //   timestamp: new Date().toISOString(),
+        // });
       }
     } else {
       const status = await addSystemMasterRecord(record);
@@ -142,30 +142,30 @@ const SystemMasterPage: React.FC<SystemMasterPageProps> = ({ user }) => {
         setInfoMessage("Save Successfully");
         setIsInfoOpen(true);
 
-        await postLogMonitoringApi({
-          userId: username,
-          module: "SystemMaster",
-          action: AuditAction.DATA_CREATE,
-          status: "Success",
-          description: `User ${username} added new SystemMaster record ${record.SYSTEM_CD}`,
-          location: "SystemMasterPage.handleSaveRecord",
-          timestamp: new Date().toISOString(),
-        });
+        // await postLogMonitoringApi({
+        //   userId: username,
+        //   module: "SystemMaster",
+        //   action: AuditAction.DATA_CREATE,
+        //   status: "Success",
+        //   description: `User ${username} added new SystemMaster record ${record.SYSTEM_CD}`,
+        //   location: "SystemMasterPage.handleSaveRecord",
+        //   timestamp: new Date().toISOString(),
+        // });
       } else {
         setInfoMessage(
           `Error: ${status.error.message} Code: ${status.error.code ?? ""}`
         );
         setIsInfoOpen(true);
 
-        await postLogMonitoringApi({
-          userId: username,
-          module: "SystemMaster",
-          action: AuditAction.DATA_CREATE,
-          status: "Error",
-          description: `Failed to add new SystemMaster record ${record.SYSTEM_CD}: ${status.error}`,
-          location: "SystemMasterPage.handleSaveRecord",
-          timestamp: new Date().toISOString(),
-        });
+        // await postLogMonitoringApi({
+        //   userId: username,
+        //   module: "SystemMaster",
+        //   action: AuditAction.DATA_CREATE,
+        //   status: "Error",
+        //   description: `Failed to add new SystemMaster record ${record.SYSTEM_CD}: ${status.error}`,
+        //   location: "SystemMasterPage.handleSaveRecord",
+        //   timestamp: new Date().toISOString(),
+        // });
       }
     }
     handleCloseModal();
@@ -194,15 +194,15 @@ const SystemMasterPage: React.FC<SystemMasterPageProps> = ({ user }) => {
 
     // 🧩 Log Delete
     try {
-      await postLogMonitoringApi({
-        userId: username,
-        module: "SystemMaster",
-        action: AuditAction.DATA_DELETE,
-        status: "Success",
-        description: `User ${username} deleted SystemMaster record ${recordToDelete.SYSTEM_CD}`,
-        location: "SystemMasterPage.handleDeleteRecord",
-        timestamp: new Date().toISOString(),
-      });
+      // await postLogMonitoringApi({
+      //   userId: username,
+      //   module: "SystemMaster",
+      //   action: AuditAction.DATA_DELETE,
+      //   status: "Success",
+      //   description: `User ${username} deleted SystemMaster record ${recordToDelete.SYSTEM_CD}`,
+      //   location: "SystemMasterPage.handleDeleteRecord",
+      //   timestamp: new Date().toISOString(),
+      // });
     } catch (err) {
       console.warn("Failed to log delete:", err);
     }
@@ -218,15 +218,15 @@ const SystemMasterPage: React.FC<SystemMasterPageProps> = ({ user }) => {
 
     if (value.trim() !== "") {
       try {
-        await postLogMonitoringApi({
-          userId: username,
-          module: "SystemMaster",
-          action: AuditAction.DATA_FILTER,
-          status: "Success",
-          description: `User ${username} filtered SystemMaster by ${key}: ${value}`,
-          location: "SystemMasterPage.handleFilterChange",
-          timestamp: new Date().toISOString(),
-        });
+        // await postLogMonitoringApi({
+        //   userId: username,
+        //   module: "SystemMaster",
+        //   action: AuditAction.DATA_FILTER,
+        //   status: "Success",
+        //   description: `User ${username} filtered SystemMaster by ${key}: ${value}`,
+        //   location: "SystemMasterPage.handleFilterChange",
+        //   timestamp: new Date().toISOString(),
+        // });
       } catch (err) {
         console.warn("Failed to log filter action:", err);
       }

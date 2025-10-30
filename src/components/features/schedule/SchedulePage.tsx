@@ -21,7 +21,7 @@ import {
   useSchedulePagination,
   useScheduleActions,
 } from "../../../hooks/useStoreSelectors";
-import { postLogMonitoringApi } from "@/src/api/log_monitoring";
+// import { postLogMonitoringApi } from "@/src/api/log_monitoring";
 import { useAuthStore } from "@/src/store/authStore";
 import { AuditAction } from "@/src/constants/auditActions";
 import { useScheduleStore } from "@/src/store/scheduleStore";
@@ -94,31 +94,31 @@ const SchedulePage: React.FC = () => {
 
   const handleOpenSetSchedule = async () => {
     setIsSetScheduleModalOpen(true);
-    await postLogMonitoringApi({
-      userId: currentUser?.username ?? "anonymous",
-      module: "Schedule",
-      action: AuditAction.DATA_CREATE,
-      status: "Success",
-      description: `User opened Set Schedule modal`,
-      location: "SchedulePage.handleOpenSetSchedule",
-      timestamp: new Date().toISOString(),
-    });
+    // await postLogMonitoringApi({
+    //   userId: currentUser?.username ?? "anonymous",
+    //   module: "Schedule",
+    //   action: AuditAction.DATA_CREATE,
+    //   status: "Success",
+    //   description: `User opened Set Schedule modal`,
+    //   location: "SchedulePage.handleOpenSetSchedule",
+    //   timestamp: new Date().toISOString(),
+    // });
   };
 
   const handleOpenEditModal = async () => {
     if (selectedRows.length > 0) {
       setIsEditModalOpen(true);
-      await postLogMonitoringApi({
-        userId: currentUser?.username ?? "anonymous",
-        module: "Schedule",
-        action: AuditAction.DATA_EDIT,
-        status: "Success",
-        description: `User opened Edit Schedule for IDs: [${selectedRows.join(
-          ", "
-        )}]`,
-        location: "SchedulePage.handleOpenEditModal",
-        timestamp: new Date().toISOString(),
-      });
+      // await postLogMonitoringApi({
+      //   userId: currentUser?.username ?? "anonymous",
+      //   module: "Schedule",
+      //   action: AuditAction.DATA_EDIT,
+      //   status: "Success",
+      //   description: `User opened Edit Schedule for IDs: [${selectedRows.join(
+      //     ", "
+      //   )}]`,
+      //   location: "SchedulePage.handleOpenEditModal",
+      //   timestamp: new Date().toISOString(),
+      // });
     }
   };
 
@@ -133,17 +133,17 @@ const SchedulePage: React.FC = () => {
       pendingUpdate.forEach((updatedSchedule) => {
         updateSchedule(updatedSchedule.ID, updatedSchedule);
       });
-      await postLogMonitoringApi({
-        userId: currentUser?.username ?? "anonymous",
-        module: "Schedule",
-        action: AuditAction.DATA_EDIT,
-        status: "Success",
-        description: `User ${
-          currentUser?.username ?? "unknown"
-        } update Schedule ${updateSchedule.name}`,
-        location: "SchedulePage.CreateForm",
-        timestamp: new Date().toISOString(),
-      });
+      // await postLogMonitoringApi({
+      //   userId: currentUser?.username ?? "anonymous",
+      //   module: "Schedule",
+      //   action: AuditAction.DATA_EDIT,
+      //   status: "Success",
+      //   description: `User ${
+      //     currentUser?.username ?? "unknown"
+      //   } update Schedule ${updateSchedule.name}`,
+      //   location: "SchedulePage.CreateForm",
+      //   timestamp: new Date().toISOString(),
+      // });
 
       setSelectedRows([]);
       setShowSuccessModal(true);
@@ -159,17 +159,17 @@ const SchedulePage: React.FC = () => {
       for (const schedule of newSchedules) {
         await addSchedule(schedule);
       }
-      await postLogMonitoringApi({
-        userId: currentUser?.username ?? "anonymous",
-        module: "Schedule",
-        action: AuditAction.DATA_CREATE,
-        status: "Success",
-        description: `User ${
-          currentUser?.username ?? "unknown"
-        } create Schedule`,
-        location: "SchedulePage.CreateForm",
-        timestamp: new Date().toISOString(),
-      });
+      // await postLogMonitoringApi({
+      //   userId: currentUser?.username ?? "anonymous",
+      //   module: "Schedule",
+      //   action: AuditAction.DATA_CREATE,
+      //   status: "Success",
+      //   description: `User ${
+      //     currentUser?.username ?? "unknown"
+      //   } create Schedule`,
+      //   location: "SchedulePage.CreateForm",
+      //   timestamp: new Date().toISOString(),
+      // });
       setShowSuccessModal(true);
     } catch (error) {
       console.error("Failed to add one or more schedules:", error);
@@ -201,17 +201,17 @@ const SchedulePage: React.FC = () => {
     // kirim log
     if (value.trim() !== "") {
       try {
-        await postLogMonitoringApi({
-          userId: currentUser?.username ?? "anonymous",
-          module: "Schedule",
-          action: AuditAction.DATA_FILTER,
-          status: "Success",
-          description: `User ${
-            currentUser?.username ?? "unknown"
-          } filtered Schedule by ${key}: ${value}`,
-          location: "SchedulePage.handleFilterChange",
-          timestamp: new Date().toISOString(),
-        });
+        // await postLogMonitoringApi({
+        //   userId: currentUser?.username ?? "anonymous",
+        //   module: "Schedule",
+        //   action: AuditAction.DATA_FILTER,
+        //   status: "Success",
+        //   description: `User ${
+        //     currentUser?.username ?? "unknown"
+        //   } filtered Schedule by ${key}: ${value}`,
+        //   location: "SchedulePage.handleFilterChange",
+        //   timestamp: new Date().toISOString(),
+        // });
       } catch (err) {
         console.warn("Failed to log filter action:", err);
       }
