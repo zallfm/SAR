@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useRef } from "react";
 import type { User } from "../../../../../types";
 import { SystemIcon } from "../../../icons/SystemIcon";
 import { EyeIcon } from "../../../icons/EyeIcon";
@@ -37,6 +37,18 @@ const LoginPage: React.FC<LoginPageProps> = ({ onLoginSuccess }) => {
   const [isLocked, setIsLocked] = useState<Record<string, boolean>>({});
   const { logAuthentication, logSecurity } = useLogging();
 
+  // Animasi mount sederhana
+  const [mounted, setMounted] = useState(false);
+  useEffect(() => {
+    setMounted(true);
+  }, []);
+
+  // Typing indicators (UI only)
+  const [isTypingUsername, setIsTypingUsername] = useState(false);
+  const [isTypingPassword, setIsTypingPassword] = useState(false);
+  const usernameTypingTimeoutRef = useRef<number | undefined>(undefined);
+  const passwordTypingTimeoutRef = useRef<number | undefined>(undefined);
+
   // ⬇️ React Query login hook
   const { mutateAsync: doLogin, isPending } = useLogin();
   // ambil user dari store kalau mau
@@ -53,6 +65,41 @@ const LoginPage: React.FC<LoginPageProps> = ({ onLoginSuccess }) => {
   }, [onLoginSuccess, currentUser]);
 
   const unameKey = username.trim().toLowerCase();
+  const remainingAttempts = Math.max(
+    SECURITY_CONFIG.MAX_LOGIN_ATTEMPTS - (failedAttempts[unameKey] || 0),
+    0
+  );
+
+  // Map error to short, and code-aware messages
+  const mapFriendlyError = (err: any): string => {
+    const rawMsg = String(err?.message || "");
+    const status = err?.status;
+    const code = err?.code || err?.errorCode || err?.details?.code;
+    const offline = typeof navigator !== "undefined" && navigator && navigator.onLine === false;
+
+    // Prefer DB/service error codes when available
+    const codeMap: Record<string, string> = {
+      AUTH_INVALID: "Invalid credentials.",
+      ACCOUNT_LOCKED: "Account temporarily locked.",
+      RATE_LIMITED: "Too many attempts. Try again later.",
+      SERVICE_UNAVAILABLE: "Service unavailable. Please try again.",
+      TIMEOUT: "Request timed out. Please try again.",
+      NETWORK_ERROR: "Network error. Check your connection.",
+    };
+    if (code && codeMap[code]) return codeMap[code];
+
+    if (offline) return "No internet connection.";
+
+    if (/Failed to fetch|NetworkError|TypeError|ECONNREFUSED|ENOTFOUND/i.test(rawMsg) || status === 0) {
+      return "Network error. Check your connection.";
+    }
+
+    if (status === 503 || status === 504) return "Service unavailable. Please try again.";
+    if (status === 500) return "Server error. Please try again.";
+    if (status === 401 || status === 403) return "Invalid credentials.";
+
+    return rawMsg || "Login failed";
+  };
 
   // const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
   //   e.preventDefault();
@@ -253,22 +300,22 @@ const LoginPage: React.FC<LoginPageProps> = ({ onLoginSuccess }) => {
       });
 
       // ⬇️ Log ke backend
-      await postLogMonitoringApi({
-        userId: user.username,
-        module: "Login",
-        action: AuditAction.LOGIN_SUCCESS,
-        status: "Success",
-        description: `User ${user.username} success login`,
-        location: "LoginPage",
-        timestamp: new Date().toISOString(),
-      });
+      // await postLogMonitoringApi({
+      //   userId: user.username,
+      //   module: "Login",
+      //   action: AuditAction.LOGIN_SUCCESS,
+      //   status: "Success",
+      //   description: `User ${user.username} success login`,
+      //   location: "LoginPage",
+      //   timestamp: new Date().toISOString(),
+      // });
 
 
       // Beri tahu parent
       onLoginSuccess(user);
 
     } catch (err: any) {
-      setError(err?.message || 'Login failed');
+      setError(mapFriendlyError(err));
 
       if (err?.status === 423 || err?.details?.locked) {
         const ms = Number(err?.details?.remainingMs ?? 0);
@@ -280,8 +327,12 @@ const LoginPage: React.FC<LoginPageProps> = ({ onLoginSuccess }) => {
       }
 
 
-      // Track attempts
-      const currentAttempts = (failedAttempts[unameKey] || 0) + 1;
+      // Track attempts (prefer backend details.attemptsLeft when provided)
+      const backendAttemptsLeft = Number(err?.details?.attemptsLeft);
+      const max = SECURITY_CONFIG.MAX_LOGIN_ATTEMPTS;
+      const currentAttempts = Number.isFinite(backendAttemptsLeft)
+        ? Math.max(0, Math.min(max, max - backendAttemptsLeft))
+        : (failedAttempts[unameKey] || 0) + 1;
       setFailedAttempts(prev => ({ ...prev, [unameKey]: currentAttempts }));
 
       // Audit log gagal
@@ -294,15 +345,15 @@ const LoginPage: React.FC<LoginPageProps> = ({ onLoginSuccess }) => {
         timestamp: new Date().toISOString()
       });
 
-      await postLogMonitoringApi({
-        userId: username,
-        module: "Login",
-        action: AuditAction.LOGIN_FAILED,
-        status: "Error",
-        description: `User ${username} gagal login (${err?.message || "invalid credentials"})`,
-        location: "LoginPage",
-        timestamp: new Date().toISOString(),
-      });
+      // await postLogMonitoringApi({
+      //   userId: username,
+      //   module: "Login",
+      //   action: AuditAction.LOGIN_FAILED,
+      //   status: "Error",
+      //   description: `User ${username} gagal login (${err?.message || "invalid credentials"})`,
+      //   location: "LoginPage",
+      //   timestamp: new Date().toISOString(),
+      // });
 
 
       // Lock setelah mencapai batas
@@ -338,137 +389,167 @@ const LoginPage: React.FC<LoginPageProps> = ({ onLoginSuccess }) => {
     }
   };
 
-  return (
-    <div className="flex items-center justify-center min-h-screen p-4">
-      <div className="w-full max-w-5xl mx-auto bg-white rounded-2xl shadow-2xl grid md:grid-cols-2 overflow-hidden">
-        {/* Left Panel */}
-        <div className="hidden md:flex flex-col items-center justify-center p-12 bg-stone-50 text-center">
-          <SystemIcon className="w-48 h-48" />
-          <h1 className="mt-8 text-4xl font-bold tracking-wider text-[#0F3460]">
-            SYSTEM
-            <br />
-            AUTHORIZATION
-            <br />
-            REVIEW
-          </h1>
+  // Reusable form block
+  const FormBlock = (
+    <div className={`mx-auto w-full max-w-md transition-all duration-700 ${mounted ? "opacity-100 translate-y-0" : "opacity-0 translate-y-2"}`}>
+      <div className="mb-6">
+        <h2 className="text-2xl font-bold text-gray-900 dark:text-white">Login to Account</h2>
+        <p className="mt-2 text-sm text-gray-500 dark:text-slate-400">Please enter username and password to continue</p>
+      </div>
+
+      <form onSubmit={handleSubmit} className="space-y-6">
+        <div className={`transition-all duration-700 ${mounted ? "opacity-100 translate-y-0" : "opacity-0 translate-y-2"}`} style={{ transitionDelay: "80ms" }}>
+          <label
+            htmlFor="username"
+            className="text-sm font-semibold text-gray-700 dark:text-slate-200 block"
+          >
+            Username <span className="text-red-500">*</span>
+          </label>
+          <div className="relative mt-2">
+            <span className={`pointer-events-none absolute left-0 top-1/2 -translate-y-1/2 h-6 w-1 rounded-full bg-gradient-to-b from-blue-400 to-indigo-400 transition-opacity ${isTypingUsername ? "opacity-100" : "opacity-0"}`}></span>
+            <input
+              id="username"
+              name="username"
+              type="text"
+              autoComplete="username"
+              required
+              value={username}
+              onChange={(e) => {
+                setUsername(e.target.value);
+                setIsTypingUsername(true);
+                if (usernameTypingTimeoutRef.current) window.clearTimeout(usernameTypingTimeoutRef.current);
+                usernameTypingTimeoutRef.current = window.setTimeout(() => setIsTypingUsername(false), 300);
+              }}
+              placeholder="Enter the username"
+              maxLength={SECURITY_CONFIG.MAX_INPUT_LENGTH.username}
+              className={`block w-full px-4 py-3 pl-5 rounded-xl bg-white/90 dark:bg-slate-800/80 placeholder-gray-400 border focus:outline-none focus:ring-2 focus:border-transparent transition-all duration-300 shadow-sm hover:shadow-md hover:-translate-y-[1px] focus:shadow-lg focus:-translate-y-[1px] ${validationErrors.username
+                ? "border-red-300 focus:ring-red-500"
+                : `border-slate-200 dark:border-slate-700 focus:ring-blue-500 focus:ring-offset-1 focus:ring-offset-white dark:focus:ring-offset-slate-900 ${isTypingUsername ? "ring-2 ring-blue-400/40 shadow-md" : ""}`
+                }`}
+              aria-invalid={!!validationErrors.username}
+            />
+          </div>
+          {validationErrors.username && (
+            <div className="mt-1 text-sm text-red-600 dark:text-red-400">
+              {validationErrors.username.map((err, i) => (
+                <div key={i}>{err}</div>
+              ))}
+            </div>
+          )}
         </div>
 
-        {/* Right Panel: Login Form */}
-        <div className="p-8 md:p-12 flex flex-col justify-center">
-          <h2 className="text-2xl font-bold text-gray-800">Login to Account</h2>
-          <p className="mt-3 text-sm text-gray-500">
-            Please enter username and password to continue
-          </p>
-
-          <form onSubmit={handleSubmit} className="mt-8 space-y-6">
-            <div>
-              <label
-                htmlFor="username"
-                className="text-sm font-semibold text-gray-700 block"
-              >
-                Username <span className="text-red-500">*</span>
-              </label>
-              <input
-                id="username"
-                name="username"
-                type="text"
-                autoComplete="username"
-                required
-                value={username}
-                onChange={(e) => setUsername(e.target.value)}
-                placeholder="Enter the username"
-                maxLength={SECURITY_CONFIG.MAX_INPUT_LENGTH.username}
-                className={`mt-2 block w-full px-4 py-3 bg-gray-50 border rounded-lg placeholder-gray-400 focus:outline-none focus:ring-2 focus:border-transparent transition ${validationErrors.username
-                  ? "border-red-300 focus:ring-red-500"
-                  : "border-gray-300 focus:ring-blue-500"
-                  }`}
-              />
-              {validationErrors.username && (
-                <div className="mt-1 text-sm text-red-600">
-                  {validationErrors.username.map((err, i) => (
-                    <div key={i}>{err}</div>
-                  ))}
-                </div>
+        <div className={`transition-all duration-700 ${mounted ? "opacity-100 translate-y-0" : "opacity-0 translate-y-2"}`} style={{ transitionDelay: "160ms" }}>
+          <label
+            htmlFor="password"
+            className="text-sm font-semibold text-gray-700 dark:text-slate-200 block"
+          >
+            Password <span className="text-red-500">*</span>
+          </label>
+          <div className="relative mt-2 group">
+            <input
+              id="password"
+              name="password"
+              type={showPassword ? "text" : "password"}
+              autoComplete="current-password"
+              required
+              value={password}
+              onChange={(e) => {
+                setPassword(e.target.value);
+                setIsTypingPassword(true);
+                if (passwordTypingTimeoutRef.current) window.clearTimeout(passwordTypingTimeoutRef.current);
+                passwordTypingTimeoutRef.current = window.setTimeout(() => setIsTypingPassword(false), 300);
+              }}
+              placeholder="Enter your password"
+              maxLength={SECURITY_CONFIG.MAX_INPUT_LENGTH.password}
+              className={`block w-full px-4 py-3 pr-12 rounded-xl bg-white/90 dark:bg-slate-800/80 placeholder-gray-400 border focus:outline-none focus:ring-2 focus:border-transparent transition-all duration-300 shadow-sm hover:shadow-md hover:-translate-y-[1px] focus:shadow-lg focus:-translate-y-[1px] ${validationErrors.password
+                ? "border-red-300 focus:ring-red-500"
+                : `border-slate-200 dark:border-slate-700 focus:ring-blue-500 focus:ring-offset-1 focus:ring-offset-white dark:focus:ring-offset-slate-900 ${isTypingPassword ? "ring-2 ring-blue-400/40 shadow-md" : ""}`
+                }`}
+              aria-invalid={!!validationErrors.password}
+            />
+            <span className={`pointer-events-none absolute right-10 top-1/2 -translate-y-1/2 h-2 w-2 rounded-full bg-blue-400/80 transition-opacity ${isTypingPassword ? "opacity-100 animate-pulse" : "opacity-0"}`}></span>
+            <button
+              type="button"
+              onClick={() => setShowPassword(!showPassword)}
+              className="absolute inset-y-0 right-0 flex items-center pr-3 text-gray-400 hover:text-gray-600 dark:text-slate-400 dark:hover:text-slate-200 focus:outline-none transition-transform duration-200 group-hover:scale-105 hover:scale-110 active:scale-95"
+              aria-label={showPassword ? "Hide password" : "Show password"}
+            >
+              {showPassword ? (
+                <EyeSlashIcon className="w-5 h-5" />
+              ) : (
+                <EyeIcon className="w-5 h-5" />
               )}
+            </button>
+          </div>
+          {validationErrors.password && (
+            <div className="mt-1 text-sm text-red-600 dark:text-red-400">
+              {validationErrors.password.map((err, i) => (
+                <div key={i}>{err}</div>
+              ))}
             </div>
+          )}
+        </div>
 
-            <div>
-              <label
-                htmlFor="password"
-                className="text-sm font-semibold text-gray-700 block"
-              >
-                Password <span className="text-red-500">*</span>
-              </label>
-              <div className="relative mt-2">
-                <input
-                  id="password"
-                  name="password"
-                  type={showPassword ? "text" : "password"}
-                  autoComplete="current-password"
-                  required
-                  value={password}
-                  onChange={(e) => setPassword(e.target.value)}
-                  placeholder="Enter your password"
-                  maxLength={SECURITY_CONFIG.MAX_INPUT_LENGTH.password}
-                  className={`block w-full px-4 py-3 bg-gray-50 border rounded-lg placeholder-gray-400 focus:outline-none focus:ring-2 focus:border-transparent transition ${validationErrors.password
-                    ? "border-red-300 focus:ring-red-500"
-                    : "border-gray-300 focus:ring-blue-500"
-                    }`}
-                />
-                <button
-                  type="button"
-                  onClick={() => setShowPassword(!showPassword)}
-                  className="absolute inset-y-0 right-0 flex items-center pr-3 text-gray-400 hover:text-gray-600 focus:outline-none"
-                  aria-label={showPassword ? "Hide password" : "Show password"}
-                >
-                  {showPassword ? (
-                    <EyeSlashIcon className="w-5 h-5" />
-                  ) : (
-                    <EyeIcon className="w-5 h-5" />
-                  )}
-                </button>
-              </div>
-              {validationErrors.password && (
-                <div className="mt-1 text-sm text-red-600">
-                  {validationErrors.password.map((err, i) => (
-                    <div key={i}>{err}</div>
-                  ))}
-                </div>
-              )}
+        {error && (
+          <div
+            className="flex items-start gap-3 p-4 text-sm text-red-800 dark:text-red-200 bg-gradient-to-br from-red-50 to-white dark:from-red-900/30 dark:to-red-900/10 rounded-xl border border-red-200/70 dark:border-red-800 shadow-sm ring-1 ring-red-100/60 dark:ring-red-900/30"
+            role="alert"
+          >
+            <div className="mt-0.5">
+              <ExclamationCircleIcon className="w-5 h-5 flex-shrink-0" />
             </div>
-
-            {error && (
-              <div
-                className="flex items-center p-4 text-sm text-red-700 bg-red-100 rounded-lg border border-red-300"
-                role="alert"
-              >
-                <ExclamationCircleIcon className="w-5 h-5 mr-3 flex-shrink-0" />
-                <span className="font-medium">{error || "Login failed"}</span>
+            <div className="flex-1">
+              <div className="font-semibold">
+                {error || "Login failed"}
               </div>
-            )}
-
-            <div>
-              <button
-                type="submit"
-                disabled={isPending || isLocked[username]}
-                className={`w-full flex justify-center py-3 px-4 border border-transparent rounded-lg shadow-sm text-base font-medium text-white focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 transition-transform transform ${isPending || isLocked[username]
-                  ? "bg-gray-400 cursor-not-allowed"
-                  : "bg-blue-600 hover:bg-blue-700 hover:scale-105"
-                  }`}
-              >
-                {isPending ? (
-                  <div className="flex items-center">
-                    <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white mr-2"></div>
-                    Logging in...
-                  </div>
-                ) : isLocked[username] ? (
-                  "Account Locked"
-                ) : (
-                  "Login"
+              <div className="text-xs mt-1 text-red-600/90 dark:text-red-300/90">
+                Try again or contact your administrator.
+                {!isLocked[unameKey] && remainingAttempts > 0 && (
+                  <span>{` You have ${remainingAttempts} attempt${remainingAttempts === 1 ? '' : 's'} remaining.`}</span>
                 )}
-              </button>
+              </div>
             </div>
-          </form>
+          </div>
+        )}
+
+        <div className={`transition-all duration-700 ${mounted ? "opacity-100 translate-y-0" : "opacity-0 translate-y-2"}`} style={{ transitionDelay: "240ms" }}>
+          <button
+            type="submit"
+            disabled={isPending || isLocked[unameKey]}
+            className={`w-full inline-flex items-center justify-center py-3 px-4 rounded-xl text-base font-semibold text-white focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 transition-all shadow-lg ${isPending || isLocked[unameKey]
+              ? "bg-slate-400 cursor-not-allowed shadow-none"
+              : "bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700 active:scale-[0.99]"
+              }`}
+          >
+            {isPending ? (
+              <div className="flex items-center">
+                <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white mr-2"></div>
+                Logging in...
+              </div>
+            ) : isLocked[unameKey] ? (
+              "Account Locked"
+            ) : (
+              "Login"
+            )}
+          </button>
+        </div>
+      </form>
+    </div>
+  );
+
+  return (
+    <div className="min-h-screen w-full bg-slate-50 dark:bg-slate-950 flex items-center justify-center p-4 relative">
+      <div className={`w-full max-w-6xl mx-auto grid lg:grid-cols-2 overflow-hidden rounded-3xl bg-white dark:bg-slate-900 shadow-2xl border border-slate-100 dark:border-slate-800 transition-all duration-700 ${mounted ? "opacity-100 scale-100" : "opacity-0 scale-[0.99]"}`}>
+        <div className="relative hidden lg:flex items-end p-10 bg-gradient-to-br from-indigo-600 to-blue-600">
+          <div className="absolute inset-0 opacity-20 animate-pulse" style={{backgroundImage: 'radial-gradient(circle at 20% 20%, white 2px, transparent 2px)', backgroundSize: '24px 24px'}}></div>
+          <div className={`relative z-10 text-white transition-all duration-700 ${mounted ? "opacity-100 translate-y-0" : "opacity-0 translate-y-2"}`}>
+            <SystemIcon className="w-48 h-48 opacity-95 drop-shadow" />
+            <h1 className="mt-6 text-4xl font-extrabold leading-tight">System Authorization Review</h1>
+            <p className="mt-2 text-sm text-blue-100 max-w-sm">Access review and authorization dashboard</p>
+          </div>
+        </div>
+        <div className="p-8 md:p-12 flex items-center justify-center bg-white dark:bg-slate-900">
+          {FormBlock}
         </div>
       </div>
     </div>

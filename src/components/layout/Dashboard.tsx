@@ -12,7 +12,7 @@ import { useAuthStore } from "../../store/authStore";
 import { useUIStore } from "../../store/uiStore";
 import { useUarStore } from "../../store/uarStore";
 // import { useLogout } from '@/src/hooks/useAuth'
-import { useLogout } from "../../hooks/useAuth";
+import { useLogout, useMenu } from "../../hooks/useAuth";
 import { useNavigate } from "react-router-dom";
 import { postLogMonitoringApi } from "@/src/api/log_monitoring";
 import { AuditAction } from "@/src/constants/auditActions";
@@ -56,6 +56,7 @@ interface DashboardProps {
 }
 
 const Dashboard: React.FC<DashboardProps> = () => {
+  const { data: menuTree, isLoading, error } = useMenu();
   const { currentUser } = useAuthStore();
   const { activeView, setActiveView, resetActiveView } = useUIStore();
   const {
@@ -78,17 +79,18 @@ const Dashboard: React.FC<DashboardProps> = () => {
   const { mutateAsync: doLogout, isPending: isLoggingOut } = useLogout();
   const handleLogout = async () => {
     try {
-      await postLogMonitoringApi({
-        userId: user.username ?? "anonymous",
-        module: "Authentication",
-        action: AuditAction.LOGOUT,
-        status: "Success",
-        description: `User ${
-          user.username ?? "unknown"
-        } logged out successfully`,
-        location: "Dashboard.handleLogout",
-        timestamp: new Date().toISOString(),
-      });
+      // await postLogMonitoringApi({
+      //   userId: user.username ?? "anonymous",
+      //   module: "Authentication",
+      //   action: AuditAction.LOGOUT,
+      //   status: "Success",
+      //   description: `User ${
+      //     user.username ?? "unknown"
+      //   } logged out successfully`,
+      //   location: "Dashboard.handleLogout",
+      //   timestamp: new Date().toISOString(),
+      // });
+      
 
       await doLogout();
       const { token, currentUser, tokenExpiryMs } = useAuthStore.getState();
@@ -104,17 +106,17 @@ const Dashboard: React.FC<DashboardProps> = () => {
     } catch (e) {
       console.error("Logout error:", e);
       try {
-        await postLogMonitoringApi({
-          userId: currentUser?.username ?? "anonymous",
-          module: "Authentication",
-          action: AuditAction.LOGOUT,
-          status: "Error",
-          description: `User ${
-            currentUser?.username ?? "unknown"
-          } failed to logout: ${String(e)}`,
-          location: "Dashboard.handleLogout",
-          timestamp: new Date().toISOString(),
-        });
+        // await postLogMonitoringApi({
+        //   userId: currentUser?.username ?? "anonymous",
+        //   module: "Authentication",
+        //   action: AuditAction.LOGOUT,
+        //   status: "Error",
+        //   description: `User ${
+        //     currentUser?.username ?? "unknown"
+        //   } failed to logout: ${String(e)}`,
+        //   location: "Dashboard.handleLogout",
+        //   timestamp: new Date().toISOString(),
+        // });
       } catch (err) {
         console.warn("Failed to log logout error:", err);
       }
@@ -224,6 +226,9 @@ const Dashboard: React.FC<DashboardProps> = () => {
             });
             setActiveView(view);
           }}
+          items={menuTree ?? []}
+          loading={isLoading}
+          error={error ? String(error) : null}
         />
       </div>
       <div className="flex-1 flex flex-col overflow-hidden h-full">

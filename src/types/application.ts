@@ -5,7 +5,7 @@ export type Application = {
   NOREG_SYSTEM_OWNER: string;
   NOREG_SYSTEM_CUST: string;
   SECURITY_CENTER: string;
-  APPLICATION_STATUS: "Aktif" | "Inactive";
+  APPLICATION_STATUS: "Active" | "Inactive";
   CREATED_BY: string
   CREATED_DT: string; // ISO
   CHANGED_BY: string;

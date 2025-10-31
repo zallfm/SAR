@@ -65,6 +65,18 @@ export const useApplicationStore = create<ApplicationState>()(
         setItemsPerPage: (size) =>
           set({ itemsPerPage: size, currentPage: 1 }),
 
+        // Helper: normalize backend status (0/1 or labels) -> UI labels "Active"/"Inactive"
+        normalizeStatus: (raw: any): "Active" | "Inactive" => {
+          if (raw === 0 || raw === "0" || raw === "Active" || raw === "Aktif") return "Active";
+          if (raw === 1 || raw === "1" || raw === "Inactive") return "Inactive";
+          return "Inactive";
+        },
+
+        // Helper: denormalize UI labels -> backend numeric 0/1
+        denormalizeStatus: (label: "Active" | "Inactive"): 0 | 1 => {
+          return label === "Active" ? 0 : 1;
+        },
+
         // ✅ GET applications from backend
         getApplications: async () => {
           set({ isLoading: true, error: null });
@@ -77,7 +89,7 @@ export const useApplicationStore = create<ApplicationState>()(
               NOREG_SYSTEM_OWNER: item.NOREG_SYSTEM_OWNER,
               NOREG_SYSTEM_CUST: item.NOREG_SYSTEM_CUST,
               SECURITY_CENTER: item.SECURITY_CENTER,
-              APPLICATION_STATUS: item.APPLICATION_STATUS,
+              APPLICATION_STATUS: (get() as any).normalizeStatus(item.APPLICATION_STATUS),
               CREATED_BY: item.CREATED_BY,
               CREATED_DT: item.CREATED_DT,
               CHANGED_BY: item.CHANGED_BY,
@@ -94,15 +106,53 @@ export const useApplicationStore = create<ApplicationState>()(
         },
 
         createApplication: async (payload: any) => {
-          const res = await postApplicationApi(payload)
-          const created = res.data;
+          const transformedPayload = {
+            ...payload,
+            ...(payload?.APPLICATION_STATUS !== undefined
+              ? {
+                  APPLICATION_STATUS: (get() as any).denormalizeStatus(
+                    payload.APPLICATION_STATUS
+                  ),
+                }
+              : {}),
+          };
+          const res = await postApplicationApi(transformedPayload)
+          const createdRaw = res.data;
+          const created = createdRaw
+            ? {
+                ...createdRaw,
+                APPLICATION_STATUS: (get() as any).normalizeStatus(
+                  createdRaw.APPLICATION_STATUS
+                ),
+              }
+            : createdRaw;
           set((s) => ({ applications: [created, ...s.applications] }))
           return created
         },
 
         editApplication: async (id: string, payload: Partial<Application>) => {
-          const res = await editApplicationApi(id, payload);
-          const updatedFromApi = res.data;
+          // Ensure status is in backend format (0/1) when sending
+          const transformedPayload = {
+            ...payload,
+            ...(payload.APPLICATION_STATUS !== undefined
+              ? {
+                  APPLICATION_STATUS: (get() as any).denormalizeStatus(
+                    payload.APPLICATION_STATUS as any
+                  ),
+                }
+              : {}),
+          };
+
+          const res = await editApplicationApi(id, transformedPayload);
+          const updatedFromApiRaw = res.data;
+          const updatedFromApi = updatedFromApiRaw
+            ? {
+                ...updatedFromApiRaw,
+                APPLICATION_STATUS: (get() as any).normalizeStatus(
+                  updatedFromApiRaw.APPLICATION_STATUS
+                ),
+              }
+            : undefined;
           const merged = updatedFromApi ?? {
             ...(get().applications.find(a => a.APPLICATION_ID === id) as Application),
             ...payload,
@@ -124,17 +174,26 @@ export const useApplicationStore = create<ApplicationState>()(
         },
 
         toggleApplicationStatus: async (app) => {
-          const nextStatus = app.APPLICATION_STATUS === "Aktif" ? "Inactive" : "Aktif"
+          const nextStatus = app.APPLICATION_STATUS === "Active" ? "Inactive" : "Active";
+          const backendStatus = (get() as any).denormalizeStatus(nextStatus);
 
           const res = await editApplicationApi(app.APPLICATION_ID, {
-            APPLICATION_STATUS: nextStatus,
-          })
+            APPLICATION_STATUS: backendStatus,
+          });
 
-          const updated = res.data ?? {
+          const updatedRaw = res.data;
+          const updated = updatedRaw
+            ? {
+                ...updatedRaw,
+                APPLICATION_STATUS: (get() as any).normalizeStatus(
+                  updatedRaw.APPLICATION_STATUS
+                ),
+              }
+            : {
             ...app,
             APPLICATION_STATUS: nextStatus,
             CHANGED_DT: new Date().toISOString(),
-          }
+          };
 
           set((s) => ({
             applications: s.applications.map((a) =>

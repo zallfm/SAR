@@ -65,13 +65,7 @@ const ApplicationPage: React.FC = () => {
     form?: string;
   }>({});
 
-  const toEnglishStatus = (
-    status: "Aktif" | "Inactive"
-  ): "Active" | "Inactive" => (status === "Aktif" ? "Active" : "Inactive");
-
-  const toIndonesianStatus = (
-    status: "Active" | "Inactive"
-  ): "Aktif" | "Inactive" => (status === "Active" ? "Aktif" : "Inactive");
+  // Status now standardized to English labels across UI: "Active" | "Inactive"
 
   const { logUserAction, logError } = useLogging({
     componentName: "ApplicationPage",
@@ -477,9 +471,7 @@ const ApplicationPage: React.FC = () => {
                       className="focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 rounded-full"
                       aria-label={`Change status for ${app.APPLICATION_NAME}`}
                     >
-                      <StatusPill
-                        status={toEnglishStatus(app.APPLICATION_STATUS)}
-                      />
+                      <StatusPill status={app.APPLICATION_STATUS} />
                     </button>
                   </td>
                   <td className="px-4 py-4 whitespace-nowrap text-sm">
@@ -575,9 +567,7 @@ const ApplicationPage: React.FC = () => {
         <StatusConfirmationModal
           onClose={handleCloseStatusConfirm}
           onConfirm={handleConfirmStatusChange}
-          currentStatus={toEnglishStatus(
-            pendingStatusApplication.APPLICATION_STATUS
-          )}
+          currentStatus={pendingStatusApplication.APPLICATION_STATUS}
         />
       )}
     </div>
