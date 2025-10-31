@@ -1,17 +1,17 @@
-export type ApiError = {
-  response?: {
-    status?: number;
-    data?: {
-      code?: string;
-      message?: string;
-      [k: string]: unknown;
-    };
-  };
-  message?: string;
+export type ApiFieldError = {
+  code: string;
+  message: string;
+  value?: any;
 };
 
-export function parseApiError(e: unknown): { code?: string; message: string; status?: number } {
-  // aman untuk semua jenis error (fetch, axios, Error biasa)
+export type ParsedApiError = {
+  code?: string;
+  message: string;
+  status?: number;
+  errors?: Record<string, ApiFieldError>; // ⬅️ tambahkan ini
+};
+
+export function parseApiError(e: unknown): ParsedApiError {
   if (typeof e === "object" && e !== null) {
     const anyErr = e as Record<string, any>;
     const code = anyErr?.response?.data?.code as string | undefined;
@@ -20,8 +20,15 @@ export function parseApiError(e: unknown): { code?: string; message: string; sta
       (anyErr?.message as string | undefined) ??
       "Unknown error";
     const status = anyErr?.response?.status as number | undefined;
-    return { code, message, status };
+
+    // ambil field errors dari backend (kalau ada)
+    const errors =
+      (anyErr?.response?.data?.errors as Record<string, ApiFieldError>) ??
+      (anyErr?.response?.data?.details?.errors as Record<string, ApiFieldError>) ??
+      undefined;
+
+    return { code, message, status, errors };
   }
-  // primitive error
+
   return { message: String(e ?? "Unknown error") };
 }

@@ -217,55 +217,57 @@ const ApplicationPage: React.FC = () => {
       setModalErrors({});
       closeModal();
     } catch (err) {
-      const { code, message } = parseApiError(err);
-      console.log("code", code);
-      if (code === "VAL-ERR-304" || /already exists/i.test(message)) {
-        setModalErrors({
-          appId: "Application ID is already in use, please use another ID.",
-        });
-        return;
-      }
-      if (/owner.*not eligible/i.test(message)) {
-        setModalErrors({
-          owner: "Selected Owner is not eligible as Owner",
-        });
-        return;
-      }
-      if (/custodian.*not eligible/i.test(message)) {
-        setModalErrors({
-          custodian: "Selected Custodian is not eligible as Custodian.",
-        });
-        return;
+      const { code, message, errors } = parseApiError(err);
+
+      // 1) Kalau BE sudah kirim errors map → pakai ini dulu
+      if (errors && Object.keys(errors).length) {
+        const fieldMap = {
+          APPLICATION_ID: "appId",
+          APPLICATION_NAME: "appName",
+          DIVISION_ID_OWNER: "divisionOwner",
+          NOREG_SYSTEM_OWNER: "owner",
+          NOREG_SYSTEM_CUST: "custodian",
+          SECURITY_CENTER: "securityCenter",
+        } as const;
+
+        const mapped: any = {};
+        for (const [beField, v] of Object.entries(errors)) {
+          const feKey = fieldMap[beField as keyof typeof fieldMap];
+          if (feKey) mapped[feKey] = (v as any)?.message || "Invalid value";
+        }
+        if (Object.keys(mapped).length) {
+          setModalErrors(mapped);
+          return;
+        }
       }
 
-      // owner dan custodian sama
+      // 2) Fallback: infer dari pesan
+      const msg = message ?? "";
+      const lower = msg.toLowerCase();
+
+      // duplikasi ID
       if (
-        /owner.*custodian.*different/i.test(message) ||
-        /must be different/i.test(message)
+        /(application[_\s-]?id|app[\s-]?id)/i.test(msg) &&
+        /exist/i.test(lower)
       ) {
-        setModalErrors({
-          owner: "Owner and Custodian must be different.",
-          custodian: "Owner and Custodian must be different.",
-        });
+        setModalErrors({ appId: message });
+        return;
+      }
+      // duplikasi NAME
+      if (
+        /(application[_\s-]?name|app[\s-]?name)/i.test(msg) &&
+        /exist/i.test(lower)
+      ) {
+        setModalErrors({ appName: message });
+        return;
+      }
+      // owner bermasalah (sudah dipakai/invalid/not found)
+      if (/owner/i.test(lower)) {
+        setModalErrors({ owner: message });
         return;
       }
 
-      // invalid NOREG
-      if (/owner noREG not found/i.test(message)) {
-        setModalErrors({ owner: "NOREG Owner not found." });
-        return;
-      }
-      if (/custodian noREG not found/i.test(message)) {
-        setModalErrors({ custodian: "NOREG Custodian not found." });
-        return;
-      }
-
-      // invalid security center (opsional)
-      if (/invalid security center/i.test(message)) {
-        setModalErrors({ form: "Security Center is invalid." });
-        return;
-      }
-
+      // 3) terakhir: form-level
       setModalErrors({ form: message || "Failed to save application." });
     }
   };

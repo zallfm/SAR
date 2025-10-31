@@ -145,7 +145,13 @@ const AddApplicationModal: React.FC<AddApplicationModalProps> = ({
 
   // [ADDED] sync error dari parent (ApplicationPage) ke modal
   useEffect(() => {
-    if (externalErrors) setErrors((prev) => ({ ...prev, ...externalErrors }));
+    if (!externalErrors) return;
+    setErrors((prev) => ({
+      ...prev,
+      ...externalErrors,
+      // handle kemungkinan divisionOwner dari BE
+      owner: externalErrors.owner ?? externalErrors.divisionOwner ?? prev.owner,
+    }));
   }, [externalErrors]);
 
   const matchUser = (u: SystemUser, q: string) =>
@@ -485,8 +491,7 @@ const AddApplicationModal: React.FC<AddApplicationModalProps> = ({
             />
             {errors.appName && (
               <p className="mt-1 text-xs text-red-600">{errors.appName}</p>
-            )}{" "}
-            {/* [ADDED] */}
+            )}
           </div>
 
           <AutocompleteInput
