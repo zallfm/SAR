@@ -80,7 +80,7 @@ export interface ScheduleState {
 
   // CRUD Operations
   // MODIFIED: All CRUD ops are now async and API-driven
-  getSchedules: (params?: ScheduleFilters) => Promise<void>;
+  getSchedules: (params?: ScheduleFilters & { signal: AbortSignal }) => Promise<void>;
   addSchedule: (
     schedule: Omit<ScheduleData, "ID">
   ) => Promise<ScheduleResponse>;
@@ -129,12 +129,18 @@ export const useScheduleStore = create<ScheduleState>()(
 
         getSchedules: async (params) => {
           const state = get();
+            const {
+            page: paramPage,
+            limit: paramLimit,
+            signal,
+            ...restParams
+          } = params || {};
           const page = params?.page ?? state.currentPage;
           const limit = params?.limit ?? state.itemsPerPage;
 
           const query: ScheduleFilters = {
             ...state.filters,
-            ...params,
+            ...restParams,
             page,
             limit,
           };
@@ -145,7 +151,7 @@ export const useScheduleStore = create<ScheduleState>()(
 
           set({ isLoading: true, error: null });
           try {
-            const res = await getScheduleApi(query);
+            const res = await getScheduleApi(query,signal);
             const response = res as {
               data: Schedule[];
               meta?: ApiMeta;
@@ -209,7 +215,6 @@ export const useScheduleStore = create<ScheduleState>()(
         // MODIFIED: resetFilters now refetches
         resetFilters: async () => {
           set({ filters: initialFilters, currentPage: 1 });
-          await get().getSchedules(initialFilters);
         },
 
         setCurrentPage: (currentPage) => {
@@ -352,6 +357,7 @@ export const useScheduleStore = create<ScheduleState>()(
         partialize: (state) => ({
           schedules: state.schedules,
           filteredSchedules: state.filteredSchedules,
+          meta: state.meta,
           filters: state.filters,
           currentPage: state.currentPage,
           itemsPerPage: state.itemsPerPage,

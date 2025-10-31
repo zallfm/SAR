@@ -76,7 +76,7 @@ export interface SystemMasterState {
 
   // CRUD Operations
   // MODIFIED: All CRUD ops are now async and API-driven
-  getSystemMasters: (params?: SystemMasterFilters) => Promise<void>;
+  getSystemMasters: (params?: SystemMasterFilters & { signal?: AbortSignal }) => Promise<void>;
   addSystemMaster: (
     record: CreateSystemMasterPayload
   ) => Promise<SystemMasterResponse>;
@@ -116,8 +116,13 @@ export const useSystemMasterStore = create<SystemMasterState>()(
 
         getSystemMasters: async (params) => {
           const state = get();
-          const page = params?.page ?? state.currentPage;
-          const limit = params?.limit ?? state.itemsPerPage;
+          const {
+            page: paramPage,
+            limit: paramLimit,
+            signal,
+          } = params || {};
+          const page = paramPage ?? state.currentPage;
+          const limit = paramLimit ?? state.itemsPerPage;
 
           const query: SystemMasterFilters = {
             ...state.filters,
@@ -128,7 +133,7 @@ export const useSystemMasterStore = create<SystemMasterState>()(
 
           set({ isLoading: true, error: null });
           try {
-            const res = await getSystemMasterApi(query);
+            const res = await getSystemMasterApi(query, signal!);
             // Type assertion to match the schedule store's pattern
             const response = res as {
               data: SystemMaster[];
@@ -182,7 +187,6 @@ export const useSystemMasterStore = create<SystemMasterState>()(
         // MODIFIED: resetFilters now refetches
         resetFilters: async () => {
           set({ filters: initialFilters, currentPage: 1 });
-          await get().getSystemMasters(initialFilters);
         },
 
         setCurrentPage: (currentPage) => {
@@ -300,6 +304,7 @@ export const useSystemMasterStore = create<SystemMasterState>()(
           records: state.records,
           filteredRecords: state.filteredRecords,
           filters: state.filters,
+          meta: state.meta,
           currentPage: state.currentPage,
           itemsPerPage: state.itemsPerPage,
         }),

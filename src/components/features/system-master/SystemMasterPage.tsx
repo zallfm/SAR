@@ -74,11 +74,18 @@ const SystemMasterPage: React.FC<SystemMasterPageProps> = ({ user }) => {
   );
 
   React.useEffect(() => {
-    getSystemMasters();
+    const controller = new AbortController();
+    getSystemMasters({
+      systemType: '',
+      systemCode: '', signal: controller.signal
+    });
+    return () => {
+      controller.abort();
+    };
   }, [getSystemMasters, filters, currentPage, itemsPerPage]);
 
   const totalPages = getTotalPages();
-  const totalItems = records.length;
+  const totalItems = meta?.total ?? 0;
   const currentRecords = getCurrentPageRecords();
   const startItem =
     currentRecords.length > 0 ? (currentPage - 1) * itemsPerPage + 1 : 0;

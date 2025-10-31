@@ -77,7 +77,8 @@ const UarPicPage: React.FC = () => {
   }, [getPics, filters, currentPage, itemsPerPage]);
   const totalPages = getTotalPages();
   const currentPics = getCurrentPagePics();
-  const totalItems = pics.length;
+  const meta = useUarPicStore((state) => state.meta);
+  const totalItems = meta?.total ?? 0;
   const startItem =
     currentPics.length > 0 ? (currentPage - 1) * itemsPerPage + 1 : 0;
   // MODIFY THIS LINE

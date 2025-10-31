@@ -9,11 +9,12 @@ import type {
   UpdateSystemMasterPayload,
 } from "../types/systemMaster";
 
-export const getSystemMasterApi = (params: SystemMasterFilters) =>
+export const getSystemMasterApi = (params: SystemMasterFilters, signal: AbortSignal) =>
   http<BackendGetSystemMasterResponse>({
     path: "/sar/master_config",
     method: "GET",
     params,
+    signal
   });
 
 export const createSystemMasterApi = (data: CreateSystemMasterPayload) =>

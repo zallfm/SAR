@@ -99,7 +99,8 @@ const SchedulePage: React.FC = () => {
 
   const totalPages = getTotalPages();
   const currentSchedules = getCurrentPageSchedules();
-  const totalItems = schedules.length;
+  const totalItems = meta?.total ?? 0;
+
 
   const startItem =
     currentSchedules.length > 0 ? (currentPage - 1) * itemsPerPage + 1 : 0;

@@ -277,6 +277,7 @@ export const useUarPicStore = create<UarPicState>()(
         name: "uar-pic-store",
         partialize: (state) => ({
           pics: state.pics,
+          meta: state.meta,
           filteredPics: state.filteredPics,
           filters: state.filters,
           currentPage: state.currentPage,

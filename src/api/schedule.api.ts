@@ -10,13 +10,14 @@ import type {
   UpdateSchedulePayload,
 } from "../types/schedule";
 
-export const getScheduleApi = (params?: ScheduleFilters) =>
+export const getScheduleApi = (params?: ScheduleFilters, signal?: AbortSignal) =>
   withToken((token) =>
     http<BackendGetScheduleResponse>({
       path: "/sar/schedules",
       method: "GET",
       token,
       params,
+      signal
     })
   );
 
