@@ -45,28 +45,18 @@ const monthNumberToName: { [key: string]: string } = {
  * @param dateStr - The date string to format.
  * @returns The date string in "dd/mm" format, or an empty string if invalid.
  */
-export const formatDisplayDateToDdMm = (dateStr: string): string => {
-  if (!dateStr) return "";
-  const trimmedDateStr = dateStr.trim();
+export const formatDisplayDateToDdMm = (dateString: string): string => {
+  const date = new Date(dateString);
+  if (isNaN(date.getTime())) return "";
 
-  const ddMmParts = trimmedDateStr.match(/^(\d{1,2})\/(\d{1,2})$/);
-  if (ddMmParts) {
-    const day = ddMmParts[1].padStart(2, "0");
-    const month = ddMmParts[2].padStart(2, "0");
-    return `${day}/${month}`;
-  }
+  // 'id-ID' specifies the Indonesian locale to get "Januari"
+  // For English, you would use 'en-US' to get "January"
+  const options: Intl.DateTimeFormatOptions = {
+    day: 'numeric', // "29" or "5"
+    month: 'long',  // "Januari" or "January"
+  };
 
-  const ddMonthParts = trimmedDateStr.split(" ");
-  if (ddMonthParts.length === 2) {
-    const day = ddMonthParts[0].padStart(2, "0");
-    const monthName = ddMonthParts[1].toLowerCase();
-    const monthNumber = monthNameToNumber[monthName];
-    if (monthNumber) {
-      return `${day}/${monthNumber}`;
-    }
-  }
-
-  return "";
+  return date.toLocaleString('en-EN', options);
 };
 
 /**
@@ -103,29 +93,87 @@ export const isValidDdMm = (ddMm: string): boolean => {
   return day > 0 && day <= 31 && month > 0 && month <= 12;
 };
 
+
+
 /**
  * Validates if UAR date is after Sync End date.
  * @param syncEndDate - The sync end date in "dd/mm" format.
  * @param uarDate - The UAR date in "dd/mm" format.
  * @returns True if UAR date is after sync end date, false otherwise.
  */
+const parseDdMm = (dateStr: string): number => {
+  const [day, month] = dateStr.split("/").map(Number);
+  return month * 100 + day;
+};
+
+// --- NEW "IN BETWEEN" FUNCTION ---
+/**
+ * Checks if a date is between two other dates (inclusive).
+ * All dates are "DD/MM" format.
+ */
+const isDateBetween = (
+  startDate: string,
+  endDate: string,
+  checkDate: string
+): boolean => {
+  const start = parseDdMm(startDate);
+  const end = parseDdMm(endDate);
+  const check = parseDdMm(checkDate);
+
+  if (start <= end) {
+    // Normal range (e.g., 01/03 to 01/05)
+    // Check is between start AND end
+    return check >= start && check <= end;
+  } else {
+    // Year-crossing range (e.g., 10/12 to 10/01)
+    // Check is after start OR before end
+    return check >= start || check <= end;
+  }
+};
+
+// --- UPDATED isUarDateValid FUNCTION ---
+/**
+ * Checks if the UAR date is VALID.
+ * A date is considered INVALID if it falls between the sync start and end dates.
+ * @param syncStartDate - "DD/MM"
+ * @param syncEndDate - "DD/MM"
+ * @param uarDate - "DD/MM"
+ * @returns {boolean} - `true` if valid (outside range), `false` if invalid (inside range).
+ */
+
+export const formatDateTimeToDdMm = (dateInput: string | Date): string => {
+  const date = new Date(dateInput);
+
+  // Check if the date is valid
+  if (isNaN(date.getTime())) {
+    return "";
+  }
+
+  // getMonth() is 0-indexed (0=Jan, 11=Dec), so we add 1.
+  const day = String(date.getDate()).padStart(2, "0");
+  const month = String(date.getMonth() + 1).padStart(2, "0");
+
+  return `${day}/${month}`;
+};
+
 export const isUarDateValid = (
+  syncStartDate: string,
   syncEndDate: string,
   uarDate: string
 ): boolean => {
-  if (!isValidDdMm(syncEndDate) || !isValidDdMm(uarDate)) return true; // If either date is invalid, don't block
+  // If any date is not in the correct "DD/MM" format, consider it valid to avoid blocking the user.
+  if (
+    !isValidDdMm(syncStartDate) ||
+    !isValidDdMm(syncEndDate) ||
+    !isValidDdMm(uarDate)
+  ) {
+    return true;
+  }
 
-  const [syncEndDay, syncEndMonth] = syncEndDate.split("/").map(Number);
-  const [uarDay, uarMonth] = uarDate.split("/").map(Number);
-
-  // Compare months first
-  if (uarMonth > syncEndMonth) return true;
-  if (uarMonth < syncEndMonth) return false;
-
-  // If same month, compare days
-  return uarDay > syncEndDay;
+  // The date is INVALID if it's in between.
+  // So, the function should return the opposite of isDateBetween.
+  return !isDateBetween(syncStartDate, syncEndDate, uarDate);
 };
-
 export const formatDate = (dateString: string) => {
   const date = new Date(dateString);
   if (isNaN(date.getTime())) return "";

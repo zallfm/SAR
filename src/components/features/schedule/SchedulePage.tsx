@@ -9,7 +9,10 @@ import ConfirmationModal from "../../common/Modal/ConfirmationModal";
 import SetScheduleModal from "../../common/Modal/SetScheduleModal";
 import SuccessModal from "../../common/Modal/SuccessModal";
 import StatusConfirmationModal from "../../common/Modal/StatusConfirmationModal";
-import { formatDdMmToDisplayDate } from "../../../../utils/dateFormatter";
+import {
+  formatDdMmToDisplayDate,
+  formatDisplayDateToDdMm,
+} from "../../../../utils/dateFormatter";
 import StatusPill from "../StatusPill/StatusPill";
 import { IconButton } from "../../common/Button/IconButton";
 import { AddButton } from "../../common/Button/AddButton";
@@ -25,7 +28,17 @@ import { postLogMonitoringApi } from "@/src/api/log_monitoring";
 import { useAuthStore } from "@/src/store/authStore";
 import { AuditAction } from "@/src/constants/auditActions";
 import { useScheduleStore } from "@/src/store/scheduleStore";
-import { applications } from "@/data";
+// --- CHANGE 1: Removed static 'applications' import ---
+// import { applications } from "@/data";
+import { useApplicationStore } from "@/src/store/applicationStore";
+
+// --- (No change to helper function) ---
+/**
+ * Generates a stable, unique string key from a schedule's compound primary key.
+ */
+const getCompoundKey = (schedule: ScheduleData) => {
+  return `${schedule.APPLICATION_ID}|${schedule.SCHEDULE_SYNC_START_DT}|${schedule.SCHEDULE_UAR_DT}`;
+};
 
 const SchedulePage: React.FC = () => {
   // Zustand store hooks
@@ -40,12 +53,21 @@ const SchedulePage: React.FC = () => {
     getTotalPages,
     getCurrentPageSchedules,
   } = useSchedulePagination();
+
+  const getDropdownApplications = useApplicationStore(
+    (state) => state.getDropdownApplications
+  );
+
+  React.useEffect(() => {
+    getDropdownApplications();
+  }, [getDropdownApplications]);
+
   const {
     setSchedules,
     setFilteredSchedules,
     setSelectedSchedule,
     addSchedule,
-    updateSchedule,
+    updateSchedule, // We assume this action is updateSchedule(originalCompoundId, newScheduleData)
     updateStatusSchedule,
     deleteSchedule,
   } = useScheduleActions();
@@ -53,8 +75,10 @@ const SchedulePage: React.FC = () => {
   // Local state for UI interactions
   const meta = useScheduleStore((state) => state.meta);
   const getSchedules = useScheduleStore((state) => state.getSchedules);
-  const totalItems = meta?.total ?? 0;
+
+  // --- (No change here, selectedRows will store the new compound string keys) ---
   const [selectedRows, setSelectedRows] = useState<string[]>([]);
+
   const [isEditModalOpen, setIsEditModalOpen] = useState(false);
   const [isSetScheduleModalOpen, setIsSetScheduleModalOpen] = useState(false);
   const [isSaveConfirmOpen, setIsSaveConfirmOpen] = useState(false);
@@ -62,6 +86,12 @@ const SchedulePage: React.FC = () => {
   const [pendingUpdate, setPendingUpdate] = useState<ScheduleData[] | null>(
     null
   );
+
+  // --- (No change here) ---
+  const [schedulesForEditing, setSchedulesForEditing] = useState<ScheduleData[]>(
+    []
+  );
+
   const [isStatusConfirmOpen, setIsStatusConfirmOpen] = useState(false);
   const [scheduleToChangeStatus, setScheduleToChangeStatus] =
     useState<ScheduleData | null>(null);
@@ -69,28 +99,33 @@ const SchedulePage: React.FC = () => {
 
   const totalPages = getTotalPages();
   const currentSchedules = getCurrentPageSchedules();
+  const totalItems = schedules.length;
+
   const startItem =
     currentSchedules.length > 0 ? (currentPage - 1) * itemsPerPage + 1 : 0;
   const endItem = Math.min(currentPage * itemsPerPage, totalItems);
 
+  // --- (No change to selection logic) ---
   const handleSelectAll = (e: React.ChangeEvent<HTMLInputElement>) => {
     if (e.target.checked) {
-      setSelectedRows(currentSchedules.map((s) => s.ID));
+      setSelectedRows(currentSchedules.map(getCompoundKey));
     } else {
       setSelectedRows([]);
     }
   };
 
-  const handleSelectRow = (id: string) => {
+  const handleSelectRow = (compoundKey: string) => {
     setSelectedRows((prev) =>
-      prev.includes(id) ? prev.filter((rowId) => rowId !== id) : [...prev, id]
+      prev.includes(compoundKey)
+        ? prev.filter((key) => key !== compoundKey)
+        : [...prev, compoundKey]
     );
   };
 
   const isAllSelectedOnPage =
     currentSchedules.length > 0 &&
     selectedRows.length > 0 &&
-    currentSchedules.every((s) => selectedRows.includes(s.ID));
+    currentSchedules.every((s) => selectedRows.includes(getCompoundKey(s)));
 
   const handleOpenSetSchedule = async () => {
     setIsSetScheduleModalOpen(true);
@@ -107,13 +142,24 @@ const SchedulePage: React.FC = () => {
 
   const handleOpenEditModal = async () => {
     if (selectedRows.length > 0) {
+      // Create a Set of selected keys for efficient filtering
+      const selectedKeyMap = new Set(selectedRows);
+
+      // Filter *all* schedules, not just the current page
+      const schedulesToEdit = schedules.filter((s) =>
+        selectedKeyMap.has(getCompoundKey(s))
+      );
+
+      setSchedulesForEditing(schedulesToEdit); // Store originals in state
       setIsEditModalOpen(true);
+
       await postLogMonitoringApi({
         userId: currentUser?.username ?? "anonymous",
         module: "Schedule",
         action: AuditAction.DATA_EDIT,
         status: "Success",
-        description: `User opened Edit Schedule for IDs: [${selectedRows.join(
+        // Log description is fine, selectedRows contains the unique string keys
+        description: `User opened Edit Schedule for keys: [${selectedRows.join(
           ", "
         )}]`,
         location: "SchedulePage.handleOpenEditModal",
@@ -129,31 +175,70 @@ const SchedulePage: React.FC = () => {
   };
 
   const handleConfirmEditSave = async () => {
-    if (pendingUpdate) {
-      pendingUpdate.forEach((updatedSchedule) => {
-        updateSchedule(updatedSchedule.ID, updatedSchedule);
-      });
-      await postLogMonitoringApi({
-        userId: currentUser?.username ?? "anonymous",
-        module: "Schedule",
-        action: AuditAction.DATA_EDIT,
-        status: "Success",
-        description: `User ${
-          currentUser?.username ?? "unknown"
-        } update Schedule ${updateSchedule.name}`,
-        location: "SchedulePage.CreateForm",
-        timestamp: new Date().toISOString(),
-      });
+    // 1. Log the values of your condition
+    console.log("Pending update:", pendingUpdate);
+    console.log("Schedules for editing length:", schedulesForEditing.length);
 
-      setSelectedRows([]);
-      setShowSuccessModal(true);
+    if (pendingUpdate) { // Check for pendingUpdate first
+      console.log("Pending update length:", pendingUpdate.length);
+      console.log("Do lengths match?", schedulesForEditing.length === pendingUpdate.length);
     }
-    setIsSaveConfirmOpen(false);
-    setPendingUpdate(null);
-  };
 
+    try {
+      if (pendingUpdate && schedulesForEditing.length === pendingUpdate.length) {
+        // 2. Log success before and after async calls
+        console.log("Condition passed. Running updates...");
+        const updatePromises = pendingUpdate.map(
+          async (updatedSchedule, index) => {
+            const originalSchedule = schedulesForEditing[index];
+
+            const originalCompoundId = {
+              APPLICATION_ID: originalSchedule.APPLICATION_ID,
+              SCHEDULE_SYNC_START_DT: originalSchedule.SCHEDULE_SYNC_START_DT,
+              SCHEDULE_UAR_DT: originalSchedule.SCHEDULE_UAR_DT,
+            };
+
+            const newScheduleData = {
+              ...originalSchedule,
+              SCHEDULE_SYNC_END_DT: updatedSchedule.SCHEDULE_SYNC_END_DT,
+              SCHEDULE_SYNC_START_DT: updatedSchedule.SCHEDULE_SYNC_START_DT,
+              SCHEDULE_UAR_DT: updatedSchedule.SCHEDULE_UAR_DT,
+              SCHEDULE_STATUS: updatedSchedule.SCHEDULE_STATUS,
+            };
+
+            return updateSchedule(originalCompoundId, newScheduleData);
+          }
+        );
+
+        await Promise.all(updatePromises);
+        console.log("Promise.all successful.");
+
+        // await postLogMonitoringApi({
+        //   userId: currentUser?.username ?? "anonymous",
+        //   module: "Schedule",
+        //   action: AuditAction.DATA_CREATE,
+        //   status: "Success",
+        //   description: `User ${currentUser?.username ?? "unknown"
+        //     } create Schedule`,
+        //   location: "SchedulePage.CreateForm",
+        //   timestamp: new Date().toISOString(),
+        // });
+
+        setSelectedRows([]);
+        setShowSuccessModal(true);
+        setSchedulesForEditing([]);
+      } else {
+        console.log("IF condition was false. State not cleared.");
+      }
+    } catch (error) {
+      console.error("ERROR CAUGHT, skipping state clear:", error);
+    } finally {
+      setIsSaveConfirmOpen(false);
+      setPendingUpdate(null);
+    }
+  };
   const handleAddNewSchedules = async (
-    newSchedules: Omit<ScheduleData, "ID">[]
+    newSchedules: Omit<ScheduleData, "ID">[] // This Omit is correct
   ) => {
     try {
       for (const schedule of newSchedules) {
@@ -164,9 +249,8 @@ const SchedulePage: React.FC = () => {
         module: "Schedule",
         action: AuditAction.DATA_CREATE,
         status: "Success",
-        description: `User ${
-          currentUser?.username ?? "unknown"
-        } create Schedule`,
+        description: `User ${currentUser?.username ?? "unknown"
+          } create Schedule`,
         location: "SchedulePage.CreateForm",
         timestamp: new Date().toISOString(),
       });
@@ -206,9 +290,8 @@ const SchedulePage: React.FC = () => {
           module: "Schedule",
           action: AuditAction.DATA_FILTER,
           status: "Success",
-          description: `User ${
-            currentUser?.username ?? "unknown"
-          } filtered Schedule by ${key}: ${value}`,
+          description: `User ${currentUser?.username ?? "unknown"
+            } filtered Schedule by ${key}: ${value}`,
           location: "SchedulePage.handleFilterChange",
           timestamp: new Date().toISOString(),
         });
@@ -218,6 +301,7 @@ const SchedulePage: React.FC = () => {
     }
   };
 
+  // --- (No change needed, this was already correct) ---
   const handleConfirmStatusChange = () => {
     if (!scheduleToChangeStatus) return;
 
@@ -236,10 +320,13 @@ const SchedulePage: React.FC = () => {
 
   return (
     <div>
+      {/* ... (rest of the header/filters is fine) ... */}
       <h2 className="text-2xl font-bold text-gray-800 mb-6">Schedule</h2>
       <div className="bg-white p-6 rounded-xl border border-gray-200 shadow-sm">
         <div className="flex justify-between items-center mb-6 flex-wrap gap-4">
           <div className="flex items-center gap-4 flex-wrap">
+            {/* --- CHANGE 2: App ID filter options sourced from 'schedules' --- */}
+            {/* (This was already correct, but confirms the pattern) */}
             <SearchableDropdown
               label="Application ID"
               value={filters.applicationId}
@@ -248,20 +335,12 @@ const SchedulePage: React.FC = () => {
               placeholder="Application ID"
               className="w-full sm:w-48"
             />
+            {/* --- CHANGE 3: App Name filter options sourced from 'schedules' --- */}
             <SearchableDropdown
               label="Application Name"
               value={filters.applicationName}
               onChange={(value) => handleFilterChange("applicationName", value)}
-              options={[
-                ...new Set(
-                  schedules.map(
-                    (s) =>
-                      applications.find(
-                        (a) => a.APPLICATION_ID === s.APPLICATION_ID
-                      )?.APP_NAME ?? ""
-                  )
-                ),
-              ]}
+              options={[...new Set(schedules.map((s) => s.APPLICATION_NAME))]}
               placeholder="Application Name"
               className="w-full sm:w-48"
             />
@@ -323,32 +402,33 @@ const SchedulePage: React.FC = () => {
               </tr>
             </thead>
             <tbody>
+              {/* --- (No change to row key logic) --- */}
               {currentSchedules.map((schedule) => (
                 <tr
-                  key={schedule.ID}
+                  key={getCompoundKey(schedule)} // Use compound key for React key
                   className="bg-white border-b border-gray-200 last:border-b-0 hover:bg-gray-50"
                 >
                   <td className="px-4 py-3 whitespace-nowrap text-sm">
                     <input
                       type="checkbox"
                       className="h-4 w-4 rounded border-gray-300 text-blue-600 focus:ring-blue-500"
-                      checked={selectedRows.includes(schedule.ID)}
-                      onChange={() => handleSelectRow(schedule.ID)}
-                      aria-label={`Select row ${schedule.ID}`}
+                      checked={selectedRows.includes(getCompoundKey(schedule))}
+                      onChange={() => handleSelectRow(getCompoundKey(schedule))}
+                      aria-label={`Select row ${schedule.APPLICATION_ID}`}
                     />
                   </td>
                   <td className="px-4 py-3 whitespace-nowrap text-gray-900 text-sm">
                     {schedule.APPLICATION_ID}
                   </td>
                   <td className="px-4 py-3 whitespace-nowrap text-sm">
-                    {schedule.APPLICATION_ID}
+                    {schedule.APPLICATION_NAME ?? ""}
                   </td>
                   <td className="px-4 py-3 whitespace-nowrap text-sm">
-                    {schedule.SCHEDULE_SYNC_START_DT} -
-                    {schedule.SCHEDULE_SYNC_END_DT}
+                    {formatDisplayDateToDdMm(schedule.SCHEDULE_SYNC_START_DT)} -
+                    {formatDisplayDateToDdMm(schedule.SCHEDULE_SYNC_END_DT)}
                   </td>
                   <td className="px-4 py-3 whitespace-nowrap text-sm">
-                    {schedule.SCHEDULE_UAR_DT}
+                    {formatDisplayDateToDdMm(schedule.SCHEDULE_UAR_DT)}
                   </td>
                   <td className="px-4 py-3 whitespace-nowrap text-sm">
                     <button
@@ -372,6 +452,7 @@ const SchedulePage: React.FC = () => {
           </table>
         </div>
 
+        {/* ... (rest of the pagination is fine) ... */}
         <div className="flex justify-between items-center mt-6 text-sm text-gray-500">
           <div className="flex items-center gap-2">
             <div className="relative">
@@ -419,11 +500,12 @@ const SchedulePage: React.FC = () => {
         </div>
       </div>
 
+      {/* --- (No change to modals) --- */}
       {isEditModalOpen && (
         <ScheduleEditModal
           onClose={() => setIsEditModalOpen(false)}
           onSave={handleEditSave}
-          schedulesToEdit={schedules.filter((s) => selectedRows.includes(s.ID))}
+          schedulesToEdit={schedulesForEditing}
         />
       )}
       {isSetScheduleModalOpen && (

@@ -17,8 +17,18 @@ export const getApplicationApi = (params?: Record<string, any>) =>
     })
   )
 
+export const getDropdownApplicationsApi = (params?: Record<string, any>) =>
+  withToken((token) =>
+    http<BackendGetApplicationResponse>({
+      path: "/sar/application/masters/dropdown",
+      method: "GET",
+      token,
+    })
+  )
+
+
 export const postApplicationApi = (payload: any) =>
-  withToken((token) => 
+  withToken((token) =>
     http<BackendCreateApplicationResponse>({
       path: "/sar/application",
       method: "POST",
@@ -48,7 +58,7 @@ export const getSystemUsersApi = (params?: { q?: string; limit?: number; offset?
   );
 
 export const getSecurityCentersApi = (params?: { q?: string; limit?: number; offset?: number }) =>
-  withToken((token) => 
+  withToken((token) =>
     http<GetSecurityCentersResp>({
       path: "/sar/application/masters/security-centers",
       method: "GET",

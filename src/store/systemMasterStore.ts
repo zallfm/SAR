@@ -97,7 +97,7 @@ const initialFilters: SystemMasterFilters = {
   page: 1,
   limit: 10,
   q: "",
-  order: "asc",
+  order: "desc",
 };
 
 export const useSystemMasterStore = create<SystemMasterState>()(
@@ -297,6 +297,8 @@ export const useSystemMasterStore = create<SystemMasterState>()(
         name: "system-master-store",
         // MODIFIED: Only persist filters and pagination, not data
         partialize: (state) => ({
+          records: state.records,
+          filteredRecords: state.filteredRecords,
           filters: state.filters,
           currentPage: state.currentPage,
           itemsPerPage: state.itemsPerPage,

@@ -1,6 +1,7 @@
 export type Schedule = {
   ID: string;
   APPLICATION_ID: string;
+  APPLICATION_NAME: string;
   SCHEDULE_SYNC_START_DT: string;
   SCHEDULE_SYNC_END_DT: string;
   SCHEDULE_UAR_DT: string;
@@ -12,8 +13,8 @@ export type Schedule = {
 };
 
 export type ScheduleData = {
-  ID: string;
   APPLICATION_ID: string;
+  APPLICATION_NAME: string;
   SCHEDULE_SYNC_START_DT: string;
   SCHEDULE_SYNC_END_DT: string;
   SCHEDULE_UAR_DT: string;

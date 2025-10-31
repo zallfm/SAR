@@ -78,7 +78,7 @@ const SystemMasterPage: React.FC<SystemMasterPageProps> = ({ user }) => {
   }, [getSystemMasters, filters, currentPage, itemsPerPage]);
 
   const totalPages = getTotalPages();
-  const totalItems = meta?.total ?? 0;
+  const totalItems = records.length;
   const currentRecords = getCurrentPageRecords();
   const startItem =
     currentRecords.length > 0 ? (currentPage - 1) * itemsPerPage + 1 : 0;
@@ -126,15 +126,15 @@ const SystemMasterPage: React.FC<SystemMasterPageProps> = ({ user }) => {
         );
         setIsInfoOpen(true);
 
-        await postLogMonitoringApi({
-          userId: username,
-          module: "SystemMaster",
-          action: AuditAction.DATA_UPDATE,
-          status: "Error",
-          description: `Failed to update SystemMaster record ${record.SYSTEM_CD}: ${status.error}`,
-          location: "SystemMasterPage.handleSaveRecord",
-          timestamp: new Date().toISOString(),
-        });
+        // await postLogMonitoringApi({
+        //   userId: username,
+        //   module: "SystemMaster",
+        //   action: AuditAction.DATA_UPDATE,
+        //   status: "Error",
+        //   description: `Failed to update SystemMaster record ${record.SYSTEM_CD}: ${status.error}`,
+        //   location: "SystemMasterPage.handleSaveRecord",
+        //   timestamp: new Date().toISOString(),
+        // });
       }
     } else {
       const status = await addSystemMasterRecord(record);
@@ -142,30 +142,30 @@ const SystemMasterPage: React.FC<SystemMasterPageProps> = ({ user }) => {
         setInfoMessage("Save Successfully");
         setIsInfoOpen(true);
 
-        await postLogMonitoringApi({
-          userId: username,
-          module: "SystemMaster",
-          action: AuditAction.DATA_CREATE,
-          status: "Success",
-          description: `User ${username} added new SystemMaster record ${record.SYSTEM_CD}`,
-          location: "SystemMasterPage.handleSaveRecord",
-          timestamp: new Date().toISOString(),
-        });
+        // await postLogMonitoringApi({
+        //   userId: username,
+        //   module: "SystemMaster",
+        //   action: AuditAction.DATA_CREATE,
+        //   status: "Success",
+        //   description: `User ${username} added new SystemMaster record ${record.SYSTEM_CD}`,
+        //   location: "SystemMasterPage.handleSaveRecord",
+        //   timestamp: new Date().toISOString(),
+        // });
       } else {
         setInfoMessage(
           `Error: ${status.error.message} Code: ${status.error.code ?? ""}`
         );
         setIsInfoOpen(true);
 
-        await postLogMonitoringApi({
-          userId: username,
-          module: "SystemMaster",
-          action: AuditAction.DATA_CREATE,
-          status: "Error",
-          description: `Failed to add new SystemMaster record ${record.SYSTEM_CD}: ${status.error}`,
-          location: "SystemMasterPage.handleSaveRecord",
-          timestamp: new Date().toISOString(),
-        });
+        // await postLogMonitoringApi({
+        //   userId: username,
+        //   module: "SystemMaster",
+        //   action: AuditAction.DATA_CREATE,
+        //   status: "Error",
+        //   description: `Failed to add new SystemMaster record ${record.SYSTEM_CD}: ${status.error}`,
+        //   location: "SystemMasterPage.handleSaveRecord",
+        //   timestamp: new Date().toISOString(),
+        // });
       }
     }
     handleCloseModal();

@@ -23,6 +23,7 @@ type HttpOptions = {
   body?: any;
   params?: Record<string, any>; // <-- query string (baru)
   headers?: Record<string, string>;
+  signal?: AbortSignal
 };
 
 // helper untuk gabung base + path, tapi tetap hormati URL absolut
@@ -90,6 +91,7 @@ export async function http<T>(opts: HttpOptions): Promise<T> {
     method: opts.method ?? 'GET',
     headers,
     body: opts.body ? JSON.stringify(opts.body) : undefined,
+    signal: opts.signal
   });
 
   const json = await res.json().catch(() => ({})); // fallback kalau bukan JSON

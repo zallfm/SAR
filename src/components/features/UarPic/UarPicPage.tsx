@@ -49,8 +49,7 @@ const UarPicPage: React.FC = () => {
   const { currentUser } = useAuthStore();
 
   const getPics = useUarPicStore((state) => state.getPics);
-  const meta = useUarPicStore((state) => state.meta);
-  const totalItems = meta?.total ?? 0;
+
   // Local state for UI interactions
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [editingPic, setEditingPic] = useState<PicUser | null>(null);
@@ -61,19 +60,24 @@ const UarPicPage: React.FC = () => {
 
   const [isInfoOpen, setIsInfoOpen] = useState(false);
   const [infoMessage, setInfoMessage] = useState("");
-  const controller = new AbortController();
-
   React.useEffect(() => {
+    const controller = new AbortController();
+
     getPics({
       pic_name: filters.pic_name,
       divisionId: filters.divisionId,
       page: currentPage,
       limit: itemsPerPage,
+      signal: controller.signal,
     });
-  }, [getPics, filters, currentPage, itemsPerPage]);
 
+    return () => {
+      controller.abort();
+    };
+  }, [getPics, filters, currentPage, itemsPerPage]);
   const totalPages = getTotalPages();
   const currentPics = getCurrentPagePics();
+  const totalItems = pics.length;
   const startItem =
     currentPics.length > 0 ? (currentPage - 1) * itemsPerPage + 1 : 0;
   // MODIFY THIS LINE

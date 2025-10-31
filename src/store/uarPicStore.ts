@@ -75,7 +75,7 @@ export interface UarPicState {
   // MODIFIED: deletePic is now async to allow for refetch
   deletePic: (id: string) => Promise<void>;
   // MODIFIED: getPics now accepts params
-  getPics: (params?: UarPicFilters) => Promise<void>;
+  getPics: (params?: UarPicFilters & { signal?: AbortSignal }) => Promise<void>;
 
   // Computed
   getTotalPages: () => number;
@@ -104,22 +104,33 @@ export const useUarPicStore = create<UarPicState>()(
         isLoading: false,
         error: null,
 
+        // In useUarPicStore.ts
+
         getPics: async (params) => {
-          ("Getting PICS");
+          // 1. Destructure the signal from params
+          const {
+            page: paramPage,
+            limit: paramLimit,
+            signal,
+            ...restParams
+          } = params || {};
           const state = get();
-          const page = params?.page ?? state.currentPage;
-          const limit = params?.limit ?? state.itemsPerPage;
+          const page = paramPage ?? state.currentPage;
+          const limit = paramLimit ?? state.itemsPerPage;
 
           const query: UarPicFilters = {
             ...state.filters,
-            ...params,
+            ...restParams,
             page,
             limit,
           };
 
           set({ isLoading: true, error: null });
           try {
-            const res = await getUarApi(query);
+            // 2. Pass the signal to your API call
+            const res = await getUarApi(query, signal); // <-- PASS SIGNAL HERE
+
+            // ... (rest of your success logic is fine) ...
             const { data: raw, meta: metaFromApi } = res as {
               data: UarPic[];
               meta?: ApiMeta;
@@ -132,25 +143,24 @@ export const useUarPicStore = create<UarPicState>()(
               MAIL: item.MAIL,
             }));
 
-
             set({
               pics,
               filteredPics: pics,
-              meta: metaFromApi ?? {
-                page,
-                limit,
-                total: pics.length,
-                totalPages: 1,
-              },
+              meta: metaFromApi,
               isLoading: false,
               currentPage: metaFromApi?.page ?? page,
               itemsPerPage: metaFromApi?.limit ?? limit,
             });
-          } catch (error) {
+
+          } catch (error: any) {
+            if (error.name === 'AbortError' || error.name === 'CanceledError') {
+              console.log("Fetch aborted");
+              return;
+            }
+            // Handle *real* errors
             set({ error: (error as Error).message, isLoading: false });
           }
         },
-
         // Actions
         setPics: (pics) => set({ pics, filteredPics: pics }),
         setFilteredPics: (filteredPics) => set({ filteredPics }),
@@ -171,7 +181,6 @@ export const useUarPicStore = create<UarPicState>()(
 
         resetFilters: async () => {
           set({ filters: initialFilters, currentPage: 1 });
-          await get().getPics(initialFilters);
         },
 
         setCurrentPage: async (currentPage) => {
@@ -267,6 +276,8 @@ export const useUarPicStore = create<UarPicState>()(
       {
         name: "uar-pic-store",
         partialize: (state) => ({
+          pics: state.pics,
+          filteredPics: state.filteredPics,
           filters: state.filters,
           currentPage: state.currentPage,
           itemsPerPage: state.itemsPerPage,

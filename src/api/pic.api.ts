@@ -10,13 +10,14 @@ import type {
 } from "../types/pic";
 import { withToken } from "./helper";
 
-export const getUarApi = (params?: UarPicFilters) =>
+export const getUarApi = (params?: UarPicFilters, signal?: AbortSignal) =>
   withToken((token) =>
     http<BackendGetUarResponse>({
       path: "/sar/uarpic",
       method: "GET",
       token,
       params,
+      signal: signal
     })
   );
 

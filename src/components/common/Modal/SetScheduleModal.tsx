@@ -1,31 +1,25 @@
 import React, { useState, useEffect, useMemo, useRef } from "react";
-import { initialSchedules } from "../../../../data";
-import { isValidDdMm, isUarDateValid } from "../../../../utils/dateFormatter";
+import { Application, initialSchedules } from "../../../../data";
+import { isValidDdMm, isUarDateValid, formatDate } from "../../../../utils/dateFormatter";
 import { TrashIcon } from "../../icons/TrashIcon";
 import ShortDatePicker from "../Button/ShortDatePicker";
 import { ScheduleData } from "@/src/types/schedule";
+import { useApplicationStore } from "@/src/store/applicationStore";
 
 interface SetScheduleModalProps {
   onClose: () => void;
-  onSave: (newSchedules: Omit<ScheduleData, "ID">[]) => void;
+  onSave: (newSchedules: Omit<ScheduleData, "ID">[]) => Promise<void>;
 }
 
 type AppOption = { id: string; name: string };
-const availableApps: AppOption[] = [
-  ...new Map(
-    initialSchedules.map((item) => [
-      item.applicationId,
-      { id: item.applicationId, name: item.applicationName },
-    ])
-  ).values(),
-];
+
 
 const SetScheduleModal: React.FC<SetScheduleModalProps> = ({
   onClose,
   onSave,
 }) => {
   const [selectedApps, setSelectedApps] = useState<AppOption[]>([]);
-  const [appName, setAppName] = useState("");
+  const [appNames, setappNames] = useState([]);
   const [isDropdownOpen, setIsDropdownOpen] = useState(false);
   const [schedules, setSchedules] = useState([
     {
@@ -48,6 +42,20 @@ const SetScheduleModal: React.FC<SetScheduleModalProps> = ({
     document.addEventListener("mousedown", handleClickOutside);
     return () => document.removeEventListener("mousedown", handleClickOutside);
   }, []);
+
+
+  const applicationsFromStore = useApplicationStore(
+    (state) => state.dropdownApplications
+  ) as Application[];
+
+  const availableApps: AppOption[] = useMemo(() => {
+    if (!applicationsFromStore) return [];
+
+    return applicationsFromStore.map((app) => ({
+      id: app.APPLICATION_ID,
+      name: app.APPLICATION_NAME,
+    }));
+  }, [applicationsFromStore]);
 
   const handleAppSelect = (app: AppOption) => {
     if (!selectedApps.some((selected) => selected.id === app.id)) {
@@ -88,35 +96,44 @@ const SetScheduleModal: React.FC<SetScheduleModalProps> = ({
   };
 
   const isFormValid = useMemo(() => {
-    if (selectedApps.length === 0 || !appName.trim()) return false;
+    if (selectedApps.length === 0) return false;
     return schedules.every(
       (s) =>
         isValidDdMm(s.SCHEDULE_SYNC_START_DT) &&
         isValidDdMm(s.SCHEDULE_SYNC_END_DT) &&
         isValidDdMm(s.SCHEDULE_UAR_DT) &&
-        isUarDateValid(s.SCHEDULE_SYNC_START_DT, s.SCHEDULE_UAR_DT)
+        isUarDateValid(s.SCHEDULE_SYNC_START_DT, s.SCHEDULE_SYNC_END_DT, s.SCHEDULE_UAR_DT)
     );
-  }, [selectedApps, appName, schedules]);
+  }, [selectedApps, schedules]);
 
-  const handleSave = () => {
+  const handleSave = async () => {
     if (!isFormValid) return;
 
-    // This type should match what 'addSchedule' expects
     const newScheduleEntries: Omit<ScheduleData, "ID">[] = [];
-
+    const currentYear = new Date().getFullYear();
     selectedApps.forEach((app) => {
       schedules.forEach((schedule) => {
+        const [startDay, startMonth] = schedule.SCHEDULE_SYNC_START_DT.trim().split('/');
+        const [endDay, endMonth] = schedule.SCHEDULE_SYNC_END_DT.trim().split('/');
+        const [uarDay, uarMonth] = schedule.SCHEDULE_UAR_DT.trim().split('/');
+
+        const isoStartDate = `${currentYear}-${startMonth}-${startDay}`;
+        const isoEndDate = `${currentYear}-${endMonth}-${endDay}`;
+        const isoUarDate = `${currentYear}-${uarMonth}-${uarDay}`;
+
         newScheduleEntries.push({
           APPLICATION_ID: app.id,
-          SCHEDULE_SYNC_START_DT: schedule.SCHEDULE_SYNC_START_DT.trim(),
-          SCHEDULE_SYNC_END_DT: schedule.SCHEDULE_SYNC_END_DT.trim(),
-          SCHEDULE_UAR_DT: schedule.SCHEDULE_UAR_DT.trim(),
-          SCHEDULE_STATUS: "Pending",
+          APPLICATION_NAME: app.name,
+          SCHEDULE_SYNC_START_DT: isoStartDate,
+          SCHEDULE_SYNC_END_DT: isoEndDate,
+          SCHEDULE_UAR_DT: isoUarDate,
+          SCHEDULE_STATUS: "1",
         });
       });
+
     });
 
-    onSave(newScheduleEntries);
+    await onSave(newScheduleEntries);
   };
 
   const getInputClasses = (
@@ -144,7 +161,7 @@ const SetScheduleModal: React.FC<SetScheduleModalProps> = ({
       field === "SCHEDULE_UAR_DT" &&
       value.length > 0 &&
       isValidDdMm(schedule.SCHEDULE_SYNC_START_DT) &&
-      !isUarDateValid(schedule.SCHEDULE_SYNC_START_DT, value)
+      !isUarDateValid(schedule.SCHEDULE_SYNC_START_DT, schedule.SCHEDULE_SYNC_END_DT, value)
     ) {
       return `${baseClasses} ${invalidClasses}`;
     }
@@ -234,11 +251,10 @@ const SetScheduleModal: React.FC<SetScheduleModalProps> = ({
                     <li
                       key={app.id}
                       onMouseDown={() => handleAppSelect(app)}
-                      className={`px-3 py-2 cursor-pointer hover:bg-gray-100 ${
-                        selectedApps.some((s) => s.id === app.id)
-                          ? "bg-blue-100 text-blue-700"
-                          : ""
-                      }`}
+                      className={`px-3 py-2 cursor-pointer hover:bg-gray-100 ${selectedApps.some((s) => s.id === app.id)
+                        ? "bg-blue-100 text-blue-700"
+                        : ""
+                        }`}
                     >
                       {app.id}
                     </li>
@@ -250,19 +266,30 @@ const SetScheduleModal: React.FC<SetScheduleModalProps> = ({
 
           <div>
             <label
-              htmlFor="appName"
+              htmlFor="appNames"
               className="block text-sm font-medium text-gray-700 mb-1"
             >
               Application Name <span className="text-red-500">*</span>
             </label>
-            <input
-              id="appName"
-              type="text"
-              value={appName}
-              onChange={(e) => setAppName(e.target.value)}
-              placeholder="Application Name"
-              className="w-full px-3 py-2 border border-gray-300 rounded-md bg-white focus:outline-none focus:ring-1 focus:ring-blue-500"
-            />
+            <div className="relative">
+              <div
+                className="flex flex-wrap items-center gap-2 p-2 pr-10 border border-gray-300 rounded-md bg-white min-h-[42px] cursor-pointer"
+              >
+                {selectedApps.length === 0 && (
+                  <span className="text-gray-400">Application Names</span>
+                )}
+                {selectedApps.map((app) => (
+                  <span
+                    key={app.name}
+                    className="flex items-center gap-1.5 bg-gray-200 text-gray-700 text-sm font-medium px-2 py-0.5 rounded"
+                  >
+                    {app.name}
+
+                  </span>
+                ))}
+
+              </div>
+            </div>
           </div>
 
           {schedules.map((schedule, index) => (
@@ -312,18 +339,6 @@ const SetScheduleModal: React.FC<SetScheduleModalProps> = ({
                     )}
                   />
                 </div>
-                {schedule.SCHEDULE_UAR_DT.length > 0 &&
-                  isValidDdMm(schedule.SCHEDULE_SYNC_START_DT) &&
-                  isValidDdMm(schedule.SCHEDULE_SYNC_END_DT) &&
-                  !isUarDateValid(
-                    schedule.SCHEDULE_SYNC_START_DT,
-                    schedule.SCHEDULE_SYNC_END_DT
-                  ) && (
-                    <p className="mt-1 text-sm text-red-600">
-                      Schedule End must be after Schedule Synchronize date (
-                      {schedule.SCHEDULE_SYNC_START_DT})
-                    </p>
-                  )}
               </div>
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-1">
@@ -341,12 +356,13 @@ const SetScheduleModal: React.FC<SetScheduleModalProps> = ({
                   isValidDdMm(schedule.SCHEDULE_SYNC_START_DT) &&
                   isValidDdMm(schedule.SCHEDULE_UAR_DT) &&
                   !isUarDateValid(
+                    schedule.SCHEDULE_SYNC_START_DT,
                     schedule.SCHEDULE_SYNC_END_DT,
                     schedule.SCHEDULE_UAR_DT
                   ) && (
                     <p className="mt-1 text-sm text-red-600">
-                      Schedule UAR must be after Schedule Synchronize date (
-                      {schedule.SCHEDULE_SYNC_END_DT})
+                      Schedule UAR must not in between Synchronize date (
+                      {schedule.SCHEDULE_SYNC_START_DT} -    {schedule.SCHEDULE_SYNC_END_DT})
                     </p>
                   )}
               </div>

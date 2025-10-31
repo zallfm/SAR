@@ -30,10 +30,14 @@ export const createScheduleApi = (data: CreateSchedulePayload) =>
     })
   );
 
-export const editScheduleApi = (id: string, data: UpdateSchedulePayload) =>
+export const editScheduleApi = (id: {
+  APPLICATION_ID: string;
+  SCHEDULE_SYNC_START_DT: string;
+  SCHEDULE_UAR_DT: string;
+}, data: UpdateSchedulePayload) =>
   withToken((token) =>
     http<BackendUpdateScheduleResponse>({
-      path: `/sar/schedules/${id}`,
+      path: `/sar/schedules/${id.APPLICATION_ID}/${id.SCHEDULE_SYNC_START_DT}/${id.SCHEDULE_UAR_DT}`,
       method: "PUT",
       token,
       body: data,

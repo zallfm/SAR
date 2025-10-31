@@ -1,12 +1,13 @@
 import { create } from "zustand";
 import { persist, devtools } from "zustand/middleware";
-import { editApplicationApi, getApplicationApi, postApplicationApi } from "../api/application.api";
+import { editApplicationApi, getApplicationApi, getDropdownApplicationsApi, postApplicationApi } from "../api/application.api";
 import type { Application } from "../types/application";
 
 interface ApplicationState {
   applications: Application[];
   filteredApplications: Application[];
   searchTerm: string;
+  dropdownApplications: Application[];
 
   // UI STATE
   isLoading: boolean;
@@ -21,6 +22,7 @@ interface ApplicationState {
 
   // Actions
   getApplications: () => Promise<void>;
+  getDropdownApplications: () => Promise<void>;
   createApplication: (payload: Omit<Application, "CREATED_BY" | "CREATED_DT" | "CHANGED_BY" | "CHANGED_DT">) => Promise<Application>;
   editApplication: (id: string, payload: Partial<Application>) => Promise<Application>;
   toggleApplicationStatus: (app: Application) => void;
@@ -46,6 +48,7 @@ export const useApplicationStore = create<ApplicationState>()(
       (set, get) => ({
         applications: [],
         filteredApplications: [],
+        dropdownApplications: [],
         searchTerm: "",
         currentPage: 1,
         itemsPerPage: 10,
@@ -77,9 +80,40 @@ export const useApplicationStore = create<ApplicationState>()(
           return label === "Active" ? 0 : 1;
         },
 
+        getDropdownApplications: async () => {
+          set({ isLoading: true, error: null });
+          try {
+            const res = await getDropdownApplicationsApi();
+            const apps = res.data.map((item) => ({
+              APPLICATION_ID: item.APPLICATION_ID,
+              APPLICATION_NAME: item.APPLICATION_NAME,
+              DIVISION_ID_OWNER: item.DIVISION_ID_OWNER,
+              NOREG_SYSTEM_OWNER: item.NOREG_SYSTEM_OWNER,
+              NOREG_SYSTEM_CUST: item.NOREG_SYSTEM_CUST,
+              SECURITY_CENTER: item.SECURITY_CENTER,
+              APPLICATION_STATUS: (get() as any).normalizeStatus(item.APPLICATION_STATUS),
+              CREATED_BY: item.CREATED_BY,
+              CREATED_DT: item.CREATED_DT,
+              CHANGED_BY: item.CHANGED_BY,
+              CHANGED_DT: item.CHANGED_DT,
+            }));
+            console.log("GET SUCCESS")
+            set({
+              dropdownApplications: apps,
+              isLoading: false,
+            });
+          } catch (err) {
+            set({ error: (err as Error).message, isLoading: false });
+            console.log("GET FAILED")
+
+          }
+        },
+
         // ✅ GET applications from backend
         getApplications: async () => {
           set({ isLoading: true, error: null });
+
+
           try {
             const res = await getApplicationApi();
             const apps = res.data.map((item) => ({
@@ -110,21 +144,21 @@ export const useApplicationStore = create<ApplicationState>()(
             ...payload,
             ...(payload?.APPLICATION_STATUS !== undefined
               ? {
-                  APPLICATION_STATUS: (get() as any).denormalizeStatus(
-                    payload.APPLICATION_STATUS
-                  ),
-                }
+                APPLICATION_STATUS: (get() as any).denormalizeStatus(
+                  payload.APPLICATION_STATUS
+                ),
+              }
               : {}),
           };
           const res = await postApplicationApi(transformedPayload)
           const createdRaw = res.data;
           const created = createdRaw
             ? {
-                ...createdRaw,
-                APPLICATION_STATUS: (get() as any).normalizeStatus(
-                  createdRaw.APPLICATION_STATUS
-                ),
-              }
+              ...createdRaw,
+              APPLICATION_STATUS: (get() as any).normalizeStatus(
+                createdRaw.APPLICATION_STATUS
+              ),
+            }
             : createdRaw;
           set((s) => ({ applications: [created, ...s.applications] }))
           return created
@@ -136,10 +170,10 @@ export const useApplicationStore = create<ApplicationState>()(
             ...payload,
             ...(payload.APPLICATION_STATUS !== undefined
               ? {
-                  APPLICATION_STATUS: (get() as any).denormalizeStatus(
-                    payload.APPLICATION_STATUS as any
-                  ),
-                }
+                APPLICATION_STATUS: (get() as any).denormalizeStatus(
+                  payload.APPLICATION_STATUS as any
+                ),
+              }
               : {}),
           };
 
@@ -147,11 +181,11 @@ export const useApplicationStore = create<ApplicationState>()(
           const updatedFromApiRaw = res.data;
           const updatedFromApi = updatedFromApiRaw
             ? {
-                ...updatedFromApiRaw,
-                APPLICATION_STATUS: (get() as any).normalizeStatus(
-                  updatedFromApiRaw.APPLICATION_STATUS
-                ),
-              }
+              ...updatedFromApiRaw,
+              APPLICATION_STATUS: (get() as any).normalizeStatus(
+                updatedFromApiRaw.APPLICATION_STATUS
+              ),
+            }
             : undefined;
           const merged = updatedFromApi ?? {
             ...(get().applications.find(a => a.APPLICATION_ID === id) as Application),
@@ -184,16 +218,16 @@ export const useApplicationStore = create<ApplicationState>()(
           const updatedRaw = res.data;
           const updated = updatedRaw
             ? {
-                ...updatedRaw,
-                APPLICATION_STATUS: (get() as any).normalizeStatus(
-                  updatedRaw.APPLICATION_STATUS
-                ),
-              }
+              ...updatedRaw,
+              APPLICATION_STATUS: (get() as any).normalizeStatus(
+                updatedRaw.APPLICATION_STATUS
+              ),
+            }
             : {
-            ...app,
-            APPLICATION_STATUS: nextStatus,
-            CHANGED_DT: new Date().toISOString(),
-          };
+              ...app,
+              APPLICATION_STATUS: nextStatus,
+              CHANGED_DT: new Date().toISOString(),
+            };
 
           set((s) => ({
             applications: s.applications.map((a) =>
@@ -243,6 +277,7 @@ export const useApplicationStore = create<ApplicationState>()(
         name: "application-store",
         partialize: (state) => ({
           applications: state.applications,
+          dropdownApplications: state.dropdownApplications,
           searchTerm: state.searchTerm,
           currentPage: state.currentPage,
           itemsPerPage: state.itemsPerPage,

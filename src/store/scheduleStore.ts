@@ -85,7 +85,11 @@ export interface ScheduleState {
     schedule: Omit<ScheduleData, "ID">
   ) => Promise<ScheduleResponse>;
   updateSchedule: (
-    id: string,
+    id: {
+      APPLICATION_ID: string;
+      SCHEDULE_SYNC_START_DT: string;
+      SCHEDULE_UAR_DT: string;
+    },
     updates: Partial<Schedule>
   ) => Promise<ScheduleResponse>;
   deleteSchedule: (id: string) => Promise<void>;
@@ -135,6 +139,10 @@ export const useScheduleStore = create<ScheduleState>()(
             limit,
           };
 
+          if (query.status !== "") {
+            query.status = query.status === 'Active' ? '1' : '0';
+          }
+
           set({ isLoading: true, error: null });
           try {
             const res = await getScheduleApi(query);
@@ -148,9 +156,7 @@ export const useScheduleStore = create<ScheduleState>()(
               ID: item.ID,
               APPLICATION_ID: item.APPLICATION_ID,
               APPLICATION_NAME:
-                applications.find(
-                  (app) => app.APPLICATION_ID === item.APPLICATION_ID
-                )?.APP_NAME ?? "Unknown",
+                item.APPLICATION_NAME,
               SCHEDULE_STATUS: item.SCHEDULE_STATUS,
               SCHEDULE_SYNC_START_DT: item.SCHEDULE_SYNC_START_DT,
               SCHEDULE_SYNC_END_DT: item.SCHEDULE_SYNC_END_DT,
@@ -239,6 +245,7 @@ export const useScheduleStore = create<ScheduleState>()(
             const schedule: Schedule = {
               ID: data.data.ID,
               APPLICATION_ID: data.data.APPLICATION_ID,
+              APPLICATION_NAME: data.data.APPLICATION_NAME,
               SCHEDULE_SYNC_START_DT: data.data.SCHEDULE_SYNC_START_DT,
               SCHEDULE_SYNC_END_DT: data.data.SCHEDULE_SYNC_END_DT,
               SCHEDULE_UAR_DT: data.data.SCHEDULE_UAR_DT,
@@ -343,6 +350,8 @@ export const useScheduleStore = create<ScheduleState>()(
         name: "schedule-store",
         // Only persist filters and pagination settings
         partialize: (state) => ({
+          schedules: state.schedules,
+          filteredSchedules: state.filteredSchedules,
           filters: state.filters,
           currentPage: state.currentPage,
           itemsPerPage: state.itemsPerPage,
