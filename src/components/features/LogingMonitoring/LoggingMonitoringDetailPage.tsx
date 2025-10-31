@@ -1,7 +1,7 @@
 import React, { useState, useMemo, useEffect } from "react";
 import { SearchIcon } from "../../../components/icons/SearchIcon";
 import { ChevronDownIcon } from "../../../components/icons/ChevronDownIcon";
-import { mockLogDetails } from "../../../../data";
+// import { mockLogDetails } from "../../../../data";
 import type { LogEntry, LogDetail } from "../../../../data";
 import * as XLSX from "xlsx";
 // import { getLogByProcessIdApi } from "@/src/api/log_monitoring";

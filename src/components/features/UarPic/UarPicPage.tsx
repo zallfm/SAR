@@ -108,29 +108,29 @@ const UarPicPage: React.FC = () => {
       if (status.error === undefined) {
         setInfoMessage("Save Successfully");
         // LOG CREATE - SUCCESS
-        await postLogMonitoringApi({
-          userId: currentUser?.username ?? "anonymous",
-          module: "UAR.PIC",
-          action: AuditAction.DATA_CREATE,
-          status: "Success",
-          description: `User created PIC ${pic.PIC_NAME}`,
-          location: "UarPicPage.handleSavePic",
-          timestamp: new Date().toISOString(),
-        });
+        // await postLogMonitoringApi({
+        //   userId: currentUser?.username ?? "anonymous",
+        //   module: "UAR.PIC",
+        //   action: AuditAction.DATA_CREATE,
+        //   status: "Success",
+        //   description: `User created PIC ${pic.PIC_NAME}`,
+        //   location: "UarPicPage.handleSavePic",
+        //   timestamp: new Date().toISOString(),
+        // });
       } else {
         setInfoMessage(
           `Error: ${status.error.message} Code: ${status.error.code ?? ""}`
         );
         // LOG CREATE - ERROR
-        await postLogMonitoringApi({
-          userId: currentUser?.username ?? "anonymous",
-          module: "UAR.PIC",
-          action: AuditAction.DATA_CREATE,
-          status: "Error",
-          description: `Create PIC failed for ${pic.PIC_NAME}: ${status.error.message}`,
-          location: "UarPicPage.handleSavePic",
-          timestamp: new Date().toISOString(),
-        });
+        // await postLogMonitoringApi({
+        //   userId: currentUser?.username ?? "anonymous",
+        //   module: "UAR.PIC",
+        //   action: AuditAction.DATA_CREATE,
+        //   status: "Error",
+        //   description: `Create PIC failed for ${pic.PIC_NAME}: ${status.error.message}`,
+        //   location: "UarPicPage.handleSavePic",
+        //   timestamp: new Date().toISOString(),
+        // });
       }
       setIsInfoOpen(true);
     }
@@ -146,30 +146,30 @@ const UarPicPage: React.FC = () => {
         setInfoMessage("Save Successfully");
         setIsInfoOpen(true);
         // LOG UPDATE - SUCCESS
-        await postLogMonitoringApi({
-          userId: currentUser?.username ?? "anonymous",
-          module: "UAR.PIC",
-          action: AuditAction.DATA_UPDATE,
-          status: "Success",
-          description: `User updated PIC ${target.name} (ID=${target.id})`,
-          location: "UarPicPage.handleConfirmEdit",
-          timestamp: new Date().toISOString(),
-        });
+        // await postLogMonitoringApi({
+        //   userId: currentUser?.username ?? "anonymous",
+        //   module: "UAR.PIC",
+        //   action: AuditAction.DATA_UPDATE,
+        //   status: "Success",
+        //   description: `User updated PIC ${target.name} (ID=${target.id})`,
+        //   location: "UarPicPage.handleConfirmEdit",
+        //   timestamp: new Date().toISOString(),
+        // });
       } else {
         setInfoMessage(
           `Error: ${status.error.message} Code: ${status.error.code ?? ""}`
         );
         setIsInfoOpen(true);
         // LOG UPDATE - ERROR (ini sudah ada, tetap dipertahankan)
-        await postLogMonitoringApi({
-          userId: currentUser?.username ?? "anonymous",
-          module: "UAR.PIC",
-          action: AuditAction.DATA_UPDATE,
-          status: "Error",
-          description: `Update PIC failed for ${target.name} (ID=${target.id}): ${status.error.message}`,
-          location: "UarPicPage.handleConfirmEdit",
-          timestamp: new Date().toISOString(),
-        });
+        // await postLogMonitoringApi({
+        //   userId: currentUser?.username ?? "anonymous",
+        //   module: "UAR.PIC",
+        //   action: AuditAction.DATA_UPDATE,
+        //   status: "Error",
+        //   description: `Update PIC failed for ${target.name} (ID=${target.id}): ${status.error.message}`,
+        //   location: "UarPicPage.handleConfirmEdit",
+        //   timestamp: new Date().toISOString(),
+        // });
       }
     }
     setIsEditConfirmOpen(false);
@@ -200,30 +200,30 @@ const UarPicPage: React.FC = () => {
       handleCloseDeleteConfirm();
 
       // Log sukses
-      await postLogMonitoringApi({
-        userId: username,
-        module: "UAR PIC",
-        action: AuditAction.DATA_DELETE,
-        status: "Success",
-        description: `User ${username} deleted PIC ${target.name}`,
-        location: "UarPicPage.handleDeletePic",
-        timestamp: new Date().toISOString(),
-      });
+      // await postLogMonitoringApi({
+      //   userId: username,
+      //   module: "UAR PIC",
+      //   action: AuditAction.DATA_DELETE,
+      //   status: "Success",
+      //   description: `User ${username} deleted PIC ${target.name}`,
+      //   location: "UarPicPage.handleDeletePic",
+      //   timestamp: new Date().toISOString(),
+      // });
     } catch (err: any) {
       console.warn("Failed to delete:", err);
 
       // Log error
-      await postLogMonitoringApi({
-        userId: username,
-        module: "UAR.PIC",
-        action: AuditAction.DATA_DELETE,
-        status: "Error",
-        description: `Delete PIC failed for ${target.name}: ${
-          err?.message ?? "Unknown error"
-        }`,
-        location: "UarPicPage.handleDeletePic",
-        timestamp: new Date().toISOString(),
-      }).catch(() => {});
+      // await postLogMonitoringApi({
+      //   userId: username,
+      //   module: "UAR.PIC",
+      //   action: AuditAction.DATA_DELETE,
+      //   status: "Error",
+      //   description: `Delete PIC failed for ${target.name}: ${
+      //     err?.message ?? "Unknown error"
+      //   }`,
+      //   location: "UarPicPage.handleDeletePic",
+      //   timestamp: new Date().toISOString(),
+      // }).catch(() => {});
     }
   };
 
@@ -236,17 +236,17 @@ const UarPicPage: React.FC = () => {
 
     const username = currentUser?.username ?? "anonymous";
     try {
-      await postLogMonitoringApi({
-        userId: username,
-        module: "UAR.PIC", // <-- samakan
-        action: AuditAction.DATA_FILTER,
-        status: "Success",
-        description: `User ${username} filtered PIC by ${key}: ${
-          value || "(cleared)"
-        }`,
-        location: "UarPicPage.handleFilterChange",
-        timestamp: new Date().toISOString(),
-      });
+      // await postLogMonitoringApi({
+      //   userId: username,
+      //   module: "UAR.PIC", // <-- samakan
+      //   action: AuditAction.DATA_FILTER,
+      //   status: "Success",
+      //   description: `User ${username} filtered PIC by ${key}: ${
+      //     value || "(cleared)"
+      //   }`,
+      //   location: "UarPicPage.handleFilterChange",
+      //   timestamp: new Date().toISOString(),
+      // });
     } catch (err) {
       console.warn("Failed to log filter action:", err);
     }
