@@ -94,20 +94,27 @@ const UarPicPage: React.FC = () => {
     setEditingPic(null);
   };
 
-  // ganti seluruh handleSavePic jadi seperti ini
+
+  const divisionOptions = useMemo(() => {
+    const divisionIdsInCurrentPics = currentPics.map(pic => pic.DIVISION_ID);
+
+    const uniqueDivisionIds = [...new Set(divisionIdsInCurrentPics)];
+
+    const divisionNames = uniqueDivisionIds.map(id => divisions[id - 1]);
+
+    return divisionNames.filter(Boolean).sort();
+  }, [currentPics]);
+
   const handleSavePic = async (pic: PicUser) => {
     handleCloseModal();
 
     if (editingPic) {
-      // Edit: buka modal konfirmasi, logging dilakukan setelah update (di handleConfirmEdit)
       setPicToEdit(pic);
       setIsEditConfirmOpen(true);
     } else {
-      // Create langsung simpan
       const status = await addPic(pic);
       if (status.error === undefined) {
         setInfoMessage("Save Successfully");
-        // LOG CREATE - SUCCESS
         await postLogMonitoringApi({
           userId: currentUser?.username ?? "anonymous",
           module: "UAR.PIC",
@@ -218,12 +225,11 @@ const UarPicPage: React.FC = () => {
         module: "UAR.PIC",
         action: AuditAction.DATA_DELETE,
         status: "Error",
-        description: `Delete PIC failed for ${target.name}: ${
-          err?.message ?? "Unknown error"
-        }`,
+        description: `Delete PIC failed for ${target.name}: ${err?.message ?? "Unknown error"
+          }`,
         location: "UarPicPage.handleDeletePic",
         timestamp: new Date().toISOString(),
-      }).catch(() => {});
+      }).catch(() => { });
     }
   };
 
@@ -241,9 +247,8 @@ const UarPicPage: React.FC = () => {
         module: "UAR.PIC", // <-- samakan
         action: AuditAction.DATA_FILTER,
         status: "Success",
-        description: `User ${username} filtered PIC by ${key}: ${
-          value || "(cleared)"
-        }`,
+        description: `User ${username} filtered PIC by ${key}: ${value || "(cleared)"
+          }`,
         location: "UarPicPage.handleFilterChange",
         timestamp: new Date().toISOString(),
       });
@@ -277,8 +282,7 @@ const UarPicPage: React.FC = () => {
                   setFilters({ divisionId: "" });
                 }
               }}
-              options={[...new Set(divisions)].sort()}
-              searchable={false}
+              options={divisionOptions} searchable={false}
               placeholder="Division"
               className="w-full sm:w-40"
             />

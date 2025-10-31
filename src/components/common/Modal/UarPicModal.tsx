@@ -97,6 +97,11 @@ const UarPicModal: React.FC<UarPicModalProps> = ({
     return name.trim() && division && isEmailValid && !nameError;
   }, [name, division, email, emailError, nameError]);
 
+  const handleClear = () => {
+    setDivision("")
+    setDivisionQuery("")
+  }
+
   const handleSave = () => {
     if (!isFormValid) return;
 
@@ -153,13 +158,17 @@ const UarPicModal: React.FC<UarPicModalProps> = ({
               type="text"
               placeholder="Enter Name"
               value={name}
-              onChange={(e) => setName(e.target.value)}
+              onChange={(e) => {
+                const formattedName = e.target.value.replace(/\b\w/g, (char) =>
+                  char.toUpperCase()
+                );
+                setName(formattedName);
+              }}
               className={`w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-1 
               
-                ${
-                  nameError
-                    ? "border-red-500 focus:ring-red-500 focus:border-red-500"
-                    : "border-gray-300 focus:ring-blue-500 focus:border-blue-500"
+                ${nameError
+                  ? "border-red-500 focus:ring-red-500 focus:border-red-500"
+                  : "border-gray-300 focus:ring-blue-500 focus:border-blue-500"
                 }  
               
                 `}
@@ -181,6 +190,10 @@ const UarPicModal: React.FC<UarPicModalProps> = ({
                 type="text"
                 placeholder="Enter Division"
                 value={divisionQuery}
+                autoComplete='off'
+                autoCapitalize='off'
+                autoCorrect='off'
+                spellCheck='false'
                 onChange={(e) => {
                   const index = divisions.indexOf(e.target.value);
                   setDivisionQuery(e.target.value);
@@ -190,7 +203,19 @@ const UarPicModal: React.FC<UarPicModalProps> = ({
                 onFocus={() => setIsDivisionDropdownOpen(true)}
                 className="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-1 focus:ring-blue-500 focus:border-blue-500 bg-white"
               />
-              <div className="absolute inset-y-0 right-0 pr-3 flex items-center pointer-events-none">
+              <div className="absolute inset-y-0 right-0 pr-3 flex items-center  z-[999]">
+                {(division || divisionQuery) && (
+                  <button
+                    type="button"
+                    onClick={handleClear}
+                    className="p-1 text-gray-400 hover:text-gray-600 mr-1"
+                    aria-label="Clear selection"
+                  >
+                    <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M6 18L18 6M6 6l12 12" />
+                    </svg>
+                  </button>
+                )}
                 <svg
                   className="w-5 h-5 text-gray-400"
                   fill="none"
@@ -239,12 +264,11 @@ const UarPicModal: React.FC<UarPicModalProps> = ({
                 type="email"
                 placeholder="Enter email (without @toyota.co.id)"
                 value={email}
-                onChange={(e) => setEmail(e.target.value)}
-                className={`w-full px-3 py-2 border rounded-md shadow-sm focus:outline-none focus:ring-1 ${
-                  emailError
-                    ? "border-red-500 focus:ring-red-500 focus:border-red-500"
-                    : "border-gray-300 focus:ring-blue-500 focus:border-blue-500"
-                }`}
+                onChange={(e) => setEmail(e.target.value.toLowerCase())}
+                className={`w-full px-3 py-2 border rounded-md shadow-sm focus:outline-none focus:ring-1 ${emailError
+                  ? "border-red-500 focus:ring-red-500 focus:border-red-500"
+                  : "border-gray-300 focus:ring-blue-500 focus:border-blue-500"
+                  }`}
               />
               {email && !email.includes("@") && !emailError && (
                 <span className="absolute inset-y-0 right-3 flex items-center text-black-400 pointer-events-none">

@@ -11,11 +11,11 @@ interface SearchableDropdownProps {
     className?: string;
 }
 
-const SearchableDropdown: React.FC<SearchableDropdownProps> = ({ 
-    label, 
-    value, 
-    onChange, 
-    options, 
+const SearchableDropdown: React.FC<SearchableDropdownProps> = ({
+    label,
+    value,
+    onChange,
+    options,
     searchable = true,
     placeholder,
     className = "w-full sm:w-40"
@@ -63,7 +63,7 @@ const SearchableDropdown: React.FC<SearchableDropdownProps> = ({
             }
         }
     };
-    
+
     const handleClear = (e: React.MouseEvent) => {
         e.stopPropagation();
         onChange('');
@@ -88,9 +88,12 @@ const SearchableDropdown: React.FC<SearchableDropdownProps> = ({
                     onFocus={() => setIsOpen(true)}
                     onClick={handleToggle}
                     readOnly={!searchable}
-                    className={`w-full bg-white border border-gray-300 rounded-lg px-4 py-2 pr-10 focus:outline-none focus:ring-2 focus:ring-blue-500 text-sm ${
-                        !searchable ? 'cursor-pointer' : ''
-                    }`}
+                    autoComplete='off'
+                    autoCapitalize='off'
+                    autoCorrect='off'
+                    spellCheck='false'
+                    className={`w-full bg-white border border-gray-300 rounded-lg px-4 py-2 pr-10 focus:outline-none focus:ring-2 focus:ring-blue-500 text-sm ${!searchable ? 'cursor-pointer' : ''
+                        }`}
                 />
                 <div className="absolute inset-y-0 right-0 flex items-center pr-2">
                     {value && (
@@ -115,9 +118,8 @@ const SearchableDropdown: React.FC<SearchableDropdownProps> = ({
                             <li
                                 key={option}
                                 onMouseDown={() => handleSelect(option)}
-                                className={`px-4 py-2 text-sm cursor-pointer hover:bg-blue-100 ${
-                                    value === option ? 'bg-blue-100 text-blue-700' : 'text-gray-800'
-                                }`}
+                                className={`px-4 py-2 text-sm cursor-pointer hover:bg-blue-100 ${value === option ? 'bg-blue-100 text-blue-700' : 'text-gray-800'
+                                    }`}
                             >
                                 {option}
                             </li>
