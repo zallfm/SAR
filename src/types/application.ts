@@ -1,7 +1,7 @@
 export type Application = {
   APPLICATION_ID: string;
   APPLICATION_NAME: string;
-  DIVISION_ID_OWNER: string;
+  DIVISION_ID_OWNER: number;
   NOREG_SYSTEM_OWNER: string;
   NOREG_SYSTEM_CUST: string;
   SECURITY_CENTER: string;
@@ -33,7 +33,8 @@ export type BackendGetApplicationResponse = {
 };
 
 export type SystemUser = {
-  NOREG: string;            // NOREG
+  NOREG: string;
+  DIVISION_ID:number;
   PERSONAL_NAME: string;
   DIVISION_NAME: string;
   MAIL: string;

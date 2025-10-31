@@ -124,6 +124,7 @@ const ApplicationPage: React.FC = () => {
 
       for (const k of required) {
         if (!application[k]) {
+          console.log("❌ Field kosong:", k, "=>", application[k]);
           setModalErrors((prev) => ({
             ...prev,
             // map key payload -> key error di modal
@@ -145,11 +146,14 @@ const ApplicationPage: React.FC = () => {
             ...(k === "SECURITY_CENTER"
               ? { securityCenter: "Field Security Center is required." }
               : {}),
+            ...(k === "APPLICATION_STATUS"
+              ? { securityCenter: "Field Application Status is required." }
+              : {}),
           }));
+          console.log("berhenti di return");
           return;
         }
       }
-
       if (editingApplication) {
         // EDIT: gabungkan data lama + perubahan
         const id = editingApplication.APPLICATION_ID;
@@ -185,7 +189,8 @@ const ApplicationPage: React.FC = () => {
         //   timestamp: new Date().toISOString(),
         // });
       } else {
-        // CREATE: kirim hanya field yang diperlukan API create
+        console.log("masuk create ga?");
+        console.log("DIVISION_ID_OWNER", application.DIVISION_ID_OWNER);
         await createApplication({
           APPLICATION_ID: application.APPLICATION_ID!,
           APPLICATION_NAME: application.APPLICATION_NAME!,
@@ -213,7 +218,7 @@ const ApplicationPage: React.FC = () => {
       closeModal();
     } catch (err) {
       const { code, message } = parseApiError(err);
-      console.log("code",code)
+      console.log("code", code);
       if (code === "VAL-ERR-304" || /already exists/i.test(message)) {
         setModalErrors({
           appId: "Application ID is already in use, please use another ID.",
@@ -287,10 +292,10 @@ const ApplicationPage: React.FC = () => {
       //   location: "ApplicationPage.StatusChange",
       //   timestamp: new Date().toISOString(),
       // })
-      setShowSuccessModal(true)
+      setShowSuccessModal(true);
       setTimeout(() => setShowSuccessModal(false), 3000);
     } catch (error) {
-      console.error("Failed to toggle status:", error)
+      console.error("Failed to toggle status:", error);
     }
 
     // const newStatus =

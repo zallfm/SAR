@@ -387,11 +387,12 @@ const AddApplicationModal: React.FC<AddApplicationModalProps> = ({
       now.getMinutes()
     ).padStart(2, "0")}:${String(now.getSeconds()).padStart(2, "0")}`;
     const newUpdateTime = `${formattedDate}\n${formattedTime}`;
+    console.log("selectedOwner", selectedOwner);
 
     const newApplication: Application = {
       APPLICATION_ID: appId,
       APPLICATION_NAME: appName,
-      DIVISION_ID_OWNER: selectedOwner!.DIVISION_NAME,
+      DIVISION_ID_OWNER: selectedOwner!.DIVISION_ID,
       NOREG_SYSTEM_OWNER: selectedOwner!.NOREG,
       NOREG_SYSTEM_CUST: selectedCustodian!.NOREG,
       SECURITY_CENTER: selectedSecurityCenter,
@@ -403,6 +404,7 @@ const AddApplicationModal: React.FC<AddApplicationModalProps> = ({
       CREATED_BY: isEditMode ? applicationToEdit!.CREATED_BY : "system",
       CHANGED_BY: "system",
     };
+    console.log("newApplication", newApplication);
     onSave(newApplication);
   };
 
