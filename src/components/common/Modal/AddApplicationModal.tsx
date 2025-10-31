@@ -399,7 +399,7 @@ const AddApplicationModal: React.FC<AddApplicationModalProps> = ({
       CHANGED_DT: newUpdateTime,
       APPLICATION_STATUS: isEditMode
         ? applicationToEdit.APPLICATION_STATUS
-        : "Aktif",
+        : "Active",
       CREATED_BY: isEditMode ? applicationToEdit!.CREATED_BY : "system",
       CHANGED_BY: "system",
     };
