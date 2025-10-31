@@ -1,5 +1,6 @@
 import { useEffect } from 'react';
 import { loggingService } from '../services/loggingService';
+import { useAuthStore } from '../store/authStore';
 
 // Global logging setup for the entire application
 export const useGlobalLogging = () => {
@@ -155,42 +156,51 @@ export const useInteractionLogging = () => {
 
 const API_HOST = 'http://localhost:3000';
 
+// useGlobalLogging.ts (bagian useApiLogging)
+
 export const useApiLogging = () => {
   useEffect(() => {
     const originalFetch = window.fetch;
 
-    // ✅ cache token di memori
-    let cachedToken: string | null = null;
+    let cachedToken: string | null = useAuthStore.getState().token;
+    const unsub = useAuthStore.subscribe((s) => { cachedToken = s.token; });
+
     const readToken = () => {
       try {
         const raw = localStorage.getItem('auth-store');
-        if (!raw) return null;
-        const parsed = JSON.parse(raw);
-        return parsed?.state?.token ?? null;
-      } catch {
-        return null;
-      }
+        return raw ? JSON.parse(raw)?.state?.token ?? null : null;
+      } catch { return null; }
     };
-    cachedToken = readToken();
-
-    // listen perubahan token (login/logout tab lain)
     const onStorage = (e: StorageEvent) => {
       if (e.key === 'auth-store') cachedToken = readToken();
     };
     window.addEventListener('storage', onStorage);
 
+    // ✅ helper aman untuk ambil URL
+    const getUrl = (input: RequestInfo | URL) => {
+      if (typeof input === 'string') return input;
+      if (input instanceof URL) return input.href;
+      if (input instanceof Request) return input.url;
+      // fallback
+      return (input as any)?.url ?? String(input);
+    };
+
     window.fetch = async (input: RequestInfo | URL, init?: RequestInit) => {
       const startTime = performance.now();
+      const urlStr = getUrl(input);
 
-      // ⏩ Skip injeksi utk non-API agar asset Vite gak keintersep
-      const urlStr = typeof input === 'string' ? input : input.toString();
       const isApi =
         urlStr.startsWith(API_HOST + '/api/') ||
-        // kalau kamu pakai path relatif dan proxy, injek juga
         urlStr.startsWith('/api/');
 
+      // ✅ kalau input adalah Request, bawa headers aslinya juga
+      const baseHeaders =
+        init?.headers ??
+        (input instanceof Request ? input.headers : undefined);
+
       const opts: RequestInit = { ...init };
-      const headers = new Headers(init?.headers || {});
+      const headers = new Headers(baseHeaders || {});
+
       if (isApi && !headers.has('Authorization') && cachedToken) {
         headers.set('Authorization', `Bearer ${cachedToken}`);
       }
@@ -202,26 +212,17 @@ export const useApiLogging = () => {
       try {
         const res = await originalFetch(input, opts);
         const duration = performance.now() - startTime;
-
-        // 🚦 logging non-blocking (masuk queue)
         queueMicrotask(() => {
-          loggingService.logApiCall(
-            opts.method || 'GET',
-            urlStr,
-            res.status,
-            duration,
-            { success: res.ok, timestamp: new Date().toISOString() }
-          );
+          loggingService.logApiCall(opts.method || 'GET', urlStr, res.status, duration, {
+            success: res.ok, timestamp: new Date().toISOString(),
+          });
         });
-
         return res;
       } catch (error) {
         const duration = performance.now() - startTime;
         queueMicrotask(() => {
           loggingService.error('api_call', 'fetch_error', {
-            method: opts.method || 'GET',
-            url: urlStr,
-            duration,
+            method: opts.method || 'GET', url: urlStr, duration,
             error: error instanceof Error ? error.message : String(error),
             timestamp: new Date().toISOString(),
           });
@@ -233,9 +234,11 @@ export const useApiLogging = () => {
     return () => {
       window.fetch = originalFetch;
       window.removeEventListener('storage', onStorage);
+      unsub();
     };
   }, []);
 };
+
 
 
 // export const useApiLogging = () => {

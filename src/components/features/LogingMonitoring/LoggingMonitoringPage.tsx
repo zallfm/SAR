@@ -2,7 +2,7 @@ import React, { useState, useMemo, useEffect } from "react";
 import { SearchIcon } from "../../../components/icons/SearchIcon";
 import { ChevronDownIcon } from "../../../components/icons/ChevronDownIcon";
 import { DetailIcon } from "../../../components/icons/DetailIcon";
-import { LogEntry, mockLogs } from "../../../../data";
+import { LogEntry } from "../../../../data";
 // import type { LogEntry } from '../../../../data';
 import StatusPill from "../StatusPill/StatusPill";
 import { DownloadButton } from "../../common/Button/DownloadButton";

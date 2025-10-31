@@ -175,15 +175,15 @@ const ApplicationPage: React.FC = () => {
 
         await editApplication(id, payload);
 
-        await postLogMonitoringApi({
-          userId: currentUser?.username ?? "anonymous",
-          module: "Application",
-          action: AuditAction.DATA_UPDATE,
-          status: "Success",
-          description: `User update aplikasi name ${payload.APPLICATION_NAME}`,
-          location: "ApplicationPage.UpdateForm",
-          timestamp: new Date().toISOString(),
-        });
+        // await postLogMonitoringApi({
+        //   userId: currentUser?.username ?? "anonymous",
+        //   module: "Application",
+        //   action: AuditAction.DATA_UPDATE,
+        //   status: "Success",
+        //   description: `User update aplikasi name ${payload.APPLICATION_NAME}`,
+        //   location: "ApplicationPage.UpdateForm",
+        //   timestamp: new Date().toISOString(),
+        // });
       } else {
         // CREATE: kirim hanya field yang diperlukan API create
         await createApplication({
@@ -196,15 +196,15 @@ const ApplicationPage: React.FC = () => {
           SECURITY_CENTER: application.SECURITY_CENTER!,
         });
 
-        await postLogMonitoringApi({
-          userId: currentUser?.username ?? "anonymous",
-          module: "Application",
-          action: AuditAction.DATA_CREATE,
-          status: "Success",
-          description: `User create aplikasi name ${application.APPLICATION_NAME}`,
-          location: "ApplicationPage.CreateForm",
-          timestamp: new Date().toISOString(),
-        });
+        // await postLogMonitoringApi({
+        //   userId: currentUser?.username ?? "anonymous",
+        //   module: "Application",
+        //   action: AuditAction.DATA_CREATE,
+        //   status: "Success",
+        //   description: `User create aplikasi name ${application.APPLICATION_NAME}`,
+        //   location: "ApplicationPage.CreateForm",
+        //   timestamp: new Date().toISOString(),
+        // });
       }
 
       setShowSuccessModal(true);
@@ -278,15 +278,15 @@ const ApplicationPage: React.FC = () => {
     try {
       await toggleApplicationStatus(pendingStatusApplication);
 
-      await postLogMonitoringApi({
-        userId: currentUser?.username ?? "anonymus",
-        module: "Application",
-        action: AuditAction.DATA_UPDATE,
-        status: "Success",
-        description: `User changed status of ${pendingStatusApplication.APPLICATION_NAME}`,
-        location: "ApplicationPage.StatusChange",
-        timestamp: new Date().toISOString(),
-      })
+      // await postLogMonitoringApi({
+      //   userId: currentUser?.username ?? "anonymus",
+      //   module: "Application",
+      //   action: AuditAction.DATA_UPDATE,
+      //   status: "Success",
+      //   description: `User changed status of ${pendingStatusApplication.APPLICATION_NAME}`,
+      //   location: "ApplicationPage.StatusChange",
+      //   timestamp: new Date().toISOString(),
+      // })
       setShowSuccessModal(true)
       setTimeout(() => setShowSuccessModal(false), 3000);
     } catch (error) {

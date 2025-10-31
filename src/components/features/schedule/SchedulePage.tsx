@@ -24,7 +24,7 @@ import {
   useSchedulePagination,
   useScheduleActions,
 } from "../../../hooks/useStoreSelectors";
-import { postLogMonitoringApi } from "@/src/api/log_monitoring";
+// import { postLogMonitoringApi } from "@/src/api/log_monitoring";
 import { useAuthStore } from "@/src/store/authStore";
 import { AuditAction } from "@/src/constants/auditActions";
 import { useScheduleStore } from "@/src/store/scheduleStore";
@@ -129,15 +129,15 @@ const SchedulePage: React.FC = () => {
 
   const handleOpenSetSchedule = async () => {
     setIsSetScheduleModalOpen(true);
-    await postLogMonitoringApi({
-      userId: currentUser?.username ?? "anonymous",
-      module: "Schedule",
-      action: AuditAction.DATA_CREATE,
-      status: "Success",
-      description: `User opened Set Schedule modal`,
-      location: "SchedulePage.handleOpenSetSchedule",
-      timestamp: new Date().toISOString(),
-    });
+    // await postLogMonitoringApi({
+    //   userId: currentUser?.username ?? "anonymous",
+    //   module: "Schedule",
+    //   action: AuditAction.DATA_CREATE,
+    //   status: "Success",
+    //   description: `User opened Set Schedule modal`,
+    //   location: "SchedulePage.handleOpenSetSchedule",
+    //   timestamp: new Date().toISOString(),
+    // });
   };
 
   const handleOpenEditModal = async () => {
@@ -152,19 +152,17 @@ const SchedulePage: React.FC = () => {
 
       setSchedulesForEditing(schedulesToEdit); // Store originals in state
       setIsEditModalOpen(true);
-
-      await postLogMonitoringApi({
-        userId: currentUser?.username ?? "anonymous",
-        module: "Schedule",
-        action: AuditAction.DATA_EDIT,
-        status: "Success",
-        // Log description is fine, selectedRows contains the unique string keys
-        description: `User opened Edit Schedule for keys: [${selectedRows.join(
-          ", "
-        )}]`,
-        location: "SchedulePage.handleOpenEditModal",
-        timestamp: new Date().toISOString(),
-      });
+      // await postLogMonitoringApi({
+      //   userId: currentUser?.username ?? "anonymous",
+      //   module: "Schedule",
+      //   action: AuditAction.DATA_EDIT,
+      //   status: "Success",
+      //   description: `User opened Edit Schedule for IDs: [${selectedRows.join(
+      //     ", "
+      //   )}]`,
+      //   location: "SchedulePage.handleOpenEditModal",
+      //   timestamp: new Date().toISOString(),
+      // });
     }
   };
 
@@ -173,7 +171,6 @@ const SchedulePage: React.FC = () => {
     setIsEditModalOpen(false);
     setIsSaveConfirmOpen(true);
   };
-
   const handleConfirmEditSave = async () => {
     // 1. Log the values of your condition
     console.log("Pending update:", pendingUpdate);
@@ -237,6 +234,8 @@ const SchedulePage: React.FC = () => {
       setPendingUpdate(null);
     }
   };
+
+
   const handleAddNewSchedules = async (
     newSchedules: Omit<ScheduleData, "ID">[] // This Omit is correct
   ) => {
@@ -244,16 +243,17 @@ const SchedulePage: React.FC = () => {
       for (const schedule of newSchedules) {
         await addSchedule(schedule);
       }
-      await postLogMonitoringApi({
-        userId: currentUser?.username ?? "anonymous",
-        module: "Schedule",
-        action: AuditAction.DATA_CREATE,
-        status: "Success",
-        description: `User ${currentUser?.username ?? "unknown"
-          } create Schedule`,
-        location: "SchedulePage.CreateForm",
-        timestamp: new Date().toISOString(),
-      });
+      // await postLogMonitoringApi({
+      //   userId: currentUser?.username ?? "anonymous",
+      //   module: "Schedule",
+      //   action: AuditAction.DATA_CREATE,
+      //   status: "Success",
+      //   description: `User ${
+      //     currentUser?.username ?? "unknown"
+      //   } create Schedule`,
+      //   location: "SchedulePage.CreateForm",
+      //   timestamp: new Date().toISOString(),
+      // });
       setShowSuccessModal(true);
     } catch (error) {
       console.error("Failed to add one or more schedules:", error);
@@ -285,16 +285,17 @@ const SchedulePage: React.FC = () => {
     // kirim log
     if (value.trim() !== "") {
       try {
-        await postLogMonitoringApi({
-          userId: currentUser?.username ?? "anonymous",
-          module: "Schedule",
-          action: AuditAction.DATA_FILTER,
-          status: "Success",
-          description: `User ${currentUser?.username ?? "unknown"
-            } filtered Schedule by ${key}: ${value}`,
-          location: "SchedulePage.handleFilterChange",
-          timestamp: new Date().toISOString(),
-        });
+        // await postLogMonitoringApi({
+        //   userId: currentUser?.username ?? "anonymous",
+        //   module: "Schedule",
+        //   action: AuditAction.DATA_FILTER,
+        //   status: "Success",
+        //   description: `User ${
+        //     currentUser?.username ?? "unknown"
+        //   } filtered Schedule by ${key}: ${value}`,
+        //   location: "SchedulePage.handleFilterChange",
+        //   timestamp: new Date().toISOString(),
+        // });
       } catch (err) {
         console.warn("Failed to log filter action:", err);
       }
